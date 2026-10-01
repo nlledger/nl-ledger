@@ -1,0 +1,186 @@
+---
+import Caveat from "./Caveat.astro";
+const {
+  pagehead,
+  num,
+  p,
+  esc,
+  fmtDate,
+  citeP,
+  money,
+  median,
+  pct,
+  under1k,
+  schedule,
+  months,
+  bar,
+  mmax,
+  moneyWords,
+  vendors,
+  D,
+  words,
+  sj,
+  ITEM_COLS,
+  sjTop,
+  itemRow,
+} = Astro.props;
+---
+
+<Fragment
+  set:html={await pagehead({
+    crumbs: [
+      ["/", "Home"],
+      [null, "Small purchases"],
+    ],
+    title: "The small purchases",
+    lede: "Most public money goes out in amounts too small to make a contract report. Two municipalities publish every payment; the province does not.",
+  })}
+/>
+<section class="section">
+  <div class="wrap">
+    <div class="figs">
+      <div>
+        <span class="big">
+          <Fragment set:html={num(p.n)} />
+        </span>
+        <span class="what">
+          payments by the Town of Paradise, {fmtDate(p.d0)} to {fmtDate(p.d1)}
+          <Fragment set:html={citeP} />
+        </span>
+      </div>
+      <div>
+        <span class="big">
+          <Fragment set:html={money(median)} />
+        </span>
+        <span class="what">the middle payment</span>
+      </div>
+      <div>
+        <span class="big">
+          <Fragment set:html={pct(under1k / p.n)} />
+        </span>
+        <span class="what">of payments were under $1,000</span>
+      </div>
+    </div>
+    {
+      <Caveat
+        text={
+          "The provincial government publishes no line-by-line payments: the Public Accounts list departments and programs, not who was paid. Federal departments publish totals only for purchases under $10,000. An access-to-information request is the only route to the province's small purchases."
+        }
+      />
+    }
+  </div>
+</section>
+<section class="section">
+  <div class="wrap grid-2">
+    <div>
+      <h2 style="margin-block-end:1rem">Paradise, month by month</h2>
+      <Fragment
+        set:html={await schedule({
+          compact: true,
+          cols: [
+            {
+              label: "Month",
+            },
+            {
+              label: "",
+              w: "55%",
+            },
+            {
+              label: "Paid",
+              num: true,
+            },
+          ],
+          rows: months.map((m) => ({
+            cells: [
+              esc(fmtDate(m.m)),
+              bar(m.amount, mmax),
+              moneyWords(m.amount),
+            ],
+          })),
+        })}
+      />
+    </div>
+    <div>
+      <h2 style="margin-block-end:1rem">Paradise's biggest vendors</h2>
+      <Fragment
+        set:html={await schedule({
+          compact: true,
+          cols: [
+            {
+              label: "Vendor",
+            },
+            {
+              label: "Payments",
+              num: true,
+            },
+            {
+              label: "Paid",
+              num: true,
+            },
+          ],
+          rows: vendors.map((v) => ({
+            cells: [
+              `<a href="/supplier/${D.keyHash(v.supplier_key)}/">${esc(v.supplier)}</a>`,
+              num(v.n),
+              moneyWords(v.amount),
+            ],
+          })),
+        })}
+      />
+      <h3 style="margin-block:2rem .8rem">What gets bought most often</h3>
+      <Fragment
+        set:html={await schedule({
+          compact: true,
+          cols: [
+            {
+              label: "Description as printed",
+            },
+            {
+              label: "Times",
+              num: true,
+            },
+            {
+              label: "Paid",
+              num: true,
+            },
+          ],
+          rows: words.map((w) => ({
+            cells: [
+              `<a href="/search/?ds=paradise&q=${encodeURIComponent(w.d.slice(0, 60))}">${esc(w.d)}</a>`,
+              num(w.n),
+              moneyWords(w.amount),
+            ],
+          })),
+        })}
+      />
+    </div>
+  </div>
+</section>
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>St. John's, a sample</h2>
+      <p>
+        The City of St. John's publishes every weekly payment voucher, but as
+        scanned images. <Fragment set:html={num(sj.n)} /> lines from the first
+        12 pages of the 2026 file were read by machine as a sample.{" "}
+        <Fragment set:html={num(sj.w)} /> of them are payments to private
+        individuals whose names the City blacks out; those show the description
+        only.
+      </p>
+    </div>
+    <Fragment
+      set:html={await schedule({
+        cols: ITEM_COLS,
+        rows: sjTop.map((a) =>
+          itemRow(D, a, {
+            showBuyer: false,
+          }),
+        ),
+      })}
+    />
+    <p>
+      <a href="/search/?ds=stjohns">All sampled St. John's lines</a>
+    </p>
+  </div>
+</section>

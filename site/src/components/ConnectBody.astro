@@ -1,0 +1,344 @@
+---
+import Caveat from "./Caveat.astro";
+const {
+  pagehead,
+  num,
+  R,
+  html,
+  copyBlock,
+  MCP_URL,
+  groups,
+  CLIENTS,
+  esc,
+  clientPanel,
+  SITE,
+  MORE,
+  schedule,
+  QUESTIONS,
+  asked,
+  icon,
+  askClaude,
+  askChatGPT,
+  TOOLS,
+} = Astro.props;
+---
+
+<Fragment
+  set:html={await pagehead({
+    crumbs: [
+      ["/", "Home"],
+      [null, "Ask your AI"],
+    ],
+    title: "Ask your own AI about every record",
+    lede: `This site shows a small part of what is in the records. Connect Claude, ChatGPT or another AI assistant to all ${num(R.itemCount)} of them and ask it anything in plain words. It answers from the records and links each figure to its source.`,
+    extra: html`<div class="addr">
+      ${await copyBlock("The address your assistant needs", MCP_URL, {
+        inline: true,
+      })}
+      <p class="small">
+        Free, read-only, and no sign-in. Your conversation stays with your
+        assistant: this site only sees the words it looks up, and keeps no
+        accounts.
+      </p>
+      <nav class="jump" aria-label="On this page">
+        <a href="#connect">1. Connect it</a
+        ><a href="#ask">2. Ask it something</a
+        ><a href="#try">Try it here first</a>
+      </nav>
+    </div>`,
+  })}
+/>
+
+<section class="section" id="connect" aria-labelledby="connect-h">
+  <div class="wrap">
+    <div class="section-head">
+      <h2 id="connect-h">1. Connect your assistant</h2>
+      <p class="lede">
+        Pick the one you use. Most take under a minute, and you only do it once.
+      </p>
+    </div>
+    <div class="picker" data-picker>
+      {groups.map(([g, label]) => (
+        <>
+          <div class="picker-row">
+            <span class="picker-label">
+              <Fragment set:html={label} />
+            </span>
+            <ul role="list">
+              {CLIENTS.filter((c) => c.group === g).map((c) => (
+                <>
+                  <li>
+                    <a class="pick" href={"#" + c.id} data-pick={c.id}>
+                      {c.name}
+                    </a>
+                  </li>
+                </>
+              ))}
+            </ul>
+          </div>
+        </>
+      ))}
+    </div>
+    <div class="clients">
+      <Fragment set:html={await Promise.all(CLIENTS.map(clientPanel))} />
+    </div>
+    <p class="works">
+      <strong>How to tell it is working:</strong> ask "Using {SITE.name}, what
+      are the largest snow clearing contracts?" The answer should name suppliers
+      and amounts and link to government files. If it answers without links, the
+      connector is not switched on for that chat.{" "}
+      <a href="#try">Try the same lookup here</a> to compare.
+    </p>
+    <details class="more" id="other">
+      <summary>
+        <span>Other assistants</span>
+        <span class="small muted">
+          <Fragment set:html={MORE.length} /> more with a documented way to add
+          a remote server
+        </span>
+      </summary>
+      <Fragment
+        set:html={await schedule({
+          compact: true,
+          cols: [
+            {
+              label: "Assistant",
+            },
+            {
+              label: "Where to add it",
+            },
+            {
+              label: "What to enter",
+            },
+          ],
+          rows: MORE.map(([n, w, c, d]) => ({
+            cells: [
+              `<a href="${esc(d)}" rel="noopener">${esc(n)}</a>`,
+              esc(w),
+              `<code>${esc(c)}</code>`,
+            ],
+          })),
+        })}
+      />
+      <p class="small">
+        Anything else that can use a remote MCP server (Model Context Protocol,
+        the standard these assistants share) works the same way: give it the
+        address above, choose streamable HTTP if asked, and no authentication.
+      </p>
+    </details>
+  </div>
+</section>
+
+<section class="section" id="ask" aria-labelledby="ask-h">
+  <div class="wrap">
+    <div class="section-head">
+      <h2 id="ask-h">2. Ask it something</h2>
+      <p class="lede">
+        A few questions that show what is in the records. Copy one, or open a
+        new chat with it already typed in, then press send.
+      </p>
+    </div>
+    <p class="warn">
+      <strong>Connect first.</strong> The Ask links only open a chat; your
+      assistant uses the records once the connector is added. In ChatGPT, also
+      type @{SITE.name} in each new chat and pick it from the list, or it will
+      answer without the records.
+    </p>
+    <ol class="asks" role="list">
+      {QUESTIONS.map((x, i) => (
+        <>
+          <li class="ask">
+            <p class="ask-q">{x.q}</p>
+            <div class="ask-do">
+              <button
+                class="linkbtn"
+                type="button"
+                data-copy-text={asked(x.q)}
+                hidden
+              >
+                <Fragment set:html={icon("copy", "i-copy")} />
+                <Fragment set:html={icon("check", "i-done")} />
+                <span>Copy</span>
+              </button>
+              <a href={askClaude(x.q)} target="_blank" rel="noopener">
+                <Fragment set:html={icon("chat")} />
+                Ask Claude
+              </a>
+              <a href={askChatGPT(x.q)} target="_blank" rel="noopener">
+                <Fragment set:html={icon("chat")} />
+                Ask ChatGPT
+              </a>
+            </div>
+          </li>
+        </>
+      ))}
+    </ol>
+    {
+      <Caveat
+        text={`The figures come from public records, gathered and combined by automated scripts, and have not been independently vetted. The server tells your assistant to cite a source for every figure. Open it before relying on an answer.`}
+      />
+    }
+  </div>
+</section>
+
+<section class="section" id="try" aria-labelledby="try-h">
+  <div class="wrap grid-2">
+    <div>
+      <div class="section-head">
+        <h2 id="try-h">Try it here first</h2>
+        <p class="lede">
+          See exactly what your assistant gets back when it looks something up.
+          This calls the same server your assistant will.
+        </p>
+      </div>
+      <p>
+        Your assistant picks the right lookup for your question on its own,
+        often several in a row, then writes the answer from what comes back.
+        Every record carries a link to the government file it came from.
+      </p>
+      <noscript>
+        <p class="small">
+          This panel needs JavaScript. Everything else on the page works without
+          it.
+        </p>
+      </noscript>
+    </div>
+    <div class="trybox" data-try hidden>
+      <form class="tryform" data-try-form>
+        <div class="field">
+          <label for="try-tool">Look up</label>
+          <div class="field-row">
+            <select id="try-tool" name="tool">
+              <option
+                value="search_records"
+                data-ph="snow clearing"
+                data-arg="query"
+                data-hint="Try a company, a town, a kind of work or a job title."
+              >
+                Records matching some words
+              </option>
+              <option
+                value="get_supplier"
+                data-ph="Newfoundland Power"
+                data-arg="name"
+                data-hint="A company or organization's name. If it is not exact, close matches are listed."
+              >
+                Reported records for one company
+              </option>
+              <option
+                value="get_members"
+                data-ph="travel"
+                data-arg="category"
+                data-hint="One of: travel, office, constituency, operational."
+              >
+                MHAs ranked by a kind of spending
+              </option>
+              <option
+                value="human_scale"
+                data-ph="$50 million"
+                data-arg="amount"
+                data-hint="Write it any way: 50000000, 50,000,000 or $50 million."
+              >
+                An amount in human terms
+              </option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="try-arg">Words</label>
+          <div class="field-row">
+            <input
+              id="try-arg"
+              name="arg"
+              type="text"
+              value="snow clearing"
+              autocomplete="off"
+              enterkeyhint="go"
+            />
+            <button class="btn" type="submit">
+              Run it
+            </button>
+          </div>
+        </div>
+      </form>
+      <p class="small muted" data-try-hint>
+        Try a company, a town, a kind of work or a job title.
+      </p>
+      <div class="tryout" data-try-out aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="tools" aria-labelledby="tools-h">
+  <div class="wrap">
+    <h2 id="tools-h" class="vh">
+      Details
+    </h2>
+    <details class="more" id="lookups">
+      <summary>
+        <span>What your assistant can look up</span>
+        <span class="small muted">
+          <Fragment set:html={TOOLS.length} /> lookups, described the way your
+          assistant sees them
+        </span>
+      </summary>
+      <Fragment
+        set:html={await schedule({
+          compact: true,
+          cols: [
+            {
+              label: "Lookup",
+            },
+            {
+              label: "What it does",
+            },
+          ],
+          rows: TOOLS.map((t) => ({
+            cells: [
+              `${esc(t.title)}<span class="meta"><code>${esc(t.name)}</code></span>`,
+              esc(t.description.replace(/ Sources: .*$/, "")),
+            ],
+          })),
+        })}
+      />
+    </details>
+    <details class="more" id="developers">
+      <summary>
+        <span>For developers</span>
+        <span class="small muted">Transport, discovery files and data</span>
+      </summary>
+      <ul class="prose">
+        <li>
+          Address:{" "}
+          <code>
+            <Fragment set:html={MCP_URL} />
+          </code>
+          . Streamable HTTP, JSON responses, no session, no authentication.
+          Protocol versions 2024-11-05 to 2025-11-25. CORS is open, so browser
+          clients can call it directly.
+        </li>
+        <li>
+          Discovery: <a href="/server.json">server.json</a> (MCP registry
+          format),{" "}
+          <a href="/.well-known/ai-catalog.json">
+            /.well-known/ai-catalog.json
+          </a>{" "}
+          and <a href="/mcp/server-card">/mcp/server-card</a> (MCP server card,
+          draft), <a href="/llms.txt">llms.txt</a>.
+        </li>
+        <li>
+          Also offers <code>search</code> and <code>fetch</code> in the shape
+          ChatGPT deep research expects, and four starter prompts.
+        </li>
+        <li>
+          Summary files this site is built from:{" "}
+          <a href="/data/receipt.json">receipt.json</a>,{" "}
+          <a href="/data/stats.json">stats.json</a>,{" "}
+          <a href="/data/flags.json">flags.json</a>,{" "}
+          <a href="/data/departments.json">departments.json</a>,{" "}
+          <a href="/data/members.json">members.json</a>.
+        </li>
+      </ul>
+    </details>
+  </div>
+</section>

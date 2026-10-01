@@ -1,0 +1,77 @@
+---
+import FeedbackHead from "./FeedbackHead.astro";
+const { early, f, esc, KINDS, token } = Astro.props;
+---
+
+<FeedbackHead
+  title="Check your note, then send it"
+  lede={
+    early
+      ? "That was quick. Wait a moment, then press Send this note once more."
+      : "One more press sends it. This step keeps automated junk out."
+  }
+/>
+<section class="section">
+  <div class="wrap fb-confirm">
+    <dl class="fb-back">
+      {f.kind ? (
+        <>
+          <div>
+            <dt>Kind</dt>
+            <dd>{KINDS[f.kind]}</dd>
+          </div>
+        </>
+      ) : (
+        ""
+      )}
+      <div>
+        <dt>About the page</dt>
+        <dd>
+          <Fragment set:html={f.page ? esc(f.page) : "No page given"} />
+        </dd>
+      </div>
+      <div>
+        <dt>Your note</dt>
+        <dd class="fb-quote">{f.note}</dd>
+      </div>
+      <div>
+        <dt>Reply to</dt>
+        <dd>
+          <Fragment
+            set:html={f.email ? esc(f.email) : "No email address, so no reply"}
+          />
+        </dd>
+      </div>
+    </dl>
+    <div class="fb-confirm-act">
+      <form action="/feedback" method="post">
+        {[
+          ["kind", f.kind],
+          ["note", f.note],
+          ["email", f.email],
+          ["page", f.page],
+          ["confirm", token],
+        ].map(([name, value]) => (
+          <input type="hidden" name={name} value={value} />
+        ))}
+        <button class="btn solo" type="submit">
+          Send this note
+        </button>
+      </form>
+      <form action="/feedback" method="post">
+        {[
+          ["kind", f.kind],
+          ["note", f.note],
+          ["email", f.email],
+          ["page", f.page],
+          ["edit", "1"],
+        ].map(([name, value]) => (
+          <input type="hidden" name={name} value={value} />
+        ))}
+        <button class="btn solo ghost" type="submit">
+          Change it
+        </button>
+      </form>
+    </div>
+  </div>
+</section>

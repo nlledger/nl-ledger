@@ -17,6 +17,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+      - name: Install site tools and compile Astro components
+        run: npm ci --prefix site && npm run check:astro --prefix site
       - name: Python scripts parse
         run: python3 -c "import ast, pathlib; [ast.parse(p.read_text(), str(p)) for p in pathlib.Path('pipeline').glob('*.py')]"
       - name: JavaScript modules parse
@@ -39,6 +41,10 @@ jobs:
         run: node site/check-federal.mjs
       - name: Imported source text is escaped
         run: node site/check-source-escaping.mjs
+      - name: Uncaught errors become one 500
+        run: node site/check-guard.mjs
+      - name: Worker requests, hostile inputs and combined suppliers
+        run: node site/check-requests.mjs
       - name: Receipt income privacy checks
         run: node site/check-receipt-privacy.mjs
       - name: Feedback box checks

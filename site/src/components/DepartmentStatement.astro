@@ -1,0 +1,130 @@
+---
+const {
+  depts,
+  pages,
+  esc,
+  words,
+  mobileSources,
+  dv,
+  cell,
+  share,
+  sourceAction,
+  c,
+  fromReport,
+} = Astro.props;
+---
+
+<ul class="legend">
+  <li>
+    <span class="sw"></span>Spent over the budget
+  </li>
+  <li>
+    <span class="sw ghost"></span>Budget not spent
+  </li>
+</ul>
+<p class="sched-hint">Scroll sideways for more columns.</p>
+<div class="sched-wrap">
+  <table class="sched pin-rows">
+    <thead>
+      <tr>
+        <th scope="col">Department</th>
+        <th scope="col" class="hide-sm" style="inline-size:24%">
+          <span class="dv-ends">
+            <span>Under</span>
+            <span>Over</span>
+          </span>
+        </th>
+        <th scope="col" class="n hide-sm">
+          Budgeted
+        </th>
+        <th scope="col" class="n hide-sm">
+          Spent
+        </th>
+        <th scope="col" class="n">
+          Over (under)
+        </th>
+        <th scope="col" class="n">
+          %
+        </th>
+        <th scope="col" class="n hide-sm">
+          Source
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      {depts.map((d) => (
+        <>
+          <tr>
+            <th scope="row">
+              {pages.has(d.slug) ? (
+                <>
+                  <a href={"/department/" + d.slug + "/"}>{d.name}</a>
+                </>
+              ) : (
+                esc(d.name)
+              )}
+              <span class="meta show-sm">
+                <Fragment set:html={words(d.budget)} /> budgeted,{" "}
+                <Fragment set:html={words(d.spent)} /> spent
+              </span>
+              <Fragment
+                set:html={mobileSources([
+                  [d.budget_source, "Budget source"],
+                  [d.spent_source, "Actual source"],
+                ])}
+              />
+            </th>
+            <td class="hide-sm">
+              <Fragment set:html={dv(d)} />
+            </td>
+            <Fragment set:html={cell(d.budget, " hide-sm")} />
+            <Fragment set:html={cell(d.spent, " hide-sm")} />
+            <Fragment set:html={cell(d.difference)} />
+            <td class={"n" + (d.share < 0 ? " neg" : "")}>
+              <Fragment set:html={share(d.share)} />
+            </td>
+            <td class="n hide-sm">
+              <Fragment
+                set:html={sourceAction(d.budget_source, "Budget source")}
+              />{" "}
+              ·{" "}
+              <Fragment
+                set:html={sourceAction(d.spent_source, "Actual source")}
+              />
+            </td>
+          </tr>
+        </>
+      ))}
+    </tbody>
+    <tfoot>
+      <tr class="total">
+        <th scope="row">
+          All <Fragment set:html={depts.length} /> departments
+        </th>
+        <td class="hide-sm"></td>
+        <Fragment set:html={cell(c.gross.budget, " hide-sm")} />
+        <Fragment set:html={cell(c.gross.actual, " hide-sm")} />
+        <Fragment set:html={cell(c.difference)} />
+        <td class={"n" + (c.share < 0 ? " neg" : "")}>
+          <Fragment set:html={share(c.share)} />
+        </td>
+        <td class="hide-sm"></td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+<p class="small muted">
+  Gross spending, before the revenue departments collect against their own
+  spending. Budgeted is the department's total in the Estimates given to the
+  House with the budget (Budget source); spent is its total in the Report's
+  summary statements (Actual source). Amounts in parentheses are spending below
+  the budget. A department can be given more, or less, during the year; those
+  amended estimates are on each department's page.
+  <Fragment
+    set:html={
+      fromReport.length
+        ? ` ${fromReport.map((d) => esc(d.name)).join(", ")}: not in that year's Estimates under this name, so the budget is the Original column of the Report.`
+        : ""
+    }
+  />
+</p>

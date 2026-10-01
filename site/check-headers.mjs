@@ -7,43 +7,82 @@ const expected = {
   "referrer-policy": "strict-origin-when-cross-origin",
   "permissions-policy": "interest-cohort=()",
   "strict-transport-security": "max-age=15552000",
-  "content-security-policy": "frame-ancestors 'self'; object-src 'none'; base-uri 'self'",
+  "content-security-policy":
+    "frame-ancestors 'self'; object-src 'none'; base-uri 'self'",
 };
 function check(res) {
-  for (const [name, value] of Object.entries(expected)) assert.equal(res.headers.get(name), value, name);
+  for (const [name, value] of Object.entries(expected))
+    assert.equal(res.headers.get(name), value, name);
   assert.equal(res.headers.get("content-type"), "text/html; charset=utf-8");
 }
 const pending = [];
 const ctx = {
   request: new Request("https://nlledger.ca/search/"),
   waitUntil: (p) => pending.push(p),
-  env: { ASSETS: { fetch: async (u) => Response.json({
-    "/data/stats.json": {}, "/data/flags.json": { flags: [], caveat: "" },
-    "/data/version.json": { v: "test", code: "headers", updated: "2026-09-30" }, "/data/links.json": {},
-  }[new URL(u).pathname]) } },
+  env: {
+    ASSETS: {
+      fetch: async (u) =>
+        Response.json(
+          {
+            "/data/stats.json": {},
+            "/data/flags.json": { flags: [], caveat: "" },
+            "/data/version.json": {
+              v: "test",
+              code: "headers",
+              updated: "2026-09-30",
+            },
+            "/data/links.json": {},
+          }[new URL(u).pathname],
+        ),
+    },
+  },
 };
 const a = { updated: "2026-09-30" };
 for (const status of [200, 400, 404, 429, 503]) {
-  const res = page(ctx, a, { title: "Test", body: "<p>Test</p>", status, maxAge: 60 });
-  check(res); assert.equal(res.status, status);
+  const res = await page(ctx, a, {
+    title: "Test",
+    body: "<p>Test</p>",
+    status,
+    maxAge: 60,
+  });
+  check(res);
+  assert.equal(res.status, status);
   assert.equal(res.headers.get("cache-control"), "public, max-age=60");
 }
-const privateRes = page(ctx, a, { title: "Receipt", body: "", maxAge: 0 });
+const privateRes = await page(ctx, a, {
+  title: "Receipt",
+  body: "",
+  maxAge: 0,
+});
 privateRes.headers.set("cache-control", "private, no-store");
-check(privateRes); assert.equal(privateRes.headers.get("cache-control"), "private, no-store");
+check(privateRes);
+assert.equal(privateRes.headers.get("cache-control"), "private, no-store");
 const entries = new Map();
-globalThis.caches = { default: {
-  match: async (req) => entries.get(req.url)?.clone(),
-  put: async (req, res) => { check(res); entries.set(req.url, res); },
-} };
+globalThis.caches = {
+  default: {
+    match: async (req) => entries.get(req.url)?.clone(),
+    put: async (req, res) => {
+      check(res);
+      entries.set(req.url, res);
+    },
+  },
+};
 let renders = 0;
-const make = async () => { renders++; return page(ctx, a, { title: "Search", body: "<p>Test</p>" }); };
+const make = async () => {
+  renders++;
+  return await page(ctx, a, { title: "Search", body: "<p>Test</p>" });
+};
 check(await cached(ctx, make));
 await Promise.all(pending.splice(0));
 check(await cached(ctx, make));
 assert.equal(renders, 1, "second request uses the hardened cached response");
 entries.clear();
-await cached(ctx, async () => page(ctx, a, { title: "Missing", body: "", status: 404 }));
+await cached(
+  ctx,
+  async () => await page(ctx, a, { title: "Missing", body: "", status: 404 }),
+);
 await Promise.all(pending.splice(0));
 assert.equal(entries.size, 0, "404 cache behavior is unchanged");
-console.log("HTML headers: success, errors, private receipt and cache hit pass");
+console.log(
+  "HTML headers: success, errors, private receipt and cache hit pass",
+);

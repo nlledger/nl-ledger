@@ -1,0 +1,40 @@
+---
+import Caveat from "./Caveat.astro";
+const { esc, D, num, flagItem, icon } = Astro.props;
+---
+
+<section class="section" aria-labelledby="fl-h">
+  <div class="wrap">
+    <div class="section-head">
+      <h2 id="fl-h">Patterns people ask about</h2>
+      <p class="lede">
+        Sole-source contracts and other awards without competition, contracts
+        that grew, purchases just under a limit, year-end rushes, overtime
+        bigger than salary. Each is counted from the records, with its method
+        written down.
+      </p>
+    </div>
+    {<Caveat text={esc(D.catalog.caveat)} />}
+    <ul class="flaglist" style="margin-block-start:1rem">
+      <Fragment
+        set:html={D.catalog.flags.slice(0, 8).map((f) => {
+          const s = D.flagSummary[f.id] || {};
+          const count = s.items
+            ? `${num(s.items)} items`
+            : s.subjects
+              ? `${num(s.subjects)} found`
+              : "none found";
+          return flagItem(f, {
+            count,
+          });
+        })}
+      />
+    </ul>
+    <p style="margin-block-start:1.5rem">
+      <a href="/flags/">
+        All <Fragment set:html={D.catalog.flags.length} /> patterns and how each
+        is worked out <Fragment set:html={icon("arrow")} />
+      </a>
+    </p>
+  </div>
+</section>

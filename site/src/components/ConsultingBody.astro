@@ -1,0 +1,183 @@
+---
+import Caveat from "./Caveat.astro";
+const {
+  pagehead,
+  esc,
+  latest,
+  moneyWords,
+  cite,
+  schedule,
+  byYear,
+  bar,
+  vmax,
+  byDept,
+  D,
+  receipt,
+  byProg,
+  money,
+  fed,
+  num,
+} = Astro.props;
+---
+
+<Fragment
+  set:html={await pagehead({
+    crumbs: [
+      ["/", "Home"],
+      [null, "Consultants and professional services"],
+    ],
+    title: "Government consultants and professional services spending",
+    lede: `The province's own accounts put spending on outside expertise, such as consultants, in one line called Professional Services. In ${esc(latest.y)} it came to ${moneyWords(latest.v)}${cite}.`,
+  })}
+/>
+<section class="section">
+  <div class="wrap">
+    {
+      <Caveat
+        text={
+          <>
+            "Professional Services" is broader than consulting. In health it is
+            mostly doctors paid fee-for-service under the Medical Care Plan, and
+            it includes legal, engineering and other outside services, so read
+            the program name before reading the figure. This account gives
+            totals by program, not individual contracts; contract awards that
+            mention consulting are in the{" "}
+            <a href="/search/?q=consulting">search</a>.
+          </>
+        }
+      />
+    }
+    <div class="grid-2">
+      <div>
+        <h2 style="margin-block-end:1rem">By year</h2>
+        <Fragment
+          set:html={await schedule({
+            compact: true,
+            cols: [
+              {
+                label: "Fiscal year",
+              },
+              {
+                label: "",
+                w: "50%",
+              },
+              {
+                label: "Professional services",
+                num: true,
+              },
+            ],
+            rows: byYear.map((r) => ({
+              cells: [esc(r.y), bar(r.v, vmax), moneyWords(r.v)],
+            })),
+          })}
+        />
+      </div>
+      <div>
+        <h2 style="margin-block-end:1rem">By department, {latest.y}</h2>
+        <Fragment
+          set:html={await schedule({
+            compact: true,
+            cols: [
+              {
+                label: "Department",
+              },
+              {
+                label: "Professional services",
+                num: true,
+              },
+              {
+                label: "Source",
+                num: true,
+              },
+            ],
+            rows: byDept.map((d) => ({
+              cells: [
+                `<a href="/department/${D.slug(D.pretty(d.department))}/">${esc(D.pretty(d.department))}</a>`,
+                moneyWords(d.v),
+                receipt(d.source_url, d.page),
+              ],
+            })),
+          })}
+        />
+      </div>
+    </div>
+  </div>
+</section>
+<section class="section">
+  <div class="wrap">
+    <h2 style="margin-block-end:1rem">Largest programs, {latest.y}</h2>
+    <Fragment
+      set:html={await schedule({
+        cols: [
+          {
+            label: "Program",
+          },
+          {
+            label: "Department",
+          },
+          {
+            label: "Professional services",
+            num: true,
+          },
+          {
+            label: "Source",
+            num: true,
+          },
+        ],
+        rows: byProg.map((p) => ({
+          cells: [
+            esc(p.program),
+            esc(D.pretty(p.department)),
+            money(p.v),
+            receipt(p.source_url, p.page),
+          ],
+        })),
+      })}
+    />
+  </div>
+</section>
+{fed.length ? (
+  <>
+    <section class="section">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Federal payments for professional and special services</h2>
+          <p>
+            Published annual payments over $100,000 selected by the payee’s
+            reported NL location, from the Public Accounts of Canada. An address
+            does not establish where work, benefits or spending occurred. This
+            series is separate from provincial professional-services actuals and
+            may overlap federal commitments.
+          </p>
+        </div>
+        <Fragment
+          set:html={await schedule({
+            compact: true,
+            cols: [
+              {
+                label: "Fiscal year",
+              },
+              {
+                label: "Payments",
+                num: true,
+              },
+              {
+                label: "Paid",
+                num: true,
+              },
+            ],
+            rows: fed.map((r) => ({
+              cells: [esc(r.y), num(r.n), moneyWords(r.v)],
+            })),
+          })}
+        />
+        <p>
+          <a href="/search/?ds=pa_pss">Search these federal payments</a> ·{" "}
+          <a href="/search/?q=consulting">Search every record for consulting</a>
+        </p>
+      </div>
+    </section>
+  </>
+) : (
+  ""
+)}

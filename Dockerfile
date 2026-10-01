@@ -12,7 +12,7 @@ COPY --from=ghcr.io/astral-sh/uv:0.12 /uv /usr/local/bin/uv
 
 ENV UV_PYTHON_DOWNLOADS=never UV_LINK_MODE=copy UV_FROZEN=1 UV_NO_SYNC=1 \
     UV_PROJECT_ENVIRONMENT=/opt/venv UV_CACHE_DIR=/tmp/uv-cache \
-    NPM_CONFIG_UPDATE_NOTIFIER=false HOME=/home/node
+    NPM_CONFIG_UPDATE_NOTIFIER=false ASTRO_TELEMETRY_DISABLED=1 HOME=/home/node
 WORKDIR /app
 
 # Dependencies first, so a code-only change rebuilds in seconds.

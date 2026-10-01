@@ -1,0 +1,28 @@
+---
+const { files, REPO, form, icon } = Astro.props;
+---
+
+<aside class="codeat" aria-labelledby="codeat-h">
+  <h2 id="codeat-h">Where the code is</h2>
+  <p>
+    This is open source. The calculation behind this page is public, so it can
+    be read, run and questioned.
+  </p>
+  <ul>
+    {files.map(([f, what]) => (
+      <>
+        <li>
+          <a href={REPO + "/blob/main/" + f}>
+            <code>{f}</code>
+          </a>{" "}
+          {what}
+        </li>
+      </>
+    ))}
+  </ul>
+  <p>
+    <a class="btn" href={form}>
+      <span>Challenge this method</span> <Fragment set:html={icon("arrow")} />
+    </a>
+  </p>
+</aside>

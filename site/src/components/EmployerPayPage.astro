@@ -1,0 +1,164 @@
+---
+import Caveat from "./Caveat.astro";
+const {
+  pagehead,
+  e,
+  esc,
+  perYear,
+  src,
+  coverage,
+  schedule,
+  years,
+  grid,
+  num,
+  moneyWords,
+  titles,
+  money,
+  top,
+  bh,
+  icon,
+} = Astro.props;
+---
+
+<Fragment
+  set:html={await pagehead({
+    flagged: true,
+    crumbs: [
+      ["/", "Home"],
+      ["/pay/", "Pay over $100,000"],
+      [null, e.buyer],
+    ],
+    title: esc(e.buyer),
+    lede: `Compensation disclosure lists for ${esc(perYear.join(", "))}. ${src.map((s) => `<a href="${esc(s.source_url)}">${esc(s.y)} list</a>`).join(" · ")}`,
+  })}
+/>
+<section class="section">
+  <div class="wrap">
+    <p>
+      Only published compensation above $100,000 is included, not the employer's
+      entire payroll. Amounts are rounded to $100 by the publisher. A year
+      marked “Not available” is missing data, not zero people or zero pay.
+    </p>
+    {coverage.length ? <Caveat text={coverage.join(" ")} /> : ""}
+    <div class="grid-2 pay-breakdown">
+      <div>
+        <Fragment
+          set:html={await schedule({
+            compact: true,
+            caption: "By year",
+            cols: [
+              {
+                label: "Year",
+              },
+              {
+                label: "People over $100,000",
+                num: true,
+              },
+              {
+                label: "Published pay over $100,000",
+                num: true,
+              },
+            ],
+            rows: years.map((y) => {
+              const g = grid.get(e.buyer)[y];
+              return {
+                cells: g
+                  ? [esc(y), num(g.n), moneyWords(g.a)]
+                  : [
+                      esc(y),
+                      '<span class="muted">Not available</span>',
+                      '<span class="muted">Not available</span>',
+                    ],
+              };
+            }),
+          })}
+        />
+      </div>
+      <div>
+        <Fragment
+          set:html={await schedule({
+            compact: true,
+            caption: `Most common job titles, ${esc(perYear[perYear.length - 1])}`,
+            cols: [
+              {
+                label: "Title as published",
+              },
+              {
+                label: "People",
+                num: true,
+              },
+              {
+                label: "Average",
+                num: true,
+              },
+            ],
+            rows: titles.map((t) => ({
+              cells: [esc(t.description), num(t.n), money(t.avg)],
+            })),
+          })}
+        />
+      </div>
+    </div>
+  </div>
+</section>
+<section class="section">
+  <div class="wrap">
+    <h2 style="margin-block-end:1rem">
+      Highest paid, {perYear[perYear.length - 1]}
+    </h2>
+    <Fragment
+      set:html={await schedule({
+        cols: [
+          {
+            label: "Name as published",
+          },
+          {
+            label: "Base",
+            num: true,
+          },
+          {
+            label: "Overtime",
+            num: true,
+          },
+          {
+            label: "Other",
+            num: true,
+          },
+          {
+            label: "Total",
+            num: true,
+          },
+          {
+            label: "Row",
+            num: true,
+          },
+        ],
+        rows: top.map((p) => {
+          const x = JSON.parse(p.extra || "{}");
+          const other =
+            (x.bonus || 0) +
+            (x.shift || 0) +
+            (x.retro || 0) +
+            (x.severance || 0) +
+            (x.other || 0);
+          return {
+            cells: [
+              `${esc(p.person)}<span class="meta">${esc(p.description)}${x.unit ? ` · ${esc(x.unit)}` : ""}</span>`,
+              money(x.base),
+              money(x.overtime),
+              money(other),
+              money(p.amount),
+              `<a class="rcpt" href="${esc(p.source_url)}" title="${esc(p.locator)}">${esc(p.locator.replace(/^sheet [^,]+, /, ""))}</a>`,
+            ],
+          };
+        }),
+      })}
+    />
+    <p>
+      <a href={"/search/?ds=sunshine&b=" + bh}>
+        Search everyone on {e.buyer}'s lists{" "}
+        <Fragment set:html={icon("arrow")} />
+      </a>
+    </p>
+  </div>
+</section>

@@ -1,0 +1,275 @@
+---
+import SelectOptions from "./SelectOptions.astro";
+const {
+  icon,
+  p,
+  empty,
+  filterCount,
+  DS_OPTIONS,
+  years,
+  flagOpts,
+  active,
+  standing,
+  examples,
+  corrected,
+  items,
+  num,
+  result,
+  sorted,
+  resultItem,
+  flags,
+  links,
+  pager,
+  base,
+  page,
+  near,
+  suggest,
+} = Astro.props;
+---
+
+<header class="pagehead search-head">
+  <div class="wrap">
+    <h1>Search</h1>
+    <form action="/search/" method="get" role="search">
+      <div class="field" style="max-inline-size:40rem">
+        <label for="sq">
+          Every award, grant, claim, pay record and payment
+        </label>
+        <div class="field-row">
+          <span class="pre">
+            <Fragment set:html={icon("search")} />
+          </span>
+          <input
+            id="sq"
+            name="q"
+            type="search"
+            value={p.q || ""}
+            placeholder="A company, a town, a word"
+            autocomplete="off"
+            autofocus={empty}
+          />
+          <button class="btn" type="submit">
+            Search
+          </button>
+        </div>
+      </div>
+      <div class="search-options">
+        <details class="search-filters" open={filterCount > 0}>
+          <summary>
+            Filters
+            <Fragment
+              set:html={filterCount ? ` (${filterCount} active)` : ""}
+            />
+          </summary>
+          <div class="filters">
+            <div class="field">
+              <label for="fds">Source</label>
+              <div class="field-row">
+                <select id="fds" name="ds">
+                  <option value="">All sources</option>
+                  <SelectOptions options={DS_OPTIONS} selected={p.ds} />
+                </select>
+              </div>
+            </div>
+            <div class="field">
+              <label for="fy">Year</label>
+              <div class="field-row">
+                <select id="fy" name="y">
+                  <option value="">Any year</option>
+                  <SelectOptions options={years} selected={p.y} />
+                </select>
+              </div>
+            </div>
+            <div class="field">
+              <label for="ff">Pattern</label>
+              <div class="field-row">
+                <select id="ff" name="f">
+                  <option value="">Any</option>
+                  <SelectOptions options={flagOpts} selected={p.f} />
+                </select>
+              </div>
+            </div>
+            {[...active, ...(p.lv ? ["lv"] : [])].map((k) => (
+              <>
+                <input type="hidden" name={k} value={p[k]} />
+              </>
+            ))}
+            <button class="btn solo" type="submit">
+              Apply filters
+            </button>
+          </div>
+        </details>
+        <a class="browse-bodies" href="/bodies/">
+          Browse public bodies
+        </a>
+      </div>
+      {active.length ? (
+        <>
+          <p class="small">
+            Filtered to one{" "}
+            <Fragment
+              set:html={
+                active.includes("n")
+                  ? "printed name of a supplier"
+                  : active.includes("s")
+                    ? "supplier"
+                    : active.includes("b")
+                      ? "public body"
+                      : "person"
+              }
+            />
+            .{" "}
+            <a
+              href={
+                "/search/?" +
+                new URLSearchParams(
+                  Object.entries(p).filter(
+                    ([k, v]) => v && !active.includes(k),
+                  ),
+                ).toString()
+              }
+            >
+              Remove
+            </a>
+          </p>
+        </>
+      ) : (
+        ""
+      )}
+    </form>
+    <Fragment set:html={p.q ? standing() : ""} />
+  </div>
+</header>
+<section class="section" style="padding-block-start:2rem">
+  <div class="wrap">
+    {empty ? (
+      <>
+        <p class="lede">Try one of these:</p>
+        <ul class="chips">
+          {examples.map((e) => (
+            <>
+              <li>
+                <a href={"/search/?q=" + encodeURIComponent(e)}>{e}</a>
+              </li>
+            </>
+          ))}
+        </ul>
+        <p class="muted">
+          Search looks in supplier and recipient names, people's names as
+          published, descriptions, programs and places. Words match the start of
+          words: <strong>snow</strong> finds snowplow. Records containing every
+          word come first; records close in meaning follow them, and a
+          misspelled name is corrected when nothing matches.
+        </p>
+      </>
+    ) : (
+      <>
+        {corrected ? (
+          <>
+            <p class="small" role="status">
+              No record contains <strong>{p.q}</strong>. Showing records for{" "}
+              <strong>{corrected.q}</strong>.
+            </p>
+          </>
+        ) : (
+          ""
+        )}
+        {items.length ? (
+          <>
+            <p class="small muted" aria-live="polite">
+              <Fragment set:html={num(items.length)} /> record
+              <Fragment set:html={items.length === 1 ? "" : "s"} /> on this page
+              <Fragment
+                set:html={result.more ? " (more on the next page)" : ""}
+              />
+              ; largest values on this page first. Each links to its source.
+            </p>
+            <ol class="results">
+              <Fragment
+                set:html={await Promise.all(
+                  sorted.map(async (it) => await resultItem(it, flags, links)),
+                )}
+              />
+            </ol>
+            <Fragment set:html={pager(base, page, result.more)} />
+          </>
+        ) : (
+          <>
+            <p class="empty">
+              {p.q ? (
+                <>
+                  No record contains every word of <strong>{p.q}</strong>.
+                </>
+              ) : (
+                "Nothing matched."
+              )}
+              <Fragment
+                set:html={
+                  near.length
+                    ? ""
+                    : " Try fewer or shorter words, or remove a filter."
+                }
+              />
+            </p>
+          </>
+        )}
+        {suggest.length ? (
+          <>
+            <p class="small" style="margin-block-end:0.4rem">
+              Searches that find records:
+            </p>
+            <ul class="chips">
+              {suggest.map((s) => (
+                <>
+                  <li>
+                    <a
+                      href={
+                        "/search/?" +
+                        new URLSearchParams({
+                          ...Object.fromEntries(
+                            Object.entries(p).filter(([, v]) => v),
+                          ),
+                          q: s,
+                        }).toString()
+                      }
+                    >
+                      {s}
+                    </a>
+                  </li>
+                </>
+              ))}
+            </ul>
+          </>
+        ) : (
+          ""
+        )}
+        {near.length ? (
+          <>
+            <section aria-labelledby="near-h" class="near">
+              <h2 id="near-h">
+                <Fragment
+                  set:html={
+                    items.length ? "Close in meaning" : "Closest in meaning"
+                  }
+                />
+              </h2>
+              <p class="small muted">
+                Records about the same thing that do not contain every word,
+                closest first. Check each one against its source.
+              </p>
+              <ol class="results">
+                <Fragment
+                  set:html={await Promise.all(
+                    near.map(async (it) => await resultItem(it, flags, links)),
+                  )}
+                />
+              </ol>
+            </section>
+          </>
+        ) : (
+          ""
+        )}
+      </>
+    )}
+  </div>
+</section>

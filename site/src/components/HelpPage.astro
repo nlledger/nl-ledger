@@ -1,0 +1,155 @@
+---
+const { pagehead, SITE, WAYS, REPO, icon } = Astro.props;
+---
+
+<Fragment
+  set:html={await pagehead({
+    crumbs: [
+      ["/", "Home"],
+      [null, "Help build this"],
+    ],
+    title: "Help build this",
+    lede: `${SITE.name} is built in the open, and anyone can help make it more accurate and more complete. Most help needs no programming: a link and a sentence is enough.`,
+  })}
+/>
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Four ways in</h2>
+      <p>
+        Each one opens a short form on GitHub, where the site's code and records
+        are kept. A free GitHub account is needed to send it.
+      </p>
+    </div>
+    <div class="ways">
+      {WAYS.map((w) => (
+        <>
+          <article class="way" id={w.id}>
+            <div>
+              <h3>{w.title}</h3>
+              <p>{w.text}</p>
+            </div>
+            <p class="way-act">
+              <a class="btn" href={REPO + "/issues/new?template=" + w.form}>
+                {w.label} <Fragment set:html={icon("arrow")} />
+              </a>
+            </p>
+          </article>
+        </>
+      ))}
+    </div>
+  </div>
+</section>
+<section class="section">
+  <div class="wrap">
+    <div class="prose">
+      <h2 style="margin-block-start:0">Sources waiting for someone</h2>
+      <p>
+        Some sources are known but not yet loaded: MERX award results, more town
+        payment registers, NL Health Services, Memorial University, the lobbyist
+        registry, political contributions and others. Each has its own page on
+        GitHub with what is known so far.{" "}
+        <a href={REPO + "/labels/wishlist"}>
+          See the list <Fragment set:html={icon("arrow")} />
+        </a>
+      </p>
+      <h2>What makes a contribution useful</h2>
+      <ul>
+        <li>A link to the source for every figure.</li>
+        <li>Where the source prints a total, the parsed lines add up to it.</li>
+        <li>
+          Plain, neutral wording. The site says what the records say and does
+          not accuse anyone.
+        </li>
+      </ul>
+      <p>
+        Every suggestion is read and every change is reviewed before it goes on
+        the site. A suggestion that needs more work stays open with a note on
+        what would settle it.
+      </p>
+      <h2 id="code">For programmers</h2>
+      <p>
+        The code is open source under the MIT licence. It fetches each source,
+        reads it, checks it against the source's own totals and builds this
+        site. To run the whole site on a laptop with a small sample of the
+        records, with no accounts, only <a href="https://nodejs.org">Node</a>{" "}
+        22.13 or newer is needed:
+      </p>
+      <pre><code>git clone <Fragment set:html={REPO} />.git &amp;&amp; cd nl-ledger &amp;&amp; ./dev.sh</code></pre>
+      <p>
+        Then open <code>localhost:8787</code>. The{" "}
+        <a href={REPO + "#readme"}>README</a> and the{" "}
+        <a href={REPO + "/blob/main/CONTRIBUTING.md"}>contributing guide</a> say
+        what is where.
+      </p>
+      <h2 id="starter">Starter issues</h2>
+      <p>
+        Each says what to do, where in the code and how to tell it is done. The
+        first two need no code.
+      </p>
+      <ul>
+        <li>
+          <a href={REPO + "/issues/19"}>
+            Trace 20 random records back to their source documents
+          </a>{" "}
+          (no code)
+        </li>
+        <li>
+          <a href={REPO + "/issues/24"}>
+            Read the Methods pages as a newcomer and rewrite what is unclear
+          </a>{" "}
+          (no code)
+        </li>
+        <li>
+          <a href={REPO + "/issues/9"}>
+            The St. John's sample reads one fixed file name
+          </a>{" "}
+          (Python)
+        </li>
+        <li>
+          <a href={REPO + "/issues/20"}>
+            Test the personal tax calculation against form NL428
+          </a>{" "}
+          (JavaScript)
+        </li>
+        <li>
+          <a href={REPO + "/issues/21"}>
+            Add a federal grants fixture so counting each agreement once is
+            checked in CI
+          </a>{" "}
+          (Python)
+        </li>
+        <li>
+          <a href={REPO + "/issues/25"}>
+            Smoke-test every MCP tool against the sample data in CI
+          </a>{" "}
+          (JavaScript)
+        </li>
+        <li>
+          <a href={REPO + "/issues/22"}>
+            Download a search or supplier's records as CSV
+          </a>{" "}
+          (JavaScript)
+        </li>
+        <li>
+          <a href={REPO + "/issues/23"}>
+            Run an accessibility check over the built pages and fix what it
+            finds
+          </a>{" "}
+          (HTML, CSS)
+        </li>
+      </ul>
+      <p>
+        <a
+          href={
+            REPO +
+            "/issues?q=is%3Aopen+label%3A%22good+first+issue%22%2C%22help+wanted%22"
+          }
+        >
+          Every open starter issue on GitHub{" "}
+          <Fragment set:html={icon("arrow")} />
+        </a>
+      </p>
+    </div>
+  </div>
+</section>

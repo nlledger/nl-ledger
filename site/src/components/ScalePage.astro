@@ -1,0 +1,67 @@
+---
+const {
+  pagehead,
+  esc,
+  fy,
+  moneyWords,
+  R,
+  BILLION,
+  schedule,
+  pins,
+  bar,
+  money,
+} = Astro.props;
+---
+
+<Fragment
+  set:html={await pagehead({
+    crumbs: [
+      ["/", "Home"],
+      [null, "$1 billion comparisons"],
+    ],
+    title: "How big is $1 billion?",
+    lede: "Each amount below is compared independently with CAD 1 billion. These examples cover different years and kinds of money and can overlap; they are not parts of a provincial budget and must not be added.",
+  })}
+/>
+<section class="section">
+  <div class="wrap">
+    <p class="lede">
+      In {fy}, provincial department actuals were{" "}
+      <Fragment set:html={moneyWords(R.total)} />,{" "}
+      <Fragment set:html={(R.total / BILLION).toFixed(1)} /> times this
+      reference amount. Federal record values are separate commitments, not
+      provincial spending.
+    </p>
+    <Fragment
+      set:html={await schedule({
+        cols: [
+          {
+            label: "Example, amount kind and period",
+          },
+          {
+            label: "Against CAD 1 billion",
+            w: "30%",
+          },
+          {
+            label: "Reported value",
+            num: true,
+          },
+        ],
+        rows: pins.map((p) => ({
+          cells: [
+            `<a href="${esc(p.href)}">${esc(p.label)}</a><span class="meta">${esc(p.detail)}</span>`,
+            bar(p.amount, BILLION),
+            money(p.amount, {
+              cents: true,
+            }),
+          ],
+        })),
+      })}
+    />
+    <p class="small">
+      Each bar starts at zero and uses the same CAD 1 billion scale. No
+      remainder or combined example total is calculated. The median wage is a
+      reference annual wage, not local wages created by a contract.
+    </p>
+  </div>
+</section>

@@ -1,0 +1,207 @@
+---
+const {
+  pagehead,
+  esc,
+  FEDERAL_RULE,
+  num,
+  F,
+  money,
+  schedule,
+  moneyWords,
+  REPO,
+  methodCode,
+} = Astro.props;
+---
+
+<Fragment
+  set:html={await pagehead({
+    crumbs: [
+      ["/", "Home"],
+      ["/method/", "Methods"],
+      [null, "Federal amendments"],
+    ],
+    title: "Method: federal amendments",
+    lede: "The federal disclosure files repeat a contract every time it changes. Added up as published, they count the same money many times.",
+  })}
+/>
+<section class="section">
+  <div class="wrap prose">
+    <h2>Selection and location evidence</h2>
+    <p>
+      {FEDERAL_RULE} We retain the source’s country, province, postal code,
+      delivery regions, bilingual comments, project narratives, coverage and
+      expected results. Generic programme purpose and supplier addresses do not
+      establish an individual project’s location. Reviewed project decisions
+      retain their evidence and stop the rebuild if that evidence changes.
+      Unreviewed prose stays unknown. A local project identifies the whole
+      commitment, not amount paid. A jurisdiction’s receipt does not establish
+      its later spending.
+    </p>
+    <h2>Contracts over $10,000</h2>
+    <ol>
+      <li>
+        Keep rows with a valid Canadian NL postal prefix or full postal code and
+        whose reported vendor country is Canada or unstated. Two placeholder
+        records ("Company XYZ") are dropped.
+      </li>
+      <li>
+        Group rows by procurement identifier and cleaned vendor name, across
+        departments. A reviewed name change joins only the matching department,
+        procurement, original start and original value; a shared number or
+        similar name alone does not join contracts. Earlier source references,
+        names and values remain as provenance. Some some Coast Guard purchase
+        orders are reported by both Fisheries and Oceans and National Defence.
+        Rows with no procurement identifier stay on their own.
+      </li>
+      <li>
+        Keep the latest row in each group (by reporting period, then contract
+        date). Its contract value is the running total after all amendments.
+      </li>
+    </ol>
+    <p>
+      As published: <Fragment set:html={num(F.contracts.raw_rows)} /> rows,{" "}
+      <Fragment set:html={money(F.contracts.raw_value)} />. Counted once:{" "}
+      <Fragment set:html={num(F.contracts.procurements)} /> contracts,{" "}
+      <Fragment set:html={money(F.contracts.dedup_value)} />. "Non-competitive"
+      means the department coded the solicitation procedure TN.
+    </p>
+    <h2>Grants and contributions</h2>
+    <p>
+      A grant value is the agreement value: the amount a department commits in a
+      grant or contribution agreement. One agreement can run several years, so a
+      value is not one year's spending and not the amount paid out.
+    </p>
+    <h3>How amendments are counted</h3>
+    <p>
+      Each amendment is a new row. The Treasury Board{" "}
+      <a href="https://open.canada.ca/data/en/dataset/432527ab-7aac-45b5-81d6-7597107a7013">
+        data dictionary
+      </a>{" "}
+      says the row's agreement value is "the total grant or contribution value,
+      and not the change in agreement value". Most departments follow it, and
+      several say so in their notes: the Atlantic Canada Opportunities Agency
+      ("the previous value was $X", which matches the row before), Health Canada
+      ("The total agreement value previously disclosed has been updated"), the
+      National Research Council ("The total amended value is"), Innovation,
+      Science and Economic Development ("value changed from X to Y"). For these
+      the latest amendment is the agreement's value.
+    </p>
+    <p>
+      Four departments report each amendment as the change in value instead. For
+      these every row of the agreement is added up.
+    </p>
+    <Fragment
+      set:html={await schedule({
+        cols: [
+          {
+            label: "Department",
+          },
+          {
+            label: "Evidence in its own rows",
+            w: "44%",
+          },
+          {
+            label: "Rows added up",
+            num: true,
+          },
+          {
+            label: "Latest row only",
+            num: true,
+          },
+          {
+            label: `Paid ${esc(Object.values(F.grants.change_reporting)[0].paid_years)}`,
+            num: true,
+          },
+        ],
+        rows: Object.values(F.grants.change_reporting).map((c) => ({
+          cells: [
+            esc(c.department),
+            esc(c.evidence),
+            moneyWords(c.summed),
+            moneyWords(c.latest_only),
+            moneyWords(c.paid),
+          ],
+        })),
+      })}
+    />
+    <p>
+      The last column is what the department paid NL recipients in four fiscal
+      years, from the{" "}
+      <a href="https://donnees-data.tpsgc-pwgsc.gc.ca/ba1/pt-tp/pt-tp-2025.csv">
+        Public Accounts transfer payments
+      </a>{" "}
+      (payments of $100,000 or more). Indigenous Services and Crown-Indigenous
+      Relations paid more in those four years than their latest rows add up to
+      for every year on file, so those rows cannot be agreement totals. If
+      Canadian Heritage and the Public Health Agency were read as reporting
+      totals, the grants total would be{" "}
+      <Fragment
+        set:html={moneyWords(
+          ["pch", "phac-aspc"].reduce(
+            (t, o) =>
+              t +
+              F.grants.change_reporting[o].summed -
+              F.grants.change_reporting[o].latest_only,
+            0,
+          ),
+        )}
+      />{" "}
+      lower.
+    </p>
+    <h3>Grouping rows into agreements</h3>
+    <ol>
+      <li>
+        Rows are grouped by department, agreement number and recipient.
+        Spelling, punctuation and legal suffixes in the recipient's name are
+        ignored, and "English name|French name" is the same recipient as the
+        English name alone.
+      </li>
+      <li>
+        A recipient renamed on an amendment (a new legal name, a transfer to a
+        successor) stays in the same agreement. Rows under another name with a
+        different program and start date are a different agreement that shares
+        the number.
+      </li>
+      <li>
+        Rows with no agreement number are one agreement each, except where a
+        department reports an amendment under a new reference number
+        (Infrastructure Canada, Veterans Affairs): those join on recipient,
+        start date, program and title.
+      </li>
+    </ol>
+    <p>
+      As published: <Fragment set:html={num(F.grants.raw_rows)} /> rows,{" "}
+      <Fragment set:html={money(F.grants.raw_value)} />. Counted once:{" "}
+      <Fragment set:html={num(F.grants.agreements)} /> agreements,{" "}
+      <Fragment set:html={money(F.grants.dedup_value)} />. The code is{" "}
+      <a href={REPO + "/blob/main/pipeline/parse_federal.py"}>
+        parse_federal.py
+      </a>
+      .
+    </p>
+    <h2>CanadaBuys award notices</h2>
+    <p>
+      Grouped by reference number and supplier, latest amendment kept. The same
+      contract can appear here and in the contracts disclosure. Notices are
+      excluded from supplier commitment summaries and shown separately in source
+      and body summaries. Any retained combined body amount is an overlapping
+      record-value sum, not spending. Foreign and unstated currency never enter
+      CAD totals.
+    </p>
+    <Fragment
+      set:html={await methodCode(
+        [
+          [
+            "pipeline/parse_federal.py",
+            "reads the federal files and keeps each contract and grant once",
+          ],
+          ["pipeline/reconcile.py", "checks totals against the sources' own"],
+        ],
+        {
+          title: "counting federal contracts once",
+          path: "/method/federal/",
+        },
+      )}
+    />
+  </div>
+</section>

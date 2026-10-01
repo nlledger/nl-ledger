@@ -1,0 +1,35 @@
+---
+const {
+  crumbs = [],
+  title,
+  lede,
+  extra = "",
+  flagged = false,
+  standing,
+} = Astro.props;
+---
+
+<header class="pagehead">
+  <div class="wrap">
+    {crumbs.length > 0 && (
+      <p class="crumbs">
+        {crumbs.map(([href, label], index) => (
+          <>
+            {index > 0 && " / "}
+            {href ? <a href={href}>{label}</a> : label}
+          </>
+        ))}
+      </p>
+    )}
+    <h1>
+      <Fragment set:html={title} />
+    </h1>
+    {lede && (
+      <p class="lede">
+        <Fragment set:html={lede} />
+      </p>
+    )}
+    {flagged && <Fragment set:html={standing()} />}
+    <Fragment set:html={extra} />
+  </div>
+</header>

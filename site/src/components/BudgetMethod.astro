@@ -1,0 +1,296 @@
+---
+const {
+  pagehead,
+  report,
+  esc,
+  fy,
+  money,
+  c,
+  a,
+  pp,
+  num,
+  D,
+  ownPP,
+  K,
+  B,
+  DOCS,
+  LICENCES,
+  DOCUMENT_LICENCE,
+  icon,
+} = Astro.props;
+---
+
+<Fragment
+  set:html={await pagehead({
+    crumbs: [
+      ["/", "Home"],
+      ["/method/", "Methods"],
+      [null, "Budget against actual"],
+    ],
+    title: "Method: budget against actual, the deficit and net debt",
+    lede: "Which budget is set against which actual, why the deficit comes from a different document, and how each figure is checked.",
+  })}
+/>
+<section class="section">
+  <div class="wrap prose">
+    <h2>Two bases of accounting</h2>
+    <p>
+      The province publishes its finances on two bases. They answer different
+      questions, cover different bodies and count at different moments. This
+      site shows both and never adds a figure from one to a figure from the
+      other.
+    </p>
+    <h3>What was budgeted, and what was spent?</h3>
+    <ul>
+      <li>
+        <strong>Documents.</strong> Budgeted: the Estimates given to the House
+        of Assembly with the budget. Spent: the Report on the Program
+        Expenditures and Revenues of the Consolidated Revenue Fund.
+      </li>
+      <li>
+        <strong>Basis.</strong> Modified cash: a payment counts in the year it
+        is made.
+      </li>
+      <li>
+        <strong>Covers.</strong> Government departments and the Legislature,
+        including the grants they pay to other bodies.
+      </li>
+    </ul>
+    <h3>Did the year end in surplus or deficit, and what is the debt?</h3>
+    <ul>
+      <li>
+        <strong>Documents.</strong> The Public Accounts: the audited
+        Consolidated Summary Financial Statements.
+      </li>
+      <li>
+        <strong>Basis.</strong> Accrual: a cost counts in the year it is
+        incurred, and buildings and roads are spread over their useful lives.
+      </li>
+      <li>
+        <strong>Covers.</strong> Departments together with Crown corporations,
+        boards and authorities, such as Newfoundland and Labrador Health
+        Services, Memorial University and Newfoundland and Labrador Hydro.
+      </li>
+    </ul>
+
+    <h2>Budgeted against spent</h2>
+    <ul>
+      <li>
+        <strong>Like for like.</strong> The Report is drawn up on the same basis
+        as the Estimates. In its own words it uses "the modified cash basis of
+        accounting", which "is the same basis used to prepare the budgeted
+        appropriations and revenues as per Government's Estimates presented to
+        the House of Assembly"
+        <Fragment set:html={report} />. Its statements print the Original
+        Estimates beside the Actuals.
+      </li>
+      <li>
+        <strong>Budgeted</strong> is the original figure: gross expenditure in
+        the Estimates as tabled with the budget, current and capital accounts
+        together. It is not the amended estimate, which moves during the year as
+        money is transferred between departments.
+      </li>
+      <li>
+        <strong>Spent</strong> is gross expenditure in the Report, before
+        "related revenue" (federal cost-sharing and fees that a department
+        collects against its own spending). For {fy}:{" "}
+        <Fragment set:html={money(c.gross.budget)} /> budgeted,{" "}
+        <Fragment set:html={money(c.gross.actual)} /> spent.
+      </li>
+      <li>
+        <strong>By department</strong>, the budget is the department's "Total:
+        Program Estimates" in the Estimates, and spending is its line in the
+        Report's summary statements. Where a department in the Report is not in
+        that year's Estimates under the same name, the budget is the Original
+        column the Report prints for it.
+      </li>
+      <li>
+        The Report is prepared by the Comptroller General and is not audited.
+      </li>
+    </ul>
+
+    <h2>The deficit and net debt</h2>
+    <ul>
+      <li>
+        <strong>The surplus or deficit</strong> is the "annual surplus
+        (deficit)" line of the Consolidated Statement of Operations in the
+        Public Accounts: total revenue less total expense for the whole
+        government. The budget figure beside it is the Original Budget column of
+        the same statement, which the province marks unaudited.
+      </li>
+      <li>
+        <strong>
+          It is not spending less revenue from the cash statement.
+        </strong>{" "}
+        In {fy} departments' cash spending outran their revenue by{" "}
+        <Fragment set:html={money(-c.cash_balance.actual)} />, while the annual{" "}
+        <Fragment set:html={a.balance.actual < 0 ? "deficit" : "surplus"} /> was{" "}
+        <Fragment set:html={money(Math.abs(a.balance.actual))} />. The cash
+        statement covers departments only and counts construction and equipment
+        at full price in the year they are paid for; the accounts spread those
+        costs over the assets' lives and include the results of Crown
+        corporations and other public bodies.
+      </li>
+      <li>
+        <strong>
+          Spending can come in under the budget in a year when the deficit is
+          larger than forecast
+        </strong>
+        , or the reverse, because the two are measured differently and the
+        deficit also depends on revenue.
+      </li>
+      <li>
+        <strong>Net debt</strong> is total liabilities less financial assets,
+        from the Consolidated Statement of Financial Position: what the province
+        owes (borrowing, pensions and other retirement benefits, payables) less
+        the cash, investments and receivables it holds. Buildings and roads are
+        not counted as financial assets.
+      </li>
+      <li>
+        <strong>Per person.</strong>{" "}
+        <Fragment
+          set:html={
+            pp
+              ? `The Public Accounts print net debt per capita themselves: ${money(pp.value)} for ${esc(fy)}. That figure is used as published. Dividing net debt by the population this site uses elsewhere (${num(D.stats.population.value)}, Statistics Canada, 1 July ${esc(fy.slice(0, 4))}) gives ${money(ownPP)}; the province divides by its own population figure.`
+              : `Net debt divided by the population (${num(D.stats.population.value)}, Statistics Canada).`
+          }
+        />
+      </li>
+      <li>
+        <strong>Restatements.</strong> Each year is shown as that year's
+        accounts first printed it. When the following year's accounts print a
+        different figure for the earlier year (after a change in accounting
+        standards, for example), the restated figure is given in a note under
+        the table.
+      </li>
+    </ul>
+
+    <h2>Checks</h2>
+    <p>
+      The figures are read from the PDF documents by a script. Nothing is typed
+      in by hand. Each run then checks:
+    </p>
+    <ul>
+      <li>
+        Every subtotal in the Report's cash statement recomputes from the lines
+        above it, for actuals and for original estimates:{" "}
+        <Fragment set:html={K.statement} /> of{" "}
+        <Fragment set:html={K.statement_n} />.
+      </li>
+      <li>
+        The departments in the Report's summary statements add to the
+        statement's gross expenditure: <Fragment set:html={K.report.ok} /> of{" "}
+        <Fragment set:html={K.report.n} /> years.
+      </li>
+      <li>
+        Each department's program lines in the Estimates add to its printed
+        total, and the departments add to the gross expenditure in the budget's
+        Summary of Cash Requirements: <Fragment set:html={K.estimates.ok} /> of{" "}
+        <Fragment set:html={K.estimates.n} /> years.
+      </li>
+      <li>
+        The Original Estimates the Report reprints equal the budget's own
+        summary: <Fragment set:html={K.original} /> of{" "}
+        <Fragment set:html={K.original_n} /> figures. Department by department,
+        the Report's Original column equals the Estimates as tabled:{" "}
+        <Fragment set:html={K.departments.ok} /> of{" "}
+        <Fragment set:html={K.departments.n} />.
+      </li>
+      <li>
+        In the Public Accounts, revenue less expense equals the printed surplus
+        or deficit, liabilities less financial assets equals net debt, and net
+        debt is the same in two statements:{" "}
+        <Fragment set:html={K.accounts.ok} /> of{" "}
+        <Fragment set:html={K.accounts.n} />.
+      </li>
+      <li>
+        From Budget 2024, when the budget's own statements are published as
+        Statements and Schedules, the Original Budget column in the Public
+        Accounts equals them: <Fragment set:html={K.budget.ok} /> of{" "}
+        <Fragment set:html={K.budget.n} />.
+      </li>
+    </ul>
+    {K.failed.length ? (
+      <>
+        <p>
+          Where a check does not hold, the province's documents disagree with
+          each other, and the Estimates' figure is used:
+        </p>
+        <ul>
+          {K.failed.map((f) => (
+            <>
+              <li>
+                {f.what.split(":")[0]}, {f.year}: the Report's Original column
+                adds to{" "}
+                <Fragment
+                  set:html={
+                    f.a == null
+                      ? "nothing, because the Report prints no program detail for the department"
+                      : money(f.a)
+                  }
+                />
+                ; the Estimates as tabled say <Fragment set:html={money(f.b)} />
+                .
+              </li>
+            </>
+          ))}
+        </ul>
+      </>
+    ) : (
+      ""
+    )}
+    <p>
+      The same checks run on sample documents for every change to the code, and
+      the results of the last full run are in{" "}
+      <a href="https://github.com/nlledger/nl-ledger/blob/main/docs/reconciliation.md">
+        the reconciliation record
+      </a>
+      .
+    </p>
+
+    <h2>What this does not show</h2>
+    <ul>
+      <li>
+        Budgets for the public bodies outside the departments (the health
+        authority, Crown corporations) line by line. The Public Accounts give
+        their results in total.
+      </li>
+      <li>
+        Why a department spent more or less than budgeted. The documents give
+        the figures; the reasons are in the province's own discussion and
+        analysis and in debate in the House.
+      </li>
+      <li>
+        Results for{" "}
+        <Fragment
+          set:html={B.years
+            .filter((x) => !x.spent_published)
+            .map((x) => esc(x.year))
+            .join(" and ")}
+        />
+        : the Report and the Public Accounts for those years are not yet
+        published.
+      </li>
+    </ul>
+    <h2>Sources and licence</h2>
+    <ul>
+      {Object.entries(DOCS).map(([k, name]) => {
+        const l = LICENCES[DOCUMENT_LICENCE[k]];
+        return (
+          <>
+            <li>
+              {name}. Published by the Government of Newfoundland and Labrador;
+              used under its <a href={l.url}>copyright notice</a>.
+            </li>
+          </>
+        );
+      })}
+    </ul>
+    <p class="small">{LICENCES.nl.note}</p>
+    <p>
+      <a href="/budget/">
+        Budget against actual <Fragment set:html={icon("arrow")} />
+      </a>
+    </p>
+  </div>
+</section>

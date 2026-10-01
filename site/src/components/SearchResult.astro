@@ -1,0 +1,65 @@
+---
+const {
+  party,
+  who,
+  it,
+  esc,
+  amountText,
+  query,
+  flags,
+  isFederal,
+  amountBasis,
+  AMOUNT_LABEL,
+  federalStatement,
+  moneyLimit,
+  meta,
+  receipt,
+} = Astro.props;
+---
+
+<li class="result">
+  <span class="who">
+    {party ? (
+      <>
+        <span class="party-label">
+          <Fragment set:html={party} />:{" "}
+        </span>
+      </>
+    ) : (
+      ""
+    )}
+    <Fragment set:html={who(it) || esc(it.d)} />
+  </span>
+  <span class="amt">
+    {amountText(it)}
+    <Fragment set:html={query(it.f, flags)} />
+    <span class="amount-type">
+      {isFederal(it)
+        ? amountBasis(it)
+        : AMOUNT_LABEL[it.ds] || "Published value"}
+    </span>
+  </span>
+  {isFederal(it) ? (
+    <>
+      <p class="what">
+        {federalStatement(it)} {moneyLimit(it)}
+      </p>
+    </>
+  ) : (
+    ""
+  )}
+  {it.d && (it.s || it.p) ? (
+    <>
+      <p class="what">{it.d}</p>
+    </>
+  ) : (
+    ""
+  )}
+  <div class="meta">
+    <Fragment set:html={meta.join("")} />
+  </div>
+  <div class="result-actions">
+    <a href={"/item/" + it.i + "/"}>Record</a>
+    <Fragment set:html={receipt(it.u, it.g, it.l)} />
+  </div>
+</li>

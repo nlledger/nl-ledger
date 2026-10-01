@@ -1,0 +1,415 @@
+---
+import Caveat from "./Caveat.astro";
+const {
+  pagehead,
+  esc,
+  fy,
+  moneyWords,
+  R,
+  citeTot,
+  depts,
+  bar,
+  max,
+  pct,
+  leaders,
+  cmp,
+  S,
+  citeSC,
+  interest,
+  health,
+  edu,
+  roads,
+  profTotal,
+  schedule,
+  prof,
+  D,
+  receipt,
+  years,
+  yoy,
+  icon,
+  citeMtp,
+  mtpRows,
+} = Astro.props;
+---
+
+<Fragment
+  set:html={await pagehead({
+    crumbs: [
+      ["/", "Home"],
+      [null, "Priorities"],
+    ],
+    title: "Priorities",
+    lede: `What the province spent in ${esc(fy)}, department by department, against what the budget said. ${moneyWords(R.total)} in all${citeTot}.`,
+  })}
+/>
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Spent against budget, {fy}</h2>
+      <p>
+        The budget's original estimate is what the House of Assembly was told in
+        the spring. Departments can get more during the year; the amended
+        figures are on each department's page.
+      </p>
+    </div>
+    <ul class="legend">
+      <li>
+        <span class="sw"></span>Spent (actual)
+      </li>
+      <li>
+        <span class="sw ghost"></span>Original estimate
+      </li>
+    </ul>
+    <p class="sched-hint">Scroll sideways for more columns.</p>
+    <div class="sched-wrap">
+      <table class="sched pin-rows">
+        <thead>
+          <tr>
+            <th scope="col">Department</th>
+            <th scope="col" class="hide-sm" style="inline-size:34%">
+              Spent against estimate
+            </th>
+            <th scope="col" class="n">
+              Spent
+            </th>
+            <th scope="col" class="n">
+              Estimate
+            </th>
+            <th scope="col" class="n">
+              Over (under) estimate
+            </th>
+            <th scope="col" class="n hide-sm">
+              Share
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {depts.map((d) => {
+            const diff = d.original != null ? d.gross - d.original : null;
+            return (
+              <>
+                <tr>
+                  <th scope="row">
+                    <a href={"/department/" + d.slug + "/"}>{d.name}</a>
+                  </th>
+                  <td class="hide-sm">
+                    <span class="pair">
+                      <Fragment set:html={bar(d.gross, max)} />
+                      <Fragment
+                        set:html={
+                          d.original != null
+                            ? bar(d.original, max, "ghost")
+                            : ""
+                        }
+                      />
+                    </span>
+                  </td>
+                  <td class="n">
+                    <Fragment set:html={moneyWords(d.gross)} />
+                  </td>
+                  <td class="n">
+                    <Fragment
+                      set:html={
+                        d.original != null
+                          ? moneyWords(d.original)
+                          : "not printed"
+                      }
+                    />
+                  </td>
+                  <td class={"n" + (diff < 0 ? " neg" : "")}>
+                    <Fragment
+                      set:html={
+                        diff == null
+                          ? ""
+                          : diff < 0
+                            ? `(${moneyWords(-diff)})`
+                            : moneyWords(diff)
+                      }
+                    />
+                  </td>
+                  <td class="n hide-sm">
+                    <Fragment set:html={pct(d.share, 1)} />
+                  </td>
+                </tr>
+              </>
+            );
+          })}
+        </tbody>
+        <tfoot>
+          <tr class="total">
+            <th scope="row">Total</th>
+            <td class="hide-sm"></td>
+            <td class="n">
+              <Fragment set:html={moneyWords(R.total)} />
+            </td>
+            <td class="n">
+              <Fragment
+                set:html={moneyWords(
+                  depts.reduce((s, d) => s + (d.original || 0), 0),
+                )}
+              />
+            </td>
+            <td></td>
+            <td class="n hide-sm">100%</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <p class="small muted">
+      Amounts in parentheses, in red, are spending below the original estimate.
+      Gross spending, before revenue departments collect themselves (federal
+      cost-sharing, fees). The estimate is each department's total in the
+      Estimates given to the House with the budget.{" "}
+      <a href="/budget/">
+        Budget against actual, largest differences first, with the deficit and
+        net debt
+      </a>
+      .
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap grid-2">
+    <div>
+      <div class="section-head">
+        <h2>Interest against health, schools and roads</h2>
+        <p>
+          Interest on the province's borrowing is paid out of Consolidated Fund
+          Services.
+        </p>
+      </div>
+      <Fragment
+        set:html={leaders(
+          cmp.map((c) => ({
+            label: c.label,
+            value: c.value,
+          })),
+        )}
+      />
+      <p class="small muted" style="margin-block-start:1rem">
+        The interest figure is the gross spending on programs 1.1.01 to 1.1.04
+        in the report, before any interest the province itself earns. Statistics
+        Canada, measuring differently, puts provincial interest on debt in{" "}
+        {S.provincial_government.year} at{" "}
+        <Fragment
+          set:html={moneyWords(S.provincial_government.interest_on_debt)}
+        />
+        <Fragment set:html={citeSC} />.
+      </p>
+    </div>
+    <div>
+      <h3 style="margin-block-end:1rem">Every dollar spent in {fy}</h3>
+      <div
+        class="stack"
+        role="img"
+        aria-label={
+          "Share of spending: interest " +
+          pct(interest.v / R.total) +
+          ", health " +
+          pct(health.gross / R.total) +
+          ", education " +
+          pct(edu.gross / R.total) +
+          ", transportation " +
+          pct(roads.gross / R.total)
+        }
+      >
+        <span style={"flex:" + interest.v + ";background:var(--red)"}></span>
+        <span style={"flex:" + health.gross + ";background:var(--bar)"}></span>
+        <span
+          style={"flex:" + edu.gross + ";background:var(--lv-municipal)"}
+        ></span>
+        <span
+          style={"flex:" + roads.gross + ";background:var(--graphite)"}
+        ></span>
+        <span
+          style={
+            "flex:" +
+            (R.total - interest.v - health.gross - edu.gross - roads.gross) +
+            ";background:var(--bar-ghost)"
+          }
+        ></span>
+      </div>
+      <ul class="legend">
+        <li>
+          <span class="sw" style="background:var(--red)"></span>Interest{" "}
+          <Fragment set:html={pct(interest.v / R.total)} />
+        </li>
+        <li>
+          <span class="sw"></span>Health{" "}
+          <Fragment set:html={pct(health.gross / R.total)} />
+        </li>
+        <li>
+          <span class="sw lv-municipal"></span>Education{" "}
+          <Fragment set:html={pct(edu.gross / R.total)} />
+        </li>
+        <li>
+          <span class="sw" style="background:var(--graphite)"></span>
+          Transportation <Fragment set:html={pct(roads.gross / R.total)} />
+        </li>
+        <li>
+          <span class="sw ghost"></span>Everything else
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Professional services by program, {fy}</h2>
+      <p>
+        "Professional services" is the account governments use for outside
+        expertise such as consultants. In health it is mostly doctors paid
+        fee-for-service under the Medical Care Plan, so read the program name
+        before reading the figure. Total across government:{" "}
+        <Fragment set:html={moneyWords(profTotal)} />.{" "}
+        <a href="/consulting/">
+          Consultants and professional services, by year and department
+        </a>
+        .
+      </p>
+    </div>
+    <Fragment
+      set:html={await schedule({
+        cols: [
+          {
+            label: "Program",
+          },
+          {
+            label: "Department",
+          },
+          {
+            label: "Professional services",
+            num: true,
+          },
+          {
+            label: "Source",
+            num: true,
+          },
+        ],
+        rows: prof.map((p) => ({
+          cells: [
+            esc(p.program),
+            esc(D.pretty(p.department)),
+            moneyWords(p.v),
+            receipt(p.source_url, p.page),
+          ],
+        })),
+      })}
+    />
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Year over year</h2>
+      <p>
+        Gross spending by department as each year's report printed it.
+        Departments were renamed and reorganised over these years; a blank means
+        the department did not exist under that name.
+      </p>
+    </div>
+    <p class="sched-hint">Scroll sideways for more columns.</p>
+    <div class="sched-wrap">
+      <table class="sched pin-rows compact">
+        <thead>
+          <tr>
+            <th scope="col">Department</th>
+            {years.map((y) => (
+              <>
+                <th scope="col" class="n">
+                  {y}
+                </th>
+              </>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {yoy.map((r) => (
+            <>
+              <tr>
+                <th scope="row">{r.name}</th>
+                {r.vals.map((v) => (
+                  <>
+                    <td class="n">
+                      <Fragment set:html={v ? moneyWords(v) : ""} />
+                    </td>
+                  </>
+                ))}
+              </tr>
+            </>
+          ))}
+        </tbody>
+        <tfoot>
+          <tr class="total">
+            <th scope="row">All departments</th>
+            {years.map((y) => (
+              <>
+                <td class="n">
+                  <Fragment
+                    set:html={moneyWords(
+                      D.deptYear[y].reduce((s, d) => s + d.gross, 0),
+                    )}
+                  />
+                </td>
+              </>
+            ))}
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <p style="margin-block-start:1.5rem">
+      <a href="/department/estimates-2026-27/">
+        The 2026-27 budget estimates by department{" "}
+        <Fragment set:html={icon("arrow")} />
+      </a>
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap grid-2">
+    <div>
+      <div class="section-head">
+        <h2>Federal money flowing in</h2>
+        <p>
+          Major federal transfers in 2024-25: to the provincial government
+          (health and social transfers, fiscal arrangements) and to people
+          directly (Old Age Security, Employment Insurance)
+          <Fragment set:html={citeMtp} />.
+        </p>
+      </div>
+      <Fragment
+        set:html={leaders([
+          ...mtpRows.map(([k, v]) => ({
+            label: esc(k),
+            value: moneyWords(v),
+          })),
+          {
+            label: "Total",
+            value: moneyWords(mtpRows.reduce((s, [, v]) => s + v, 0)),
+            cls: "total",
+          },
+        ])}
+      />
+      <p style="margin-block-start:1rem">
+        <a href="/federal/">
+          Federal contracts and grants in the province{" "}
+          <Fragment set:html={icon("arrow")} />
+        </a>
+      </p>
+    </div>
+    <div>
+      {
+        <Caveat
+          text={
+            "Federal transfers to people (Old Age Security, Employment Insurance) are not provincial spending. They are here because they are public money arriving in the province, and are often larger than a whole provincial department."
+          }
+        />
+      }
+    </div>
+  </div>
+</section>

@@ -1,0 +1,12 @@
+---
+const { label, x, cls, cell } = Astro.props;
+---
+
+<tr class={cls || undefined}>
+  <th scope="row">
+    {typeof label === "string" ? <Fragment set:html={label} /> : label}
+  </th>
+  <Fragment set:html={cell(x.budget)} />
+  <Fragment set:html={cell(x.actual)} />
+  <Fragment set:html={cell(x.actual - x.budget)} />
+</tr>

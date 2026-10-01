@@ -1,0 +1,244 @@
+---
+const {
+  B,
+  yearLink,
+  mobileSources,
+  bar,
+  maxYear,
+  cell,
+  share,
+  rcpt,
+  unit,
+  words,
+  money,
+  accord,
+  restated,
+  esc,
+} = Astro.props;
+---
+
+<section class="section" id="years">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Year by year</h2>
+      <p>
+        Each year as its own documents printed it. The two newest budgets have
+        no published results yet.
+      </p>
+    </div>
+    <ul class="legend">
+      <li>
+        <span class="sw"></span>Spent
+      </li>
+      <li>
+        <span class="sw ghost"></span>Budgeted
+      </li>
+    </ul>
+    <p class="sched-hint">Scroll sideways for more columns.</p>
+    <div class="sched-wrap">
+      <table class="sched pin-rows tight">
+        <caption>Spending by departments</caption>
+        <thead>
+          <tr>
+            <th scope="col">Fiscal year</th>
+            <th scope="col" class="hide-sm" style="inline-size:30%">
+              Spent against budget
+            </th>
+            <th scope="col" class="n">
+              Budgeted
+            </th>
+            <th scope="col" class="n">
+              Spent
+            </th>
+            <th scope="col" class="n">
+              Over (under)
+            </th>
+            <th scope="col" class="n hide-sm">
+              %
+            </th>
+            <th scope="col" class="n hide-sm">
+              Source
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {B.years
+            .filter((x) => x.cash.gross.budget != null)
+            .map((x) => (
+              <>
+                <tr>
+                  <th scope="row">
+                    <Fragment set:html={yearLink(x)} />
+                    <Fragment
+                      set:html={mobileSources([
+                        [x.cash.budget_source, "Budget source"],
+                        [x.cash.actual_source, "Actual source"],
+                      ])}
+                    />
+                  </th>
+                  <td class="hide-sm">
+                    <span class="pair">
+                      <Fragment
+                        set:html={
+                          x.cash.gross.actual != null
+                            ? bar(x.cash.gross.actual, maxYear)
+                            : '<span class="bar"></span>'
+                        }
+                      />
+                      <Fragment
+                        set:html={bar(x.cash.gross.budget, maxYear, "ghost")}
+                      />
+                    </span>
+                  </td>
+                  <Fragment set:html={cell(x.cash.gross.budget)} />
+                  <Fragment set:html={cell(x.cash.gross.actual)} />
+                  <Fragment
+                    set:html={
+                      x.cash.difference == null
+                        ? '<td class="n"></td>'
+                        : cell(x.cash.difference)
+                    }
+                  />
+                  <td class={"n hide-sm" + (x.cash.share < 0 ? " neg" : "")}>
+                    <Fragment set:html={share(x.cash.share)} />
+                  </td>
+                  <td class="n hide-sm">
+                    <Fragment
+                      set:html={[
+                        rcpt(x.cash.budget_source),
+                        rcpt(x.cash.actual_source),
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    />
+                  </td>
+                </tr>
+              </>
+            ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="sched-hint" style="margin-block-start:2.5rem">
+      Scroll sideways for more columns.
+    </p>
+    <div class="sched-wrap budget-accounts-trend">
+      <table class="sched pin-rows tight">
+        <caption>
+          Surplus or deficit, and net debt, for the whole government
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Fiscal year</th>
+            <th scope="col" class="n">
+              Budget
+            </th>
+            <th scope="col" class="n">
+              Actual
+            </th>
+            <th scope="col" class="n hide-sm">
+              Difference
+            </th>
+            <th scope="col" class="n">
+              Net debt at year end
+            </th>
+            <th scope="col" class="n hide-sm">
+              Per person
+            </th>
+            <th scope="col" class="n hide-sm">
+              Source
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {B.years.map((x) => {
+            const b = x.accounts.balance,
+              nd = x.accounts.net_debt;
+            return (
+              <>
+                <tr>
+                  <th scope="row">
+                    <Fragment set:html={yearLink(x)} />
+                    <Fragment
+                      set:html={mobileSources([
+                        [
+                          b.source || b.budget_source,
+                          b.source ? "Accounts source" : "Budget source",
+                        ],
+                        [
+                          nd.source || nd.budget_source,
+                          nd.source
+                            ? "Net debt source"
+                            : "Net debt budget source",
+                        ],
+                      ])}
+                    />
+                  </th>
+                  <Fragment set:html={cell(b.budget)} />
+                  <Fragment set:html={cell(b.actual)} />
+                  <Fragment
+                    set:html={
+                      b.actual == null
+                        ? '<td class="n hide-sm"></td>'
+                        : cell(b.actual - b.budget, " hide-sm")
+                    }
+                  />
+                  {nd.actual == null ? (
+                    <>
+                      <td class="n muted">
+                        <Fragment set:html={unit(words(nd.budget))} />
+                        <span class="meta">budgeted</span>
+                      </td>
+                    </>
+                  ) : (
+                    <Fragment set:html={cell(nd.actual)} />
+                  )}
+                  <td class="n hide-sm">
+                    <Fragment
+                      set:html={
+                        x.accounts.net_debt_per_person
+                          ? money(x.accounts.net_debt_per_person.value)
+                          : ""
+                      }
+                    />
+                  </td>
+                  <td class="n hide-sm">
+                    <Fragment
+                      set:html={[
+                        rcpt(b.source || b.budget_source),
+                        rcpt(nd.source),
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    />
+                  </td>
+                </tr>
+              </>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+    <p class="small muted">
+      A surplus is printed plain and a deficit in parentheses.
+      <Fragment
+        set:html={
+          accord
+            ? ` The 2019-20 Public Accounts put that year's surplus down "in large part" to the Atlantic Accord (2019) (${rcpt(
+                {
+                  ...accord,
+                  page: null,
+                },
+              )}).`
+            : ""
+        }
+      />
+      <Fragment
+        set:html={
+          restated.length
+            ? ` Later accounts restated some of these figures: ${restated.map((x) => `${esc(x.year)} ${[x.accounts.balance.restated != null ? `${x.accounts.balance.restated < 0 ? "deficit" : "surplus"} to ${words(x.accounts.balance.restated)} (${rcpt(x.accounts.balance.restated_source)})` : "", x.accounts.net_debt.restated != null ? `net debt to ${words(x.accounts.net_debt.restated)} (${rcpt(x.accounts.net_debt.restated_source)})` : ""].filter(Boolean).join(" and ")}`).join("; ")}. The table shows each year as first published.`
+            : ""
+        }
+      />
+    </p>
+  </div>
+</section>

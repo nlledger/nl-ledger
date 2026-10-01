@@ -1,0 +1,275 @@
+---
+import Caveat from "./Caveat.astro";
+const {
+  pagehead,
+  b,
+  esc,
+  num,
+  moneyWords,
+  sets,
+  datasetLabel,
+  dept,
+  D,
+  FEDERAL_RULE,
+  leaders,
+  byDs,
+  fmtDate,
+  flagNotes,
+  subjectFlags,
+  methods,
+  schedule,
+  bar,
+  mmax,
+  byYear,
+  ymax,
+  federalSummary,
+  suppliers,
+  smax,
+  ITEM_COLS,
+  top,
+  itemRow,
+  recent,
+  icon,
+} = Astro.props;
+---
+
+<Fragment
+  set:html={await pagehead({
+    flagged: true,
+    crumbs: [
+      ["/", "Home"],
+      ["/bodies/", "Public bodies"],
+      [null, b.buyer],
+    ],
+    title: esc(b.buyer),
+    lede: `${num(b.n)} records, ${moneyWords(b.amount)} in CAD published record values across all years, from ${sets
+      .map(datasetLabel)
+      .map((s) => esc(s.toLowerCase()))
+      .join(
+        ", ",
+      )}.${sets.length > 1 ? " Sources can overlap; this sum is not a deduplicated spending total." : ""} Values are not total money paid.${dept ? ` <a href="/department/${D.slug(dept.name)}/">Program spending for ${esc(dept.name)}</a>.` : ""}`,
+  })}
+/>
+<section class="section">
+  <div class="wrap grid-2">
+    <div>
+      <h2 style="margin-block-end:1rem">What is on record</h2>
+      {b.level === "federal" ? (
+        <Caveat
+          text={`${FEDERAL_RULE} CAD totals cover only supported CAD amounts. These are selected records, not all the department’s activity. Notices and disclosures can overlap; combined record values are not spending totals.`}
+        />
+      ) : (
+        ""
+      )}
+      {sets.includes("ppa") ? (
+        <Caveat
+          text={
+            "These are published contract award reports, not a complete ledger of this body's purchases or payments. This page shows the body as buyer; money it receives as a supplier or grant recipient belongs in a separate search."
+          }
+        />
+      ) : (
+        ""
+      )}
+      <Fragment
+        set:html={leaders(
+          byDs.map((d) => ({
+            label: `${esc(datasetLabel(d.dataset))} <span class="muted small">${num(d.n)}, ${esc(fmtDate(d.d0))} to ${esc(fmtDate(d.d1))}</span>`,
+            value: moneyWords(d.amount),
+          })),
+        )}
+      />
+      {flagNotes.length ? (
+        <>
+          <h3 style="margin-block:2rem .6rem">Patterns</h3>
+          <ul class="prose">
+            {flagNotes.map((t, i) => (
+              <>
+                <li>
+                  <Fragment set:html={t} />{" "}
+                  <a href={"/flags/" + subjectFlags[i].flag + "/"}>
+                    How this is worked out
+                  </a>
+                </li>
+              </>
+            ))}
+          </ul>
+          {
+            <Caveat
+              text={
+                "A flag is a question, not a finding. It is not evidence that anything wrong happened."
+              }
+            />
+          }
+        </>
+      ) : (
+        ""
+      )}
+    </div>
+    <div>
+      {methods.length > 1 ? (
+        <>
+          <h3 style="margin-block-end:.8rem">Reported procurement methods</h3>
+          <p class="small">
+            CAD record values, all years; sources can overlap. Federal addresses
+            do not locate work or benefits.
+          </p>
+          <Fragment
+            set:html={await schedule({
+              compact: true,
+              cols: [
+                {
+                  label: "Method",
+                },
+                {
+                  label: "",
+                  w: "40%",
+                },
+                {
+                  label: "Awards",
+                  num: true,
+                },
+                {
+                  label: "Value",
+                  num: true,
+                },
+              ],
+              rows: methods.map((m) => ({
+                cells: [
+                  esc(m.m),
+                  bar(m.amount || 0, mmax),
+                  num(m.n),
+                  moneyWords(m.amount || 0),
+                ],
+              })),
+            })}
+          />
+        </>
+      ) : (
+        ""
+      )}
+      {byYear.length > 1 ? (
+        <>
+          <h3 style="margin-block:1.5rem .8rem">By original record date</h3>
+          <p class="small">
+            CAD reported values, not annual payments. Sources can overlap;
+            federal addresses do not locate work or benefits.
+          </p>
+          <Fragment
+            set:html={await schedule({
+              compact: true,
+              cols: [
+                {
+                  label: "Year",
+                },
+                {
+                  label: "",
+                  w: "50%",
+                },
+                {
+                  label: "Value",
+                  num: true,
+                },
+              ],
+              rows: byYear.map((y) => ({
+                cells: [
+                  esc(y.y),
+                  bar(y.amount || 0, ymax),
+                  moneyWords(y.amount || 0),
+                ],
+              })),
+            })}
+          />
+        </>
+      ) : (
+        ""
+      )}
+    </div>
+  </div>
+</section>
+{b.level === "federal" ? (
+  <>
+    <section class="section">
+      <div class="wrap">
+        <Fragment
+          set:html={await federalSummary(
+            D,
+            "buyer_key=? AND dataset IN ('fed_contract','fed_grant','canadabuys')",
+            b.buyer_key,
+          )}
+        />
+      </div>
+    </section>
+  </>
+) : (
+  ""
+)}
+<section class="section">
+  <div class="wrap">
+    <h2 style="margin-block-end:1rem">Largest reported values by supplier</h2>
+    <p class="small">
+      CAD record values, all years; sources can overlap. Federal addresses do
+      not locate work or benefits.
+    </p>
+    <Fragment
+      set:html={await schedule({
+        cols: [
+          {
+            label: "Supplier",
+          },
+          {
+            label: "",
+            w: "34%",
+          },
+          {
+            label: "Records",
+            num: true,
+          },
+          {
+            label: "Value",
+            num: true,
+          },
+        ],
+        rows: suppliers.map((s) => ({
+          cells: [
+            `<a href="/supplier/${D.keyHash(s.supplier_key)}/">${esc(s.supplier)}</a>`,
+            bar(s.amount || 0, smax),
+            num(s.n),
+            moneyWords(s.amount || 0),
+          ],
+        })),
+      })}
+    />
+  </div>
+</section>
+<section class="section">
+  <div class="wrap">
+    <h2 style="margin-block-end:1rem">Largest records</h2>
+    <Fragment
+      set:html={await schedule({
+        cols: ITEM_COLS,
+        rows: top.map((a) =>
+          itemRow(D, a, {
+            showBuyer: false,
+          }),
+        ),
+      })}
+    />
+    <h2 style="margin-block:2.5rem 1rem">Most recent</h2>
+    <Fragment
+      set:html={await schedule({
+        cols: ITEM_COLS,
+        rows: recent.map((a) =>
+          itemRow(D, a, {
+            showBuyer: false,
+          }),
+        ),
+      })}
+    />
+    <p style="margin-block-start:1.5rem">
+      <a href={"/search/?b=" + D.keyHash(b.buyer_key)}>
+        Search all <Fragment set:html={num(b.n)} /> records for {b.buyer}{" "}
+        <Fragment set:html={icon("arrow")} />
+      </a>
+    </p>
+  </div>
+</section>

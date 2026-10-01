@@ -1,0 +1,36 @@
+---
+const { schedule, f, rows, D, esc, num, money } = Astro.props;
+---
+
+<p>
+  Counted by employer, job title and year. The government's lists name each
+  person; this page does not repeat the names.
+</p>
+<Fragment
+  set:html={await schedule({
+    cols: [
+      {
+        label: "Employer and job title",
+      },
+      {
+        label: "Year",
+      },
+      {
+        label: "People",
+        num: true,
+      },
+      {
+        label: f.id === "severance" ? "Severance" : "Overtime",
+        num: true,
+      },
+    ],
+    rows: rows.slice(0, 120).map((s) => ({
+      cells: [
+        `<a href="/pay/${D.slug(s.x.employer)}/">${esc(s.x.employer)}</a><span class="meta">${esc(s.x.title)}</span>`,
+        esc(s.x.year),
+        num(s.x.people),
+        money(s.value),
+      ],
+    })),
+  })}
+/>

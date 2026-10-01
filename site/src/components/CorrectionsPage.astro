@@ -1,0 +1,119 @@
+---
+const { pagehead, GH, fmtDate, D, SITE } = Astro.props;
+---
+
+<Fragment
+  set:html={await pagehead({
+    crumbs: [
+      ["/", "Home"],
+      [null, "Corrections"],
+    ],
+    title: "Corrections",
+    lede: "Every change to a published figure is logged here with the date and the reason.",
+  })}
+/>
+<section class="section">
+  <div class="wrap prose">
+    <h2>Log</h2>
+    <ul>
+      <li>
+        <strong>
+          30 September 2026. Federal record values and location claims
+          corrected.
+        </strong>{" "}
+        Contracts: CAD 2,614,227,060.51 corrected to CAD 2,547,127,660.51, down
+        CAD 67,099,400. The Health Canada national-service contract appeared
+        twice under two supplier names in one amendment history.
+        Professional-services payments: CAD 690,028,445 corrected to CAD
+        683,854,665, down CAD 6,173,780: two Ontario payees (CAD 6,286,216) are
+        removed and one valid published NL abbreviation (CAD 112,436) is
+        included. CanadaBuys: the former dollar-labelled numeric sum of
+        855,968,652.83 is replaced by supported CAD 830,019,361.38, a numeric
+        reduction of 25,949,291.45. Three foreign supplier addresses are removed
+        (EUR 52,924.80 and two zeros); USD 473,000 and 394,250 with unstated
+        currency stay in separate native-currency summaries; six published zero
+        notice totals no longer take fallback amounts totalling CAD
+        25,029,116.65. Missing and zero values remain distinct. Federal grants
+        stay CAD 8,430,775,591.69, with conflicting Winnipeg/Regina addresses
+        labelled. Federal records no longer get provincial per-person or
+        wage-time figures. An address selects a record; it does not establish
+        work, benefit or spending in NL. Home ranks sources separately and the
+        scale page no longer adds examples together. Provincial actual-spending
+        figures are unchanged.{" "}
+        <a href={GH + "/blob/main/docs/federal-evidence-review.md"}>
+          Sources, verification and every changed total
+        </a>
+        ; <a href="/method/federal/">method</a>.
+      </li>
+      <li>
+        <strong>
+          30 September 2026. Provincial award values: $1,358,312,018.08
+          corrected to $1,372,054,508.65, an increase of $13,742,490.57.
+        </strong>{" "}
+        Five entries with different products, zones, dates or terms had been
+        removed as repeats; they are restored. Four repeated awards with
+        punctuation or PO-label differences in their full identifiers are
+        counted once. An explicitly corrected Hatch description replaces its
+        earlier printing at the same value. Every counted-once award keeps the
+        other printings and receipts.{" "}
+        <a href={GH + "/blob/main/docs/award-review.md"}>
+          Source review and every changed total
+        </a>
+        ; <a href="/sources/#report-card">publisher report card</a>.
+      </li>
+      <li>
+        <strong>
+          29 September 2026. Federal grants: $8.51 billion corrected to $8.43
+          billion.
+        </strong>{" "}
+        Canadian Heritage and the Public Health Agency of Canada report each
+        amendment as the change in value, and only their latest amendment had
+        been counted; their amendments are now added up. Some agreements were
+        counted twice: a recipient renamed on an amendment, and Infrastructure
+        Canada agreements with no agreement number reported again under a new
+        reference number. The method page now shows each department's evidence
+        and a check against Public Accounts.{" "}
+        <a href="/method/federal/">Method</a>.
+      </li>
+      <li>
+        <strong>
+          29 September 2026. Federal grants: $8.67 billion corrected to $8.51
+          billion.
+        </strong>{" "}
+        Some grant agreements were counted twice. A department that reports each
+        amendment as the agreement's new total sometimes printed the recipient's
+        name in English only and sometimes as "English name|French name", and
+        those rows were treated as two agreements. They are now one agreement,
+        counted at its latest amendment (for example, an Association for New
+        Canadians agreement reported twelve times).{" "}
+        <a href="/method/federal/">Method</a>.
+      </li>
+      <li>
+        <strong>
+          29 September 2026. Supplier pages combine names printed different
+          ways.
+        </strong>{" "}
+        A supplier's page now includes records printed under other spellings of
+        its name where the records show they are one supplier, so its total can
+        be higher than before. <a href="/method/suppliers/">Method</a>.
+      </li>
+    </ul>
+    <p>NL Ledger was first published on {fmtDate(D.gathered)}.</p>
+    <h2>Known errors in the sources</h2>
+    <p>
+      Errors found in the government's own files are not corrected here; the
+      figure is shown as published and the error is listed on the{" "}
+      <a href="/sources/#report-card">report card</a>.
+    </p>
+    <h2>Report an error</h2>
+    <p>
+      Every figure links to its source. If a figure here does not match the
+      source it links to, that is an error on this site and belongs in this log.
+      Email{" "}
+      <a href={"mailto:" + SITE.corrections + "?subject=Correction%20request"}>
+        <Fragment set:html={SITE.corrections} />
+      </a>{" "}
+      or <a href="/help/#figure">report it on GitHub</a>.
+    </p>
+  </div>
+</section>
