@@ -9,5 +9,14 @@
  "budget_checks": 40,
  "budget_departments": 20,
  "pay_rows": 4,
- "pay_total": 475600.0
+ "pay_total": 475600.0,
+ "federal_grant_raw_rows": 22,
+ "federal_grant_raw_total": 68102928.0,
+ "federal_agreements": 8,
+ "federal_grant_total": 48889141.0,
+ "federal_contract_raw_rows": 14,
+ "federal_contract_raw_total": 1681123737.32,
+ "federal_contracts": 2,
+ "federal_contract_total": 255366616.88,
+ "federal_national_contracts": 1
 }
