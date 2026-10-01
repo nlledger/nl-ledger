@@ -49,14 +49,16 @@ const {
     )}
     {trend.length > 1 ? (
       <>
-        <h3 style="margin-block-end:.8rem">Spending by year</h3>
+        <h2 class="minor-heading" style="margin-block-end:.8rem">
+          Spending by year
+        </h2>
         <>
-          <Schedule compact>
+          <Schedule label="Department spending by year" compact>
             <thead>
               <tr>
                 <th scope="col">Fiscal year</th>
-                <th scope="col" style={"inline-size:" + "50%"}>
-                  {""}
+                <th data-graphic-header scope="col" style={"inline-size:" + "50%"}>
+                  <span class="vh">Relative amount</span>
                 </th>
                 <th scope="col" class="n">
                   Spent
@@ -226,7 +228,7 @@ const {
           </p>
         </div>
         <>
-          <Schedule>
+          <Schedule label="Professional services">
             <thead>
               <tr>
                 <th scope="col">Program</th>
@@ -272,7 +274,7 @@ const {
           </p>
         </div>
         <>
-          <Schedule>
+          <Schedule label="Contracts awarded">
             <thead>
               <tr>
                 {ITEM_COLS.map((c) => (

@@ -20,6 +20,7 @@ const { R, levelTotals } = Astro.props;
         action="/search/"
         method="get"
         role="search"
+        aria-label="Find a recipient"
         style="max-inline-size:30rem"
       >
         <label for="wq">Search every record</label>
@@ -85,7 +86,7 @@ const { R, levelTotals } = Astro.props;
       </p>
       <p class="sched-hint">Scroll sideways for more columns.</p>
       <div class="sched-wrap">
-        <table class="sched pin-rows compact">
+        <table aria-label="Provincial suppliers" class="sched pin-rows compact">
           <thead>
             <tr>
               <th scope="col">Recipient</th>

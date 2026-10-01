@@ -294,8 +294,8 @@ const { s, hash, dsRows, links, years, ymax, flagRows, flags } = Astro.props;
               <thead>
                 <tr>
                   <th scope="col">Year</th>
-                  <th scope="col" style={"inline-size:" + "55%"}>
-                    {""}
+                  <th data-graphic-header scope="col" style={"inline-size:" + "55%"}>
+                    <span class="vh">Relative amount</span>
                   </th>
                   <th scope="col" class="n">
                     Value
@@ -320,7 +320,9 @@ const { s, hash, dsRows, links, years, ymax, flagRows, flags } = Astro.props;
         )}
         {flagRows.length ? (
           <>
-            <h3 style="margin-block:1.5rem .6rem">Patterns</h3>
+            <h2 class="minor-heading" style="margin-block:1.5rem .6rem">
+              Patterns
+            </h2>
             <ul class="flaglist">
               {flagRows.map((x) => (
                 <FlagItem

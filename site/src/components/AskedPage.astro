@@ -20,7 +20,7 @@ const { ASKED, ASKED_STATE } = Astro.props;
       {ASKED.map((a) => (
         <>
           <li>
-            <h3>{a.asked}</h3>
+            <h2 class="minor-heading">{a.asked}</h2>
             <span class={"state " + (a.state === "done" ? "" : "open")}>
               {ASKED_STATE[a.state]}
             </span>

@@ -24,7 +24,10 @@ const { fy, top, max, S, depts, total, D } = Astro.props;
     </ul>
     <p class="sched-hint">Scroll sideways for more columns.</p>
     <div class="sched-wrap">
-      <table class="sched pin-rows">
+      <table
+        aria-label="Provincial spending by department"
+        class="sched pin-rows"
+      >
         <thead>
           <tr>
             <th scope="col">Department</th>

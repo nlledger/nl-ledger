@@ -75,3 +75,9 @@ assert.match(
 console.log(
   "PASS: shared/custom tables, idempotence, semantics, zero/missing amounts, totals, links",
 );
+
+// Named graphic headers preserve the existing phone bars without a redundant visible label.
+const graphicHeader = mobileTables('<table class="sched"><thead><tr><th scope="col">Year</th><th scope="col" data-graphic-header><span class="vh">Relative amount</span></th><th scope="col">Spent</th></tr></thead><tbody><tr><th scope="row">2025</th><td><span class="bar" aria-hidden="true"></span></td><td>$1</td></tr></tbody></table>');
+assert.match(graphicHeader, /role="columnheader"><span class="vh">Relative amount/);
+assert.match(graphicHeader, /role="cell" data-graphic>/);
+assert.doesNotMatch(graphicHeader, /cell-label[^>]*>Relative amount/);

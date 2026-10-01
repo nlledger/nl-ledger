@@ -4,6 +4,7 @@ const {
   compact = false,
   pin = true,
   caption,
+  label,
   cols = [],
   rows = [],
   foot,
@@ -12,7 +13,10 @@ const {
 
 <p class="sched-hint">Scroll sideways for more columns.</p>
 <div class="sched-wrap" id={id}>
-  <table class={`sched${compact ? " compact" : ""}${pin ? " pin-rows" : ""}`}>
+  <table
+    aria-label={caption ? undefined : label}
+    class={`sched${compact ? " compact" : ""}${pin ? " pin-rows" : ""}`}
+  >
     {caption && <caption>{caption}</caption>}
     {Astro.slots.has("default") ? (
       <slot />

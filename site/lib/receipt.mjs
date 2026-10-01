@@ -31,7 +31,7 @@ export function renderReceipt(R, income, stats) {
         .join("");
       return `<div class="rc-row"><span><a href="/department/${e(d.slug)}/">${e(d.name)}</a></span><span class="amt">${money(d.yours, { cents: true })}</span>
         <span class="bar" aria-hidden="true"><span style="inline-size:${Math.max(0.5, (d.yours / max) * 100).toFixed(2)}%"></span></span>
-        ${ex ? `<details><summary>Spending examples</summary><ul>${ex}</ul></details>` : ""}</div>`;
+        ${ex ? `<details><summary aria-label="Spending examples for ${e(d.name)}">Spending examples</summary><ul>${ex}</ul></details>` : ""}</div>`;
   };
   const head = c.lines.slice(0, 7).map(row).join("");
   const rest = c.lines.slice(7);
@@ -41,7 +41,7 @@ export function renderReceipt(R, income, stats) {
     ? `<p class="small">This employment-income estimate is zero after the credits included here, so the illustration is empty. Everyone still pays sales tax and other levies.</p>`
     : "";
   return `<article class="receipt" aria-live="polite">
-    <h3>Receipt, ${e(R.year)}</h3>
+    <h2 class="minor-heading">Receipt, ${e(R.year)}</h2>
     <p class="small">Employment income ${money(c.income)} · estimated provincial income tax ${money(c.tax, { cents: true })} · ${pct(c.tax / Math.max(1, c.income), 1)} of income</p>
     <p class="small">${RECEIPT_ASSUMPTIONS} The amounts below illustrate spending shares, not where a person’s tax was paid.</p>
     ${note}

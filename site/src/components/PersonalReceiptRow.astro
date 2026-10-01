@@ -23,7 +23,9 @@ const cents = (v) =>
   </span>
   {d.examples?.length > 0 && (
     <details>
-      <summary>Spending examples</summary>
+      <summary aria-label={"Spending examples for " + d.name}>
+        Spending examples
+      </summary>
       <ul>
         {d.examples.map((x) => (
           <li>

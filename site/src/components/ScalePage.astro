@@ -24,7 +24,7 @@ const { fy, R, BILLION, pins } = Astro.props;
       record values are separate commitments, not provincial spending.
     </p>
     <>
-      <Schedule>
+      <Schedule label="Independent comparisons against CAD 1 billion">
         <thead>
           <tr>
             <th scope="col">Example, amount kind and period</th>
@@ -46,6 +46,9 @@ const { fy, R, BILLION, pins } = Astro.props;
                 </>
               </th>
               <td>
+                <span class="vh">
+                  {((p.amount / BILLION) * 100).toFixed(4)}% of CAD 1 billion
+                </span>
                 <Bar value={p.amount} max={BILLION} />
               </td>
               <td class="n">

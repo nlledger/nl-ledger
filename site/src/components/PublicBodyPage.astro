@@ -130,12 +130,12 @@ const {
             do not locate work or benefits.
           </p>
           <>
-            <Schedule compact>
+            <Schedule label="Reported procurement methods" compact>
               <thead>
                 <tr>
                   <th scope="col">Method</th>
-                  <th scope="col" style={"inline-size:" + "40%"}>
-                    {""}
+                  <th data-graphic-header scope="col" style={"inline-size:" + "40%"}>
+                    <span class="vh">Relative amount</span>
                   </th>
                   <th scope="col" class="n">
                     Awards
@@ -171,12 +171,12 @@ const {
             federal addresses do not locate work or benefits.
           </p>
           <>
-            <Schedule compact>
+            <Schedule label="Public body records by date" compact>
               <thead>
                 <tr>
                   <th scope="col">Year</th>
-                  <th scope="col" style={"inline-size:" + "50%"}>
-                    {""}
+                  <th data-graphic-header scope="col" style={"inline-size:" + "50%"}>
+                    <span class="vh">Relative amount</span>
                   </th>
                   <th scope="col" class="n">
                     Value
@@ -228,12 +228,12 @@ const {
       not locate work or benefits.
     </p>
     <>
-      <Schedule>
+      <Schedule label="Public body suppliers">
         <thead>
           <tr>
             <th scope="col">Supplier</th>
-            <th scope="col" style={"inline-size:" + "34%"}>
-              {""}
+            <th data-graphic-header scope="col" style={"inline-size:" + "34%"}>
+              <span class="vh">Relative amount</span>
             </th>
             <th scope="col" class="n">
               Records
@@ -269,7 +269,7 @@ const {
   <div class="wrap">
     <h2 style="margin-block-end:1rem">Largest records</h2>
     <>
-      <Schedule>
+      <Schedule label="Largest public body records">
         <thead>
           <tr>
             {ITEM_COLS.map((c) => (
@@ -298,7 +298,7 @@ const {
     </>
     <h2 style="margin-block:2.5rem 1rem">Most recent</h2>
     <>
-      <Schedule>
+      <Schedule label="Public body records">
         <thead>
           <tr>
             {ITEM_COLS.map((c) => (

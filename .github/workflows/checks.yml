@@ -92,3 +92,33 @@ jobs:
       - name: Imported currency validation and original evidence
         working-directory: pipeline
         run: uv run --no-sync python check_currency.py
+
+  accessibility:
+    name: Browser accessibility on every page family
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci --prefix site
+      - name: Install browser
+        run: cd site && npx playwright install --with-deps chromium
+      - name: Build and serve sample records
+        run: |
+          node site/dev.mjs 8896 > /tmp/accessibility-preview.log 2>&1 &
+          for attempt in $(seq 1 120); do
+            if curl --fail --silent http://localhost:8896/ > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/accessibility-preview.log
+          exit 1
+      - name: Axe, keyboard, colour roles, motion and reflow
+        run: node site/check-accessibility.mjs http://localhost:8896 /tmp/accessibility.json --prove-regression
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: accessibility-evidence
+          path: |
+            /tmp/accessibility.json
+            /tmp/accessibility-preview.log
