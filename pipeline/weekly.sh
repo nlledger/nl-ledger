@@ -52,8 +52,7 @@ step "meaning index check"
 uv run python vectorize_sync.py --dry-run
 
 step "site build"
-# Wrangler checks that site/dist exists before running its own build command, and a fresh
-# container has none, so build and run the guardrails here first; cf deploy rebuilds the same.
+# Build and run the guardrails before deploying; cf deploy runs its own build again.
 cd ../site
 node build.mjs
 ./check.sh

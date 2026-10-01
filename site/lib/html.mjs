@@ -324,18 +324,6 @@ export function leaders(items) {
   </dl>`;
 }
 
-// The 1:1 call-out: one real purchase pulled out at true proportion.
-export async function oneToOne({ title, amount, body, href, share, against }) {
-  return await renderComponent("components_OneToOne_astro", {
-    money,
-    amount,
-    href,
-    title,
-    body,
-    against,
-  });
-}
-
 export function pager(base, page, more) {
   const prev =
     page > 1

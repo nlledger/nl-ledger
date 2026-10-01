@@ -45,7 +45,7 @@ All of them are under the [`good first issue`](https://github.com/nlledger/nl-le
 
 ## Editing a page
 
-Page markup lives in `site/src/components/*.astro` and the shared shell in `site/src/layouts/Layout.astro`. The matching `site/src/pages/*.mjs` files assemble data and calculations; Worker handlers in `site/routes/` use the same components. Keep imported text escaped and use raw HTML only for the existing escaped helper fragments. `npm run format --prefix site` formats the Astro markup. See [the migration proof](docs/astro-proof.md) for the build comparison command.
+Page markup lives in `site/src/components/*.astro` and the shared shell in `site/src/layouts/Layout.astro`. The matching `site/src/pages/*.mjs` files assemble data and calculations; Worker handlers in `site/routes/` use the same components. Keep imported text escaped and use raw HTML (`set:html`) only for the existing escaped helper fragments; `site/check.sh` caps the number of uses. `npm run format --prefix site` formats the Astro markup. See [the migration proof](docs/astro-proof.md) for the build comparison command.
 
 ## What a good contribution includes
 

@@ -43,6 +43,8 @@ jobs:
         run: node site/check-source-escaping.mjs
       - name: Uncaught errors become one 500
         run: node site/check-guard.mjs
+      - name: Worker requests, hostile inputs and combined suppliers
+        run: node site/check-requests.mjs
       - name: Receipt income privacy checks
         run: node site/check-receipt-privacy.mjs
       - name: Feedback box checks

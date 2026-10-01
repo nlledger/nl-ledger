@@ -29,17 +29,17 @@ Reproduce the build comparison with dependencies installed and both frozen build
 node site/check-rendering.mjs /path/to/before/site/dist /path/to/after/site/dist
 ```
 
-Raw HTML, PNGs, paired screenshots, geometry comparisons, Lighthouse reports and deploy logs are retained outside the repository at `/private/tmp/nlledger-astro-evidence/`.
+Raw HTML, PNGs, paired screenshots, geometry comparisons, Lighthouse reports and deploy logs were kept outside the repository. The request cases are in `site/check-requests.mjs`.
 
 ## Real Cloudflare proof
 
-Before converting pages, Astro 7.3.5 with the Cloudflare adapter 14.3.3 deployed to **`nlledger-astro-preview`**, workers.dev only, no custom domains. Version `05d2b865-58bf-454d-a417-7f153e4ba675` served both a static Astro page and a Worker-rendered page. The latter read **29,024 D1 documents** and reported the D1, AI, Vectorize, assets, mail and all three rate-limit bindings present.
+Before converting pages, Astro 7.3.5 with the Cloudflare adapter 14.3.3 deployed to a temporary workers.dev-only preview Worker, workers.dev only, no custom domains. Version `05d2b865-58bf-454d-a417-7f153e4ba675` served both a static Astro page and a Worker-rendered page. The latter read **29,024 D1 documents** and reported the D1, AI, Vectorize, assets, mail and all three rate-limit bindings present.
 
 The complete migration was then deployed with the actual one-step command, on the requested account:
 
 ```sh
 cd site
-NL_LEDGER_ASTRO_PREVIEW=1 cf deploy --worker nlledger-astro-preview --profile nl-ledger
+NL_LEDGER_ASTRO_PREVIEW=1 cf deploy --worker <preview-name> --profile nl-ledger
 ```
 
 Final verified preview version: **`3d0e97e2-eed2-4d3a-828c-c447cab292a0`**. Its build ran `astro build`, the frozen-data build, `check.sh`, adapter packaging and the upload in that order. Production was never deployed.

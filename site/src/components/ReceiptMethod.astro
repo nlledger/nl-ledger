@@ -93,7 +93,7 @@ const { pagehead, S, money, R, workedExample, pct, methodCode } = Astro.props;
         )}
       />{" "}
       of provincial revenue in {S.provincial_government.year} (Statistics Canada
-      table <Fragment set:html={S.provincial_government.table} />
+      table {S.provincial_government.table}
       ). The receipt shows how your part would be spread, not the whole bill.
       With JavaScript, the calculation stays in your browser. Without it, or
       when you open a shared receipt link, the income is sent in the web
