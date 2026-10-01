@@ -8,7 +8,7 @@ writeFileSync(
   JSON.stringify(
     {
       name: worker.name,
-      main: "@astrojs/cloudflare/entrypoints/server",
+      main: "./astro-worker.mjs",
       compatibility_date: worker.compatibilityDate,
       compatibility_flags: worker.compatibilityFlags,
       workers_dev: worker.workersDev,

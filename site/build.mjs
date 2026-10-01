@@ -17,7 +17,7 @@ import {
 } from "node:fs";
 import { createHash } from "node:crypto";
 import { transformSync } from "esbuild";
-import { SECURITY_HEADERS } from "./lib/headers.mjs";
+import { STATIC_HEADERS } from "./lib/headers.mjs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { load, DB_PATH as D_PATH } from "./src/data.mjs";
@@ -283,31 +283,7 @@ writeFileSync(
 );
 writeFileSync(join(DIST, "llms.txt"), llmsTxt(D, R, TOOLS));
 
-writeFileSync(
-  join(DIST, "_headers"),
-  `/*
-${Object.entries(SECURITY_HEADERS)
-  .map(([name, value]) => `  ${name}: ${value}`)
-  .join("\n")}
-/share/static/*
-  Cache-Control: public, max-age=31536000, immutable
-/fonts/*
-  Cache-Control: public, max-age=31536000, immutable
-/site.css
-  Cache-Control: public, max-age=31536000, immutable
-/app.js
-  Cache-Control: public, max-age=31536000, immutable
-/data/*
-  Cache-Control: public, max-age=3600
-  Access-Control-Allow-Origin: *
-/server.json
-  Access-Control-Allow-Origin: *
-  Cache-Control: public, max-age=3600
-/llms.txt
-  Content-Type: text/plain; charset=utf-8
-  Access-Control-Allow-Origin: *
-`,
-);
+writeFileSync(join(DIST, "_headers"), STATIC_HEADERS);
 
 console.log(
   `${pages} pages, ${shards.count} suppliers in ${Object.keys(shards.files).length} shards; sitemap ${urls.length} URLs (${supplierUrls} suppliers with ${SUPPLIER_MIN_RECORDS}+ records or ${SUPPLIER_MIN_TOTAL}+ dollars)`,

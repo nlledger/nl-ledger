@@ -1,0 +1,6 @@
+{
+  "name": "nlledger-use-cf-deploy",
+  "compatibility_date": "2026-09-01",
+  "main": "./scripts/refuse-wrangler-deploy.mjs",
+  "build": { "command": "node ./scripts/refuse-wrangler-deploy.mjs" }
+}
