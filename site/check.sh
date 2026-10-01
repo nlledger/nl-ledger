@@ -3,6 +3,7 @@
 set -uo pipefail
 cd "$(dirname "$0")"
 fail=0
+node check-astro-edges.mjs || fail=1
 # Public records name many people; the site never names the people who run it.
 # The one allowed exception is the address of the code repository, which the site links to.
 # More names can be added, unpublished, as NL_LEDGER_PRIVATE_NAMES (a regex) in site/.env.

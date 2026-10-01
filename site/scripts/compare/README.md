@@ -20,3 +20,5 @@ PLAYWRIGHT_MODULE=/tmp/nl-ledger-browser-proof/node_modules/playwright/index.mjs
 ```
 
 It uses installed Chrome. Each output directory contains PNGs and a manifest. An optional fourth argument supplies a JSON array of routes for a focused repeat. Keep captures outside the repository. Compare decoded pixels rather than treating PNG compression bytes as proof of a visual change.
+
+For the merge with the Astro edge fixes, also run `node site/check-astro-edge-rendering.mjs BEFORE/site/dist AFTER/site/dist`. It compares parsed serialization, exact protected text and whole control-group spacing. This permits template indentation and equivalent entity spelling without hiding missing link/button separators. The recorded run is in [Readability merge comparison](../../../docs/readability-rebase.md).

@@ -165,15 +165,15 @@ const { R, groups } = Astro.props;
                 <Fragment set:html={icon("copy", "i-copy")} />
                 <Fragment set:html={icon("check", "i-done")} />
                 <span>Copy</span>
-              </button>
+              </button>{" "}
               <a href={askClaude(x.q)} target="_blank" rel="noopener">
                 <Fragment set:html={icon("chat")} />
                 Ask Claude
-              </a>
+              </a>{" "}
               <a href={askChatGPT(x.q)} target="_blank" rel="noopener">
                 <Fragment set:html={icon("chat")} />
                 Ask ChatGPT
-              </a>
+              </a>{" "}
             </div>
           </li>
         </>

@@ -39,7 +39,7 @@ The complete migration was then deployed with the actual one-step command, on th
 
 ```sh
 cd site
-NL_LEDGER_ASTRO_PREVIEW=1 cf deploy --worker <preview-name> --profile nl-ledger
+NL_LEDGER_ASTRO_PREVIEW=1 NL_LEDGER_ASTRO_PREVIEW_NAME=<preview-name> cf deploy --profile nl-ledger
 ```
 
 Final verified preview version: **`3d0e97e2-eed2-4d3a-828c-c447cab292a0`**. Its build ran `astro build`, the frozen-data build, `check.sh`, adapter packaging and the upload in that order. Production was never deployed.

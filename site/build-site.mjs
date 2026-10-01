@@ -3,6 +3,7 @@
 // (worker.mjs, routes/) from D1 and from the JSON this build writes under dist/data.
 import { card, cardAlt, cardAmount } from "./lib/share-card.mjs";
 import { render } from "./src/card-render-node.mjs";
+import { cardImageName } from "./lib/card-image-name.mjs";
 import {
   mkdirSync,
   writeFileSync,
@@ -15,7 +16,7 @@ import {
 } from "node:fs";
 import { createHash } from "node:crypto";
 import { transformSync } from "esbuild";
-import { SECURITY_HEADERS } from "./lib/headers.mjs";
+import { STATIC_HEADERS } from "./lib/headers.mjs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { load, DB_PATH as D_PATH } from "./src/data.mjs";
@@ -83,7 +84,6 @@ let pages = 0;
 const PATHS = [];
 const cards = new Map();
 const cardManifest = [];
-const cardPages = new Map();
 const pageHTML = async (page, path) =>
   await layout({
     ...page,
@@ -117,18 +117,27 @@ export async function write(path, page) {
     if (!c && path.startsWith("/method/"))
       c = card(page.title, "", "How the figures are worked out and checked");
     if (c) {
-      const hash = createHash("sha256")
+      // Code/data changes invalidate rendering, but only PNG bytes name the asset.
+      const renderKey = createHash("sha256")
         .update(templateVersion)
         .update(JSON.stringify(c))
-        .digest("hex")
-        .slice(0, 24);
-      const image = `/share/static/${hash}.png`;
-      cards.set(image, c);
-      const entries = cardPages.get(image) || [];
-      entries.push({ page, path, file });
-      cardPages.set(image, entries);
-      page = { ...page, share: { image, alt: cardAlt(c) } };
-      cardManifest.push({ path, image, ...c });
+        .digest("hex");
+      let image = "/og.png";
+      let fallback = false;
+      try {
+        if (!cards.has(renderKey)) cards.set(renderKey, await render(c));
+        const png = cards.get(renderKey);
+        image = cardImageName(png);
+        const imageFile = join(DIST, image);
+        mkdirSync(dirname(imageFile), { recursive: true });
+        writeFileSync(imageFile, png);
+        page = { ...page, share: { image, alt: cardAlt(c) } };
+      } catch (e) {
+        console.warn(`Card fallback for ${path}: ${e.message}`);
+        page = { ...page, share: null };
+        fallback = true;
+      }
+      cardManifest.push({ path, image, ...c, ...(fallback ? { fallback } : {}) });
     }
   }
   writeFileSync(
@@ -230,26 +239,6 @@ for (const [path, page] of [
 ])
   await write(path, page);
 
-for (const [image, c] of cards) {
-  const file = join(DIST, image);
-  mkdirSync(dirname(file), { recursive: true });
-  try {
-    writeFileSync(file, await render(c));
-  } catch (e) {
-    console.warn(`Card fallback for ${image}: ${e.message}`);
-    cpSync(join(DIST, "og.png"), file);
-    // Keep the metadata truthful when a card cannot be rendered.
-    for (const entry of cardPages.get(image))
-      writeFileSync(
-        entry.file,
-        await pageHTML({ ...entry.page, share: null }, entry.path),
-      );
-    for (const entry of cardManifest.filter((x) => x.image === image)) {
-      entry.image = "/og.png";
-      entry.fallback = true;
-    }
-  }
-}
 writeJSON("data/share-cards.json", cardManifest);
 const shards = buildSupplierShards(D);
 for (const [n, obj] of Object.entries(shards.files))
@@ -293,31 +282,7 @@ writeFileSync(
 );
 writeFileSync(join(DIST, "llms.txt"), llmsTxt(D, R, TOOLS));
 
-writeFileSync(
-  join(DIST, "_headers"),
-  `/*
-${Object.entries(SECURITY_HEADERS)
-  .map(([name, value]) => `  ${name}: ${value}`)
-  .join("\n")}
-/share/static/*
-  Cache-Control: public, max-age=31536000, immutable
-/fonts/*
-  Cache-Control: public, max-age=31536000, immutable
-/site.css
-  Cache-Control: public, max-age=31536000, immutable
-/app.js
-  Cache-Control: public, max-age=31536000, immutable
-/data/*
-  Cache-Control: public, max-age=3600
-  Access-Control-Allow-Origin: *
-/server.json
-  Access-Control-Allow-Origin: *
-  Cache-Control: public, max-age=3600
-/llms.txt
-  Content-Type: text/plain; charset=utf-8
-  Access-Control-Allow-Origin: *
-`,
-);
+writeFileSync(join(DIST, "_headers"), STATIC_HEADERS);
 
 console.log(
   `${pages} pages, ${shards.count} suppliers in ${Object.keys(shards.files).length} shards; sitemap ${urls.length} URLs (${supplierUrls} suppliers with ${SUPPLIER_MIN_RECORDS}+ records or ${SUPPLIER_MIN_TOTAL}+ dollars)`,

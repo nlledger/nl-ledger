@@ -128,7 +128,7 @@ cf deploy --dry-run            # build and checks only
 | D1: 5 million rows read a day | Every filter is an indexed full-text token, no table scans. Search, supplier and record pages cached at the edge for an hour |
 | Workers: 10 ms CPU | Pages are rendered from small documents; supplier pages read one of 512 JSON shards |
 | Workers static assets: 20,000 files a version | 922 files: 410 static pages plus 512 shards; supplier, search, record and receipt pages are rendered on request |
-| Workers: 100,000 requests a day | Only search, supplier, record, receipt and `/mcp` requests count. Static asset requests are free and unlimited |
+| Workers: 100,000 requests a day | Dynamic routes and status-aware `/_astro/*` and `/share/static/*` requests count. Other static asset requests are free and unlimited |
 
 ## What is verified
 
@@ -304,13 +304,13 @@ The NL Ledger account's first load on 2026-09-29 wrote 29,697 rows (D1's own cou
 
 `site/lib/share-card.mjs` chooses the text and enforces the privacy rule. Person pages and every individual record keep `/og.png`. Organisation names on department, public-body, employer and supplier cards are an exact reviewed list, not a guess based on a legal suffix: a sole proprietor can have one. Unreviewed names and queries outside the reviewed spending vocabulary keep the generic image. Add an organisation only after checking that the pictured name carries no person's name; a new deploy changes the image version.
 
-Static page builders pass `card` with the same value they use on the page. `build.mjs` renders 1200×630 PNGs under `/share/static/`, named from the data, renderer, font and template bytes, cached for a year. A render failure rebuilds that page's metadata with the generic image and generic alt text. `data/share-cards.json` lists the cards built.
+Static page builders pass `card` with the same value they use on the page. `build.mjs` renders 1200×630 PNGs under `/share/static/`, named from the full SHA-256 of the rendered PNG bytes, cached for a year. The separate render key still includes data, renderer, font, template and locked dependencies. A render failure rebuilds that page's metadata with the generic image and generic alt text. `data/share-cards.json` lists the cards built.
 
 Supplier and search cards render on first request under `/share/dynamic/<build-version>/`; the Worker edge-caches successful PNGs for a year. Old versions, unknown suppliers, unsafe queries and failed generation return the generic image with a one-minute lifetime. If the asset binding itself fails, the image request redirects to the ordinary `/og.png` asset path. URLs take a supplier key or search words, never a visitor-supplied amount or card title. Search cache keys use the shared NFC/whitespace canonical query, with a 300-character raw-input limit before normalization. Only eligible cache misses charge `SHARE_RENDER_LIMIT` (namespace 350): 20 render attempts per minute, per Cloudflare location, across all cards and visitors. A missing/exhausted binding returns the generic image; hits do not charge it. Cloudflare rate limiting is permissive/eventually consistent, not a billing quota. Production and preview set a 1,000 ms CPU ceiling; normal cards were checked locally, with edge enforcement still awaiting deployment proof. `x-share-card` reports `miss`, `hit` or `fallback`.
 
 Satori 0.26.0 and resvg WASM 2.6.2 are pinned. Satori's standalone entry uses imported Yoga WASM rather than compiling at request time. Both WASM engines initialize once per isolate. The card font is a fixed weight-850, width-72 Archivo instance derived from the existing font, with its own glyph advances for word wrapping; unsupported characters or text that cannot fit use the generic image. To regenerate the font and metrics, run `brand/src/card_font.py` from the root with fonttools and brotli available. Its licence is the same SIL OFL 1.1 as the source font.
 
-`node site/check-cards.mjs` checks privacy, cents, zero versus missing data, French, oversized text, metadata, supplier titles, cache hits, stale versions, HEAD and rendering failures. When the build and dependencies exist it also checks all built PNGs and renders boundary fixtures.
+`node site/check-cards.mjs` checks privacy, cents, zero versus missing data, French, oversized text, metadata, supplier titles, cache hits, stale versions, HEAD and rendering failures. When the build and dependencies exist it also checks all built PNGs and renders boundary fixtures. It checks built filenames against PNG bytes. `node site/check-rendering.mjs /path/to/before/dist /path/to/after/dist` rejects any byte-identical image rename; run it across code-only changes on the same data.
 
 ### Cards preview
 

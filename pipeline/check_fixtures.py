@@ -16,6 +16,8 @@ own totals:
   accounts   statements of the same year       liabilities less financial assets is net debt
              (four pages of the real file)
   sunshine   one employer's pay disclosure     each person's pay parts add to the total
+  federal    real grant and contract chains    reviewed counts, values and national scope;
+                                               these sources print no reconciliation total
 
 The parsers run on a copy of those files (NL_LEDGER_DATA points them at it), then every
 check must pass, and the counts must match tests/fixtures/expected.json so a parser that
@@ -35,7 +37,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 FIXTURES = HERE.parent / "tests" / "fixtures"
-PARSERS = ["parse_ministers.py", "parse_mha.py", "parse_programs.py", "parse_fiscal.py", "parse_sunshine.py"]
+PARSERS = ["parse_ministers.py", "parse_mha.py", "parse_programs.py", "parse_fiscal.py", "parse_sunshine.py", "check_federal_fixtures.py"]
 
 
 def rows(clean: Path, name: str) -> list[dict]:
@@ -89,6 +91,16 @@ def main() -> int:
               "budget_figures": len(rows(clean, "fiscal.csv")), "budget_checks": len(fiscal_checks),
               "budget_departments": len(rows(clean, "dept_budget.csv")),
               "pay_rows": len(pay), "pay_total": round(sum(num(r["total"]) for r in pay), 2)}
+    federal = json.loads((clean / "federal_fixture_report.json").read_text())
+    counts.update({"federal_grant_raw_rows": federal["grants"]["raw_rows"],
+                   "federal_grant_raw_total": federal["grants"]["raw_value"],
+                   "federal_agreements": federal["grants"]["agreements"],
+                   "federal_grant_total": federal["grants"]["dedup_value"],
+                   "federal_contract_raw_rows": federal["contracts"]["raw_rows"],
+                   "federal_contract_raw_total": federal["contracts"]["raw_value"],
+                   "federal_contracts": federal["contracts"]["procurements"],
+                   "federal_contract_total": federal["contracts"]["dedup_value"],
+                   "federal_national_contracts": federal["national_contracts"]})
     expected_file = FIXTURES / "expected.json"
     if "--update" in sys.argv:
         expected_file.write_text(json.dumps(counts, indent=1) + "\n")
@@ -107,7 +119,8 @@ def main() -> int:
             print("  " + p)
         return 1
     print(f"PASS: {len(programs)} department totals, {len(fiscal_checks)} budget and Public Accounts checks, {len(summary)} MHA categories, "
-          f"the minister report and {len(pay)} pay rows reconcile with their sources' printed totals")
+          f"the minister report and {len(pay)} pay rows reconcile with their sources' printed totals; "
+          f"{counts['federal_agreements']} federal agreements and {counts['federal_contracts']} contracts match reviewed source rows")
     return 0
 
 

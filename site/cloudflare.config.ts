@@ -5,6 +5,7 @@ import { bindings, defineConfig } from "cf/config";
 if (existsSync(".env")) process.loadEnvFile(".env");
 const env = (name: string) => process.env[name] ?? "";
 
+// NL_LEDGER_ASTRO_PREVIEW_NAME optionally isolates an Astro proof from other previews.
 // Astro packages the static pages from dist and the existing Worker dispatcher together.
 // Only runWorkerFirst paths execute the dispatcher; other requests use the asset binding.
 // NL_LEDGER_PREVIEW=1 deploys the same code and bindings as a second Worker, nlledger-preview, on its
@@ -19,7 +20,7 @@ export default defineConfig({
   accountId: env("CLOUDFLARE_ACCOUNT_ID"),
   worker: {
     name: astroPreview
-      ? "nlledger-astro-preview"
+      ? env("NL_LEDGER_ASTRO_PREVIEW_NAME") || "nlledger-astro-preview"
       : cardsPreview
         ? "nlledger-cards-preview"
         : preview
@@ -33,6 +34,9 @@ export default defineConfig({
       notFoundHandling: "404-page",
       // Every other path is a static asset: free and unlimited, not counted against 100,000 requests a day.
       runWorkerFirst: [
+        // The entry guard preserves asset hits and makes only 404s no-store.
+        "/_astro/*",
+        "/share/static/*",
         "/share/dynamic/*",
         "/search",
         "/search/*",
