@@ -1,0 +1,37 @@
+---
+import { money, moneyWords } from "../../lib/format.mjs";
+const { d, max, fraction } = Astro.props;
+const cents = (v) =>
+  v >= 1
+    ? money(v, {
+        cents: true,
+      })
+    : v >= 0.01
+      ? `${(v * 100).toFixed(v < 0.1 ? 2 : 1)}¢`
+      : "less than a hundredth of a cent";
+---
+
+<div class="rc-row">
+  <span>
+    <a href={`/department/${d.slug}/`}>{d.name}</a>
+  </span>
+  <span class="amt">{money(d.yours, { cents: true })}</span>
+  <span class="bar" aria-hidden="true">
+    <span
+      style={`inline-size:${Math.max(0.5, (d.yours / max) * 100).toFixed(2)}%`}
+    ></span>
+  </span>
+  {d.examples?.length > 0 && (
+    <details>
+      <summary>Spending examples</summary>
+      <ul>
+        {d.examples.map((x) => (
+          <li>
+            <a href={x.href}>{x.title}</a>: {moneyWords(x.amount)} in total;
+            illustrated share {cents(x.amount * fraction)}.
+          </li>
+        ))}
+      </ul>
+    </details>
+  )}
+</div>

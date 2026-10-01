@@ -1,0 +1,9 @@
+---
+const { it } = Astro.props;
+---
+
+{it.s && it.k && it.ds !== "sunshine" ? (
+  <a href={`/supplier/${it.k}/`}>{it.s}</a>
+) : (
+  it.s || it.p || (it.x?.payee_withheld ? "Payee not published" : "") || it.d
+)}

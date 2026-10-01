@@ -1,13 +1,12 @@
-import { renderComponent } from "../../lib/render.mjs";
+import { components_ConsultingBody_astro as ConsultingBody } from "../../.render/components.mjs";
+import { renderAstro } from "../../lib/render.mjs";
 // Consulting and professional services: what the province and Ottawa pay for outside expertise.
 // Built from the "Professional Services" account in the province's program report and the federal
 // Public Accounts payments to suppliers in the province, so the page answers "how much does the
 // government spend on consultants" directly instead of leaving it to a search box.
-import { esc, html, Notes, schedule, receipt, bar } from "../../lib/html.mjs";
-import { money, moneyWords, num } from "../../lib/format.mjs";
+import { Notes } from "../../lib/html.mjs";
+import { moneyWords } from "../../lib/format.mjs";
 import { desc } from "../seo.mjs";
-import { pagehead, caveat } from "../common.mjs";
-
 export async function consulting(D, R) {
   const notes = new Notes();
   const fy = R.year;
@@ -33,23 +32,15 @@ export async function consulting(D, R) {
     label: `Report on the Program Expenditures and Revenues of the Consolidated Revenue Fund ${latest.y}, object "Professional Services", all programs`,
   });
   const vmax = Math.max(...byYear.map((r) => r.v), 1);
-  const body = await renderComponent("components_ConsultingBody_astro", {
-    pagehead,
-    esc,
+  const body = await renderAstro(ConsultingBody, {
     latest,
-    moneyWords,
     cite,
-    schedule,
     byYear,
-    bar,
     vmax,
     byDept,
     D,
-    receipt,
     byProg,
-    money,
     fed,
-    num,
   });
   return [
     "/consulting/",

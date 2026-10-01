@@ -1,5 +1,5 @@
 ---
-const { leaders, R, esc } = Astro.props;
+const { R } = Astro.props;
 ---
 
 <section class="section" aria-labelledby="rp-h">
@@ -25,14 +25,21 @@ const { leaders, R, esc } = Astro.props;
       </p>
     </div>
     <div>
-      <Fragment
-        set:html={leaders(
-          R.reportCard.map((x) => ({
-            label: esc(x.label),
-            value: esc(x.value),
-          })),
-        )}
-      />
+      <dl class="leaders">
+        {R.reportCard
+          .map((x) => ({
+            label: x.label,
+            value: x.value,
+          }))
+          .map((x) => (
+            <div class={x.cls}>
+              <dt>
+                <span>{x.label}</span>
+              </dt>
+              <dd>{x.value}</dd>
+            </div>
+          ))}
+      </dl>
     </div>
   </div>
 </section>

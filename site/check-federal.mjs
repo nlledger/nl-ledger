@@ -168,7 +168,7 @@ for (const r of fixture.ledger) {
       );
     }
   }
-  assert.match(itemRow(D, r).cells[2], /Selected because/);
+  assert.match(await itemRow(D, r), /Selected because/);
   const meta = itemMeta(it);
   assert.ok(meta.description.includes(statement), id);
   assert.ok(meta.title.includes(x.amount_kind), id);

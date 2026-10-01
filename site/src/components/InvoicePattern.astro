@@ -1,0 +1,81 @@
+---
+import Schedule from "./Schedule.astro";
+import { num, date as fmtDate, money } from "../../lib/format.mjs";
+const { f, D } = Astro.props;
+const subjects = D.flagRows.filter((r) => r.flag === f.id && !r.item_id);
+const groups = subjects
+  .map((s) => ({
+    ...s,
+    x: JSON.parse(s.detail),
+  }))
+  .sort((a, b) => b.value - a.value);
+---
+
+<>
+  <Schedule>
+    <thead>
+      <tr>
+        <th scope="col">
+          {f.id === "possible-duplicate"
+            ? "Vendor and invoice"
+            : "Supplier, buyer and date"}
+        </th>
+        <th scope="col" class="n">
+          {f.id === "possible-duplicate" ? "Times paid" : "Invoices"}
+        </th>
+        <th scope="col" class="n">
+          {f.id === "possible-duplicate" ? "Each" : "Together"}
+        </th>
+        <th scope="col" class="n">
+          Lines
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      {groups.slice(0, 100).map((s) => (
+        <tr>
+          <th scope="row">
+            <>
+              <a href={"/supplier/" + D.keyHash(s.x.supplier_key || "") + "/"}>
+                {s.subject}
+              </a>
+              {s.x.dates ? (
+                <>
+                  <span class="meta">
+                    {s.x.dates
+                      .map((d) => fmtDate(d))
+                      .flatMap((node, index) =>
+                        index ? [", ", node] : [node],
+                      )}
+                  </span>
+                </>
+              ) : (
+                ""
+              )}
+            </>
+          </th>
+          <td class="n">{num(s.x.invoices || s.x.times)}</td>
+          <td class="n">{money(s.value)}</td>
+          <td class="n">
+            {s.x.items
+              .map((i, n) => (
+                <>
+                  <a class="rcpt" href={"/item/" + i.split("-").pop() + "/"}>
+                    {n + 1}
+                  </a>
+                </>
+              ))
+              .flatMap((node, index) => (index ? [" ", node] : [node]))}
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </Schedule>
+</>
+{groups.length > 100 && (
+  <>
+    <>
+      <p class="muted">Showing the 100 largest of {num(groups.length)}.</p>
+    </>
+  </>
+)}

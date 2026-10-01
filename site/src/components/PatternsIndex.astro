@@ -1,30 +1,28 @@
 ---
+import { countLine } from "../../lib/page-format.mjs";
 import Caveat from "./Caveat.astro";
-const { pagehead, esc, cat, flagItem, countLine, D } = Astro.props;
+import PageHead from "./PageHead.astro";
+import FlagItem from "./FlagItem.astro";
+const { cat, D } = Astro.props;
 ---
 
-<Fragment
-  set:html={await pagehead({
-    crumbs: [
-      ["/", "Home"],
-      [null, "Patterns"],
-    ],
-    title: "Patterns people ask about",
-    lede: "Patterns in the records that people often ask about: deals made without competition, contracts that grew, amounts just under a limit, spending bunched at year end, and more. Each is counted from the records with its method written down. None is a finding of wrongdoing.",
-  })}
+<PageHead
+  crumbs={[
+    ["/", "Home"],
+    [null, "Patterns"],
+  ]}
+  title={"Patterns people ask about"}
+  lede={
+    "Patterns in the records that people often ask about: deals made without competition, contracts that grew, amounts just under a limit, spending bunched at year end, and more. Each is counted from the records with its method written down. None is a finding of wrongdoing."
+  }
 />
 <section class="section">
   <div class="wrap">
-    {<Caveat text={esc(cat.caveat)} />}
+    <Caveat text={cat.caveat} />
     <ul class="flaglist" style="margin-block-start:1.5rem">
-      <Fragment
-        set:html={cat.flags.map((f) =>
-          flagItem(f, {
-            count: countLine(D, f),
-            method: true,
-          }),
-        )}
-      />
+      {cat.flags.map((f) => (
+        <FlagItem f={f} count={countLine(D, f)} method={true} />
+      ))}
     </ul>
     <p class="small muted" style="margin-block-start:1.5rem">
       Some patterns cannot be checked with Newfoundland and Labrador data:

@@ -1,0 +1,11 @@
+---
+const { x, latestYear } = Astro.props;
+---
+
+{x.spent_published && x.accounts.published ? (
+  <a href={x.year === latestYear ? "/budget/" : `/budget/${x.year}/`}>
+    {x.year}
+  </a>
+) : (
+  x.year
+)}

@@ -1,23 +1,44 @@
 ---
+import { words, march } from "../../lib/budget-format.mjs";
+import Citation from "./Citation.astro";
+import PageHead from "./PageHead.astro";
+import CashStatement from "./CashStatement.astro";
+import { DOCS } from "../budgetdata.mjs";
+import AccrualStatement from "./AccrualStatement.astro";
+import DepartmentStatement from "./DepartmentStatement.astro";
+import BudgetTrends from "./BudgetTrends.astro";
+import BudgetChecks from "./BudgetChecks.astro";
 const {
-  pagehead,
   isLatest,
   fy,
-  esc,
-  lede,
-  yearNav,
-  cashTable,
-  acctTable,
-  march,
-  deptTable,
-  trend,
-  checks,
+  deficit,
+  citeBudget,
+  citeSpent,
+  citeOps,
+  citeDebt,
+  published,
+  B,
+  y,
+  c,
+  need,
+  a,
+  citeDebtBudget,
+  pp,
+  citePP,
+  depts,
+  pages,
+  fromReport,
+  maxYear,
+  accord,
+  restated,
+  K,
+  maxDiff,
 } = Astro.props;
 ---
 
-<Fragment
-  set:html={await pagehead({
-    crumbs: isLatest
+<PageHead
+  crumbs={
+    isLatest
       ? [
           ["/", "Home"],
           [null, "Budget against actual"],
@@ -26,20 +47,59 @@ const {
           ["/", "Home"],
           ["/budget/", "Budget against actual"],
           [null, fy],
-        ],
-    title: `Budget against actual, ${esc(fy)}`,
-    lede,
-    extra: yearNav,
-  })}
+        ]
+  }
+  title={`Budget against actual, ${fy}`}
+  lede={
+    <>
+      The budget for {fy} planned {words(c.gross.budget)} of spending by
+      government departments
+      <Citation citation={citeBudget} />. They spent {words(c.gross.actual)}
+      <Citation citation={citeSpent} />, {words(c.difference)}{" "}
+      {c.difference < 0 ? "under" : "over"} the plan. Across the whole
+      government the year ended with a {deficit ? "deficit" : "surplus"} of{" "}
+      {words(a.balance.actual)}
+      <Citation citation={citeOps} /> and net debt of {words(a.net_debt.actual)}
+      <Citation citation={citeDebt} />.
+    </>
+  }
+  extra={
+    <>
+      <nav aria-label="Fiscal year">
+        <ul class="chips">
+          {published.map((x) => (
+            <>
+              <li>
+                <a
+                  href={x === B.latest ? "/budget/" : `/budget/${x.year}/`}
+                  {...(x === y ? { "aria-current": "page" } : {})}
+                >
+                  {x.year}
+                </a>
+              </li>
+            </>
+          ))}
+        </ul>
+      </nav>
+    </>
+  }
 />
 <section class="section">
   <div class="wrap">
     <div class="grid-2 stmts">
       <div>
-        <Fragment set:html={cashTable} />
+        <CashStatement c={c} need={need} DOCS={DOCS} fy={fy} />
       </div>
       <div>
-        <Fragment set:html={acctTable} />
+        <AccrualStatement
+          a={a}
+
+          fy={fy}
+          citeDebtBudget={citeDebtBudget}
+          DOCS={DOCS}
+          pp={pp}
+          citePP={citePP}
+        />
       </div>
     </div>
     <div class="prose" style="margin-block-start:2rem">
@@ -63,11 +123,28 @@ const {
       <h2>By department, largest differences first</h2>
       <p>
         What each department was budgeted in the spring of {fy.slice(0, 4)},
-        what it spent by <Fragment set:html={march(fy)} />, and the difference.
+        what it spent by {march(fy)}, and the difference.
       </p>
     </div>
-    <Fragment set:html={deptTable} />
+    <DepartmentStatement
+      depts={depts}
+      pages={pages}
+
+      c={c}
+      fromReport={fromReport}
+      maxDiff={maxDiff}
+    />
   </div>
 </section>
-<Fragment set:html={trend} />
-<Fragment set:html={checks} />
+{!isLatest ? (
+  ""
+) : (
+  <BudgetTrends
+    B={B}
+    maxYear={maxYear}
+
+    accord={accord}
+    restated={restated}
+  />
+)}
+{!isLatest ? "" : <BudgetChecks K={K} />}

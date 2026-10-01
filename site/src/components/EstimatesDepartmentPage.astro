@@ -1,75 +1,79 @@
 ---
-const {
-  pagehead,
-  estYear,
-  esc,
-  moneyWords,
-  estTotal,
-  cite,
-  schedule,
-  estRows,
-  D,
-  receipt,
-} = Astro.props;
+import Schedule from "./Schedule.astro";
+import PageHead from "./PageHead.astro";
+import { moneyWords } from "../../lib/format.mjs";
+import Citation from "./Citation.astro";
+import ReceiptLink from "./ReceiptLink.astro";
+const { estYear, estTotal, cite, estRows, D } = Astro.props;
 ---
 
-<Fragment
-  set:html={await pagehead({
-    crumbs: [
-      ["/", "Home"],
-      ["/priorities/", "Priorities"],
-      [null, `Estimates ${estYear}`],
-    ],
-    title: `Budget estimates, ${esc(estYear)}`,
-    lede: `What the province plans to spend this year: ${moneyWords(estTotal)} gross${cite}, set against last year's revised figures. The government reorganised departments in late 2025, so many names are new.`,
-  })}
+<PageHead
+  crumbs={[
+    ["/", "Home"],
+    ["/priorities/", "Priorities"],
+    [null, `Estimates ${estYear}`],
+  ]}
+  title={`Budget estimates, ${estYear}`}
+  lede={
+    <>
+      What the province plans to spend this year: {moneyWords(estTotal)} gross
+      <Citation citation={cite} />, set against last year's revised figures. The
+      government reorganised departments in late 2025, so many names are new.
+    </>
+  }
 />
 <section class="section">
   <div class="wrap">
-    <Fragment
-      set:html={await schedule({
-        cols: [
-          {
-            label: "Department",
-          },
-          {
-            label: `Estimate ${esc(estYear)}`,
-            num: true,
-          },
-          {
-            label: "Revised, year before",
-            num: true,
-          },
-          {
-            label: "Budget, year before",
-            num: true,
-          },
-          {
-            label: "Source",
-            num: true,
-          },
-        ],
-        rows: estRows.map((r) => ({
-          cells: [
-            `<a href="/department/${D.slug(r.department)}/">${esc(r.department)}</a>`,
-            moneyWords(r.c1),
-            moneyWords(r.c2),
-            moneyWords(r.c3),
-            receipt(r.source_url, r.page),
-          ],
-        })),
-        foot: [
-          {
-            cells: [
-              "Total",
-              moneyWords(estTotal),
-              moneyWords(estRows.reduce((s, r) => s + r.c2, 0)),
-              moneyWords(estRows.reduce((s, r) => s + r.c3, 0)),
-              "",
-            ],
-          },
-        ],
-      })}
-    />
+    <>
+      <Schedule>
+        <thead>
+          <tr>
+            <th scope="col">Department</th>
+            <th scope="col" class="n">{`Estimate ${estYear}`}</th>
+            <th scope="col" class="n">
+              Revised, year before
+            </th>
+            <th scope="col" class="n">
+              Budget, year before
+            </th>
+            <th scope="col" class="n">
+              Source
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {estRows.map((r) => (
+            <tr>
+              <th scope="row">
+                <>
+                  <a href={"/department/" + D.slug(r.department) + "/"}>
+                    {r.department}
+                  </a>
+                </>
+              </th>
+              <td class="n">{moneyWords(r.c1)}</td>
+              <td class="n">{moneyWords(r.c2)}</td>
+              <td class="n">{moneyWords(r.c3)}</td>
+              <td class="n">
+                <ReceiptLink url={r.source_url} page={r.page} />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+        <tfoot>
+          <tr class="total">
+            <th scope="row">Total</th>
+            <td class="n">{moneyWords(estTotal)}</td>
+            <td class="n">
+              {moneyWords(estRows.reduce((s, r) => s + r.c2, 0))}
+            </td>
+            <td class="n">
+              {moneyWords(estRows.reduce((s, r) => s + r.c3, 0))}
+            </td>
+            <td class="n">{""}</td>
+          </tr>
+        </tfoot>
+      </Schedule>
+    </>
   </div>
 </section>

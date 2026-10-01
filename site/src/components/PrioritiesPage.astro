@@ -1,18 +1,19 @@
 ---
+import Schedule from "./Schedule.astro";
 import Caveat from "./Caveat.astro";
+import PageHead from "./PageHead.astro";
+import { moneyWords, pct } from "../../lib/format.mjs";
+import Citation from "./Citation.astro";
+import Bar from "./Bar.astro";
+import ReceiptLink from "./ReceiptLink.astro";
+import { icon } from "../../lib/icons.mjs";
 const {
-  pagehead,
-  esc,
   fy,
-  moneyWords,
   R,
   citeTot,
   depts,
-  bar,
   max,
-  pct,
-  leaders,
-  cmp,
+  citeInt,
   S,
   citeSC,
   interest,
@@ -20,27 +21,28 @@ const {
   edu,
   roads,
   profTotal,
-  schedule,
   prof,
   D,
-  receipt,
   years,
   yoy,
-  icon,
   citeMtp,
   mtpRows,
 } = Astro.props;
 ---
 
-<Fragment
-  set:html={await pagehead({
-    crumbs: [
-      ["/", "Home"],
-      [null, "Priorities"],
-    ],
-    title: "Priorities",
-    lede: `What the province spent in ${esc(fy)}, department by department, against what the budget said. ${moneyWords(R.total)} in all${citeTot}.`,
-  })}
+<PageHead
+  crumbs={[
+    ["/", "Home"],
+    [null, "Priorities"],
+  ]}
+  title={"Priorities"}
+  lede={
+    <>
+      What the province spent in {fy}, department by department, against what
+      the budget said. {moneyWords(R.total)} in all
+      <Citation citation={citeTot} />.
+    </>
+  }
 />
 <section class="section">
   <div class="wrap">
@@ -94,42 +96,28 @@ const {
                   </th>
                   <td class="hide-sm">
                     <span class="pair">
-                      <Fragment set:html={bar(d.gross, max)} />
-                      <Fragment
-                        set:html={
-                          d.original != null
-                            ? bar(d.original, max, "ghost")
-                            : ""
-                        }
-                      />
+                      <Bar value={d.gross} max={max} />
+                      {d.original != null ? (
+                        <Bar value={d.original} max={max} cls={"ghost"} />
+                      ) : (
+                        ""
+                      )}
                     </span>
                   </td>
+                  <td class="n">{moneyWords(d.gross)}</td>
                   <td class="n">
-                    <Fragment set:html={moneyWords(d.gross)} />
-                  </td>
-                  <td class="n">
-                    <Fragment
-                      set:html={
-                        d.original != null
-                          ? moneyWords(d.original)
-                          : "not printed"
-                      }
-                    />
+                    {d.original != null
+                      ? moneyWords(d.original)
+                      : "not printed"}
                   </td>
                   <td class={"n" + (diff < 0 ? " neg" : "")}>
-                    <Fragment
-                      set:html={
-                        diff == null
-                          ? ""
-                          : diff < 0
-                            ? `(${moneyWords(-diff)})`
-                            : moneyWords(diff)
-                      }
-                    />
+                    {diff == null
+                      ? ""
+                      : diff < 0
+                        ? `(${moneyWords(-diff)})`
+                        : moneyWords(diff)}
                   </td>
-                  <td class="n hide-sm">
-                    <Fragment set:html={pct(d.share, 1)} />
-                  </td>
+                  <td class="n hide-sm">{pct(d.share, 1)}</td>
                 </tr>
               </>
             );
@@ -139,15 +127,9 @@ const {
           <tr class="total">
             <th scope="row">Total</th>
             <td class="hide-sm"></td>
+            <td class="n">{moneyWords(R.total)}</td>
             <td class="n">
-              <Fragment set:html={moneyWords(R.total)} />
-            </td>
-            <td class="n">
-              <Fragment
-                set:html={moneyWords(
-                  depts.reduce((s, d) => s + (d.original || 0), 0),
-                )}
-              />
+              {moneyWords(depts.reduce((s, d) => s + (d.original || 0), 0))}
             </td>
             <td></td>
             <td class="n hide-sm">100%</td>
@@ -179,23 +161,37 @@ const {
           Services.
         </p>
       </div>
-      <Fragment
-        set:html={leaders(
-          cmp.map((c) => ({
-            label: c.label,
-            value: c.value,
-          })),
-        )}
-      />
+      <dl class="leaders">
+        <div>
+          <dt>
+            <span>
+              Interest on the province's borrowing
+              <Citation citation={citeInt} />
+            </span>
+          </dt>
+          <dd>{moneyWords(interest.v)}</dd>
+        </div>
+        {[health, edu, roads].map((department, index) => (
+          <div>
+            <dt>
+              <span>
+                <a href={`/department/${department.slug}/`}>
+                  {department.name}
+                </a>
+                {index === 2 && " (roads, ferries, buildings)"}
+              </span>
+            </dt>
+            <dd>{moneyWords(department.gross)}</dd>
+          </div>
+        ))}
+      </dl>
       <p class="small muted" style="margin-block-start:1rem">
         The interest figure is the gross spending on programs 1.1.01 to 1.1.04
         in the report, before any interest the province itself earns. Statistics
         Canada, measuring differently, puts provincial interest on debt in{" "}
         {S.provincial_government.year} at{" "}
-        <Fragment
-          set:html={moneyWords(S.provincial_government.interest_on_debt)}
-        />
-        <Fragment set:html={citeSC} />.
+        {moneyWords(S.provincial_government.interest_on_debt)}
+        <Citation citation={citeSC} />.
       </p>
     </div>
     <div>
@@ -233,19 +229,18 @@ const {
       <ul class="legend">
         <li>
           <span class="sw" style="background:var(--red)"></span>Interest{" "}
-          <Fragment set:html={pct(interest.v / R.total)} />
+          {pct(interest.v / R.total)}
         </li>
         <li>
-          <span class="sw"></span>Health{" "}
-          <Fragment set:html={pct(health.gross / R.total)} />
+          <span class="sw"></span>Health {pct(health.gross / R.total)}
         </li>
         <li>
           <span class="sw lv-municipal"></span>Education{" "}
-          <Fragment set:html={pct(edu.gross / R.total)} />
+          {pct(edu.gross / R.total)}
         </li>
         <li>
           <span class="sw" style="background:var(--graphite)"></span>
-          Transportation <Fragment set:html={pct(roads.gross / R.total)} />
+          Transportation {pct(roads.gross / R.total)}
         </li>
         <li>
           <span class="sw ghost"></span>Everything else
@@ -264,41 +259,41 @@ const {
         expertise such as consultants. In health it is mostly doctors paid
         fee-for-service under the Medical Care Plan, so read the program name
         before reading the figure. Total across government:{" "}
-        <Fragment set:html={moneyWords(profTotal)} />.{" "}
+        {moneyWords(profTotal)}.{" "}
         <a href="/consulting/">
           Consultants and professional services, by year and department
         </a>
         .
       </p>
     </div>
-    <Fragment
-      set:html={await schedule({
-        cols: [
-          {
-            label: "Program",
-          },
-          {
-            label: "Department",
-          },
-          {
-            label: "Professional services",
-            num: true,
-          },
-          {
-            label: "Source",
-            num: true,
-          },
-        ],
-        rows: prof.map((p) => ({
-          cells: [
-            esc(p.program),
-            esc(D.pretty(p.department)),
-            moneyWords(p.v),
-            receipt(p.source_url, p.page),
-          ],
-        })),
-      })}
-    />
+    <>
+      <Schedule>
+        <thead>
+          <tr>
+            <th scope="col">Program</th>
+            <th scope="col">Department</th>
+            <th scope="col" class="n">
+              Professional services
+            </th>
+            <th scope="col" class="n">
+              Source
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {prof.map((p) => (
+            <tr>
+              <th scope="row">{p.program}</th>
+              <td>{D.pretty(p.department)}</td>
+              <td class="n">{moneyWords(p.v)}</td>
+              <td class="n">
+                <ReceiptLink url={p.source_url} page={p.page} />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </Schedule>
+    </>
   </div>
 </section>
 
@@ -334,9 +329,7 @@ const {
                 <th scope="row">{r.name}</th>
                 {r.vals.map((v) => (
                   <>
-                    <td class="n">
-                      <Fragment set:html={v ? moneyWords(v) : ""} />
-                    </td>
+                    <td class="n">{v ? moneyWords(v) : ""}</td>
                   </>
                 ))}
               </tr>
@@ -349,11 +342,7 @@ const {
             {years.map((y) => (
               <>
                 <td class="n">
-                  <Fragment
-                    set:html={moneyWords(
-                      D.deptYear[y].reduce((s, d) => s + d.gross, 0),
-                    )}
-                  />
+                  {moneyWords(D.deptYear[y].reduce((s, d) => s + d.gross, 0))}
                 </td>
               </>
             ))}
@@ -379,22 +368,25 @@ const {
           Major federal transfers in 2024-25: to the provincial government
           (health and social transfers, fiscal arrangements) and to people
           directly (Old Age Security, Employment Insurance)
-          <Fragment set:html={citeMtp} />.
+          <Citation citation={citeMtp} />.
         </p>
       </div>
-      <Fragment
-        set:html={leaders([
-          ...mtpRows.map(([k, v]) => ({
-            label: esc(k),
-            value: moneyWords(v),
-          })),
-          {
-            label: "Total",
-            value: moneyWords(mtpRows.reduce((s, [, v]) => s + v, 0)),
-            cls: "total",
-          },
-        ])}
-      />
+      <dl class="leaders">
+        {mtpRows.map(([label, value]) => (
+          <div>
+            <dt>
+              <span>{label}</span>
+            </dt>
+            <dd>{moneyWords(value)}</dd>
+          </div>
+        ))}
+        <div class={"total"}>
+          <dt>
+            <span>Total</span>
+          </dt>
+          <dd>{moneyWords(mtpRows.reduce((s, [, v]) => s + v, 0))}</dd>
+        </div>
+      </dl>
       <p style="margin-block-start:1rem">
         <a href="/federal/">
           Federal contracts and grants in the province{" "}
@@ -403,13 +395,11 @@ const {
       </p>
     </div>
     <div>
-      {
-        <Caveat
-          text={
-            "Federal transfers to people (Old Age Security, Employment Insurance) are not provincial spending. They are here because they are public money arriving in the province, and are often larger than a whole provincial department."
-          }
-        />
-      }
+      <Caveat
+        text={
+          "Federal transfers to people (Old Age Security, Employment Insurance) are not provincial spending. They are here because they are public money arriving in the province, and are often larger than a whole provincial department."
+        }
+      />
     </div>
   </div>
 </section>

@@ -1,16 +1,19 @@
 ---
-const { pagehead, groups, schedule, D, esc, num, moneyWords } = Astro.props;
+import Schedule from "./Schedule.astro";
+import PageHead from "./PageHead.astro";
+import { num, moneyWords } from "../../lib/format.mjs";
+const { groups, D } = Astro.props;
 ---
 
-<Fragment
-  set:html={await pagehead({
-    crumbs: [
-      ["/", "Home"],
-      [null, "Public bodies"],
-    ],
-    title: "Public bodies",
-    lede: "Departments and agencies named in the records. Federal results are selected by reported addresses, not spending location; sources can overlap.",
-  })}
+<PageHead
+  crumbs={[
+    ["/", "Home"],
+    [null, "Public bodies"],
+  ]}
+  title={"Public bodies"}
+  lede={
+    "Departments and agencies named in the records. Federal results are selected by reported addresses, not spending location; sources can overlap."
+  }
 />
 {await Promise.all(
   groups.map(async ([title, rows]) => (
@@ -21,31 +24,34 @@ const { pagehead, groups, schedule, D, esc, num, moneyWords } = Astro.props;
           CAD reported record values, all years. Sources can overlap; federal
           address selection does not locate work or benefit.
         </p>
-        <Fragment
-          set:html={await schedule({
-            compact: true,
-            cols: [
-              {
-                label: "Body",
-              },
-              {
-                label: "Records",
-                num: true,
-              },
-              {
-                label: "Value",
-                num: true,
-              },
-            ],
-            rows: rows.map((b) => ({
-              cells: [
-                `<a href="/body/${D.slug(b.buyer)}/">${esc(b.buyer)}</a>`,
-                num(b.n),
-                moneyWords(b.amount || 0),
-              ],
-            })),
-          })}
-        />
+        <>
+          <Schedule compact>
+            <thead>
+              <tr>
+                <th scope="col">Body</th>
+                <th scope="col" class="n">
+                  Records
+                </th>
+                <th scope="col" class="n">
+                  Value
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((b) => (
+                <tr>
+                  <th scope="row">
+                    <>
+                      <a href={"/body/" + D.slug(b.buyer) + "/"}>{b.buyer}</a>
+                    </>
+                  </th>
+                  <td class="n">{num(b.n)}</td>
+                  <td class="n">{moneyWords(b.amount || 0)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </Schedule>
+        </>
       </div>
     </section>
   )),

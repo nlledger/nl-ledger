@@ -1,40 +1,28 @@
-import { renderComponent } from "../../lib/render.mjs";
+import {
+  components_SourcesPage_astro as SourcesPage,
+  components_MethodsPage_astro as MethodsPage,
+  components_ReceiptMethod_astro as ReceiptMethod,
+  components_FederalMethod_astro as FederalMethod,
+  components_SuppliersMethod_astro as SuppliersMethod,
+  components_CorrectionsPage_astro as CorrectionsPage,
+  components_AboutPage_astro as AboutPage,
+  components_TermsPage_astro as TermsPage,
+  components_AskedPage_astro as AskedPage,
+  components_HelpPage_astro as HelpPage,
+  components_NotFound_astro as NotFound,
+  components_ScalePage_astro as ScalePage,
+} from "../../.render/components.mjs";
+import { renderAstro } from "../../lib/render.mjs";
 // Sources and report card, methods, corrections, about, data access, the fold-out scale, 404.
-import {
-  esc,
-  html,
-  icon,
-  Notes,
-  schedule,
-  leaders,
-  bar,
-  methodCode,
-  REPO,
-} from "../../lib/html.mjs";
+import { Notes } from "../../lib/html.mjs";
 import { card as shareCard, cardAmount } from "../../lib/share-card.mjs";
-import {
-  money,
-  moneyWords,
-  num,
-  pct,
-  date as fmtDate,
-  workTime,
-  SITE,
-  payrollContributions,
-  nlIncomeTax,
-} from "../../lib/format.mjs";
-import {
-  FEDERAL_RULE,
-  federalStatement,
-  amountBasis,
-} from "../../lib/federal.mjs";
+import { num, pct } from "../../lib/format.mjs";
+import { federalStatement, amountBasis } from "../../lib/federal.mjs";
 import { desc } from "../seo.mjs";
 import { DATASETS } from "../../lib/search.mjs";
-import { pagehead, caveat, datasetLabel } from "../common.mjs";
 import { connectPage } from "./connect.mjs";
 import { LICENCES, SOURCE_LICENCE } from "../licences.mjs";
 import { ASKED, ASKED_STATE } from "../asked.mjs";
-
 const SOURCES = [
   {
     ds: "ppa",
@@ -117,7 +105,6 @@ const SOURCES = [
     form: "Scanned images read by OCR (tesseract). Text can be misread; every line links to its page.",
   },
 ];
-
 const OTHER = [
   [
     "Report on the Program Expenditures and Revenues of the Consolidated Revenue Fund, 2019-20 to 2024-25",
@@ -152,62 +139,6 @@ const OTHER = [
 ];
 
 // The receipt's arithmetic for one income, line by line, so a reader can redo it with a calculator.
-async function workedExample(S) {
-  const t = S.nl_tax;
-  const income = Math.round(S.median_annual_wage.value);
-  const p = payrollContributions(income, t);
-  const net = income - p.deduction;
-  const rate1 = t.brackets[0][2];
-  const cents = (x) => money(x, { cents: true });
-  let brackets = 0;
-  const parts = [];
-  for (const [lo, hi, rate] of t.brackets) {
-    if (net <= lo) break;
-    const slice = Math.min(net, hi ?? Infinity) - lo;
-    brackets += slice * rate;
-    parts.push(`${cents(slice)} at ${(rate * 100).toFixed(1)}%`);
-  }
-  const credits = t.basic_personal_amount + p.baseCpp + p.ei;
-  const lowIncome = Math.max(
-    0,
-    t.low_income.basic -
-      t.low_income.rate * Math.max(0, net - t.low_income.threshold),
-  );
-  const rows = [
-    [
-      "Employment income (the median full-time wage, Statistics Canada)",
-      cents(income),
-    ],
-    ["Base CPP, 4.95% of earnings above $3,500 (a credit)", cents(p.baseCpp)],
-    ["Enhanced CPP, 1% of the same earnings (a deduction)", cents(p.deduction)],
-    ["EI premiums, 1.64% of income (a credit)", cents(p.ei)],
-    ["Net income: income less the deduction", cents(net)],
-    [`Tax on the brackets: ${parts.join(" and ")}`, cents(brackets)],
-    [
-      `Credits: basic personal amount ${cents(t.basic_personal_amount)} + CPP + EI = ${cents(credits)}, times ${(rate1 * 100).toFixed(1)}%`,
-      cents(credits * rate1),
-    ],
-    ["Low-income tax reduction (none at this income)", cents(lowIncome)],
-    ["Provincial income tax on the receipt", cents(nlIncomeTax(income, t))],
-  ];
-
-  return await renderComponent("components_ReceiptWorkedExample_astro", {
-    money,
-    income,
-    esc,
-    t,
-    schedule,
-    rows,
-    cents,
-    nlIncomeTax,
-  });
-}
-
-export function isBrokenPublisherLink(issue) {
-  return /^(?:[45]\d\d\b|link returns a web page\b)|page not found/i.test(
-    issue,
-  );
-}
 
 export async function info(D, R) {
   const out = [];
@@ -281,7 +212,6 @@ export async function info(D, R) {
       grade: ["No line-by-line payment data is published at all"],
     },
   ];
-
   out.push([
     "/sources/",
     {
@@ -289,24 +219,15 @@ export async function info(D, R) {
       description: desc(
         "What each publisher releases, how much is loaded, the licence each source is under, and a report card on how complete and usable the records are.",
       ),
-      body: await renderComponent("components_SourcesPage_astro", {
-        pagehead,
+      body: await renderAstro(SourcesPage, {
         SOURCES,
         DATASETS,
         counts,
-        esc,
-        datasetLabel,
         LICENCES,
         SOURCE_LICENCE,
-        num,
-        moneyWords,
-        fmtDate,
-        schedule,
         OTHER,
-        REPO,
         card,
         D,
-        isBrokenPublisherLink,
       }),
     },
   ]);
@@ -324,13 +245,8 @@ export async function info(D, R) {
       description: desc(
         "How every figure and pattern on NL Ledger is counted, what it leaves out and what it cannot tell you: the tax receipt, federal amendments and each pattern.",
       ),
-      body: await renderComponent("components_MethodsPage_astro", {
-        pagehead,
-        num,
+      body: await renderAstro(MethodsPage, {
         D,
-        fmtDate,
-        money,
-        methodCode,
       }),
     },
   ]);
@@ -342,14 +258,9 @@ export async function info(D, R) {
       description: desc(
         "How the tax receipt works out provincial income tax from form NL428 with CPP and EI credits, spreads it across departments, and a worked example at the median wage.",
       ),
-      body: await renderComponent("components_ReceiptMethod_astro", {
-        pagehead,
+      body: await renderAstro(ReceiptMethod, {
         S,
-        money,
         R,
-        workedExample,
-        pct,
-        methodCode,
       }),
     },
   ]);
@@ -366,21 +277,11 @@ export async function info(D, R) {
       description: desc(
         "Federal disclosure files repeat a contract every time it is amended. How NL Ledger counts each contract and grant once, and the totals before and after.",
       ),
-      body: await renderComponent("components_FederalMethod_astro", {
-        pagehead,
-        esc,
-        FEDERAL_RULE,
-        num,
+      body: await renderAstro(FederalMethod, {
         F,
-        money,
-        schedule,
-        moneyWords,
-        REPO,
-        methodCode,
       }),
     },
   ]);
-
   const M = D.matching;
   const GH = "https://github.com/nlledger/nl-ledger";
   out.push([
@@ -395,16 +296,9 @@ export async function info(D, R) {
       description: desc(
         "How NL Ledger decides that names printed different ways across provincial and federal records are one supplier, and which close names it keeps apart.",
       ),
-      body: await renderComponent("components_SuppliersMethod_astro", {
-        pagehead,
-        esc,
-        FEDERAL_RULE,
-        num,
+      body: await renderAstro(SuppliersMethod, {
         M,
-        schedule,
-        moneyWords,
         GH,
-        methodCode,
       }),
     },
   ]);
@@ -417,12 +311,9 @@ export async function info(D, R) {
       description: desc(
         "Every change to a published figure on NL Ledger, logged with the date and the reason, and how to report a figure that does not match its source.",
       ),
-      body: await renderComponent("components_CorrectionsPage_astro", {
-        pagehead,
+      body: await renderAstro(CorrectionsPage, {
         GH,
-        fmtDate,
         D,
-        SITE,
       }),
     },
   ]);
@@ -435,14 +326,9 @@ export async function info(D, R) {
       description: desc(
         "NL Ledger is an independent project, in beta, that gathers Newfoundland and Labrador public spending records in one searchable place, each linked to its source.",
       ),
-      body: await renderComponent("components_AboutPage_astro", {
-        pagehead,
-        SITE,
-        num,
+      body: await renderAstro(AboutPage, {
         R,
-        fmtDate,
         D,
-        icon,
       }),
     },
   ]);
@@ -455,10 +341,7 @@ export async function info(D, R) {
       description: desc(
         "NL Ledger's terms of use: what the site is, what its figures are and are not, and the limits of its responsibility.",
       ),
-      body: await renderComponent("components_TermsPage_astro", {
-        pagehead,
-        SITE,
-      }),
+      body: await renderAstro(TermsPage, {}),
     },
   ]);
 
@@ -470,11 +353,9 @@ export async function info(D, R) {
       description: desc(
         "Suggestions readers have sent about NL Ledger and what was done about each one, without names. Anyone can add one from the box on any page.",
       ),
-      body: await renderComponent("components_AskedPage_astro", {
-        pagehead,
+      body: await renderAstro(AskedPage, {
         ASKED,
         ASKED_STATE,
-        fmtDate,
       }),
     },
   ]);
@@ -510,7 +391,6 @@ export async function info(D, R) {
       text: "Want records that are not published anywhere? Describe them and who holds them. A good request can become an access to information request, and the answer can be added here.",
     },
   ];
-
   out.push([
     "/help/",
     {
@@ -518,12 +398,8 @@ export async function info(D, R) {
       description: desc(
         "Add a source, challenge a method, report a figure that does not match its document, or request records that are not published. No programming needed.",
       ),
-      body: await renderComponent("components_HelpPage_astro", {
-        pagehead,
-        SITE,
+      body: await renderAstro(HelpPage, {
         WAYS,
-        REPO,
-        icon,
       }),
     },
   ]);
@@ -540,12 +416,11 @@ export async function info(D, R) {
     {
       title: "Page not found",
       robots: "noindex",
-      body: await renderComponent("components_NotFound_astro", { pagehead }),
+      body: await renderAstro(NotFound, {}),
     },
   ]);
   return out;
 }
-
 async function scalePage(D, R) {
   const S = D.stats;
   const BILLION = 1e9;
@@ -555,7 +430,14 @@ async function scalePage(D, R) {
   const fy = R.year;
   const pins = [];
   const add = (label, amount, href, detail) =>
-    amount && amount < BILLION && pins.push({ label, amount, href, detail });
+    amount &&
+    amount < BILLION &&
+    pins.push({
+      label,
+      amount,
+      href,
+      detail,
+    });
   add(
     "A median full-time wage for a year",
     S.median_annual_wage.value,
@@ -643,17 +525,11 @@ async function scalePage(D, R) {
     "Medical Care Plan",
   );
   pins.sort((a, b) => a.amount - b.amount);
-  const body = await renderComponent("components_ScalePage_astro", {
-    pagehead,
-    esc,
+  const body = await renderAstro(ScalePage, {
     fy,
-    moneyWords,
     R,
     BILLION,
-    schedule,
     pins,
-    bar,
-    money,
   });
   return [
     "/scale/",

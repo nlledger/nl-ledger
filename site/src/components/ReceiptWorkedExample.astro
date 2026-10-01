@@ -1,43 +1,84 @@
 ---
-const { money, income, esc, t, schedule, rows, cents, nlIncomeTax } =
-  Astro.props;
+import Schedule from "./Schedule.astro";
+import { money, nlIncomeTax, payrollContributions } from "../../lib/format.mjs";
+const { S } = Astro.props;
+const t = S.nl_tax;
+const income = Math.round(S.median_annual_wage.value);
+const p = payrollContributions(income, t);
+const net = income - p.deduction;
+const rate1 = t.brackets[0][2];
+const cents = (x) =>
+  money(x, {
+    cents: true,
+  });
+let brackets = 0;
+const parts = [];
+for (const [lo, hi, rate] of t.brackets) {
+  if (net <= lo) break;
+  const slice = Math.min(net, hi ?? Infinity) - lo;
+  brackets += slice * rate;
+  parts.push(`${cents(slice)} at ${(rate * 100).toFixed(1)}%`);
+}
+const credits = t.basic_personal_amount + p.baseCpp + p.ei;
+const lowIncome = Math.max(
+  0,
+  t.low_income.basic -
+    t.low_income.rate * Math.max(0, net - t.low_income.threshold),
+);
+const rows = [
+  [
+    "Employment income (the median full-time wage, Statistics Canada)",
+    cents(income),
+  ],
+  ["Base CPP, 4.95% of earnings above $3,500 (a credit)", cents(p.baseCpp)],
+  ["Enhanced CPP, 1% of the same earnings (a deduction)", cents(p.deduction)],
+  ["EI premiums, 1.64% of income (a credit)", cents(p.ei)],
+  ["Net income: income less the deduction", cents(net)],
+  [`Tax on the brackets: ${parts.join(" and ")}`, cents(brackets)],
+  [
+    `Credits: basic personal amount ${cents(t.basic_personal_amount)} + CPP + EI = ${cents(credits)}, times ${(rate1 * 100).toFixed(1)}%`,
+    cents(credits * rate1),
+  ],
+  ["Low-income tax reduction (none at this income)", cents(lowIncome)],
+  ["Provincial income tax on the receipt", cents(nlIncomeTax(income, t))],
+];
 ---
 
 <h2>Worked example at the median wage</h2>
 <p>
-  The same arithmetic the receipt runs, for{" "}
-  <Fragment set:html={money(income)} /> of employment income in {t.year}. Redo
-  it with a calculator, or check it against form NL428 (lines 27 and 29 are the
-  CPP and EI credits).
+  The same arithmetic the receipt runs, for {money(income)} of employment income
+  in {t.year}. Redo it with a calculator, or check it against form NL428 (lines
+  27 and 29 are the CPP and EI credits).
 </p>
-<Fragment
-  set:html={await schedule({
-    compact: true,
-    cols: [
-      {
-        label: "Step",
-      },
-      {
-        label: "Amount",
-        num: true,
-      },
-    ],
-    rows: rows.map((r) => ({
-      cells: [esc(r[0]), r[1]],
-    })),
-  })}
-/>
+<>
+  <Schedule compact>
+    <thead>
+      <tr>
+        <th scope="col">Step</th>
+        <th scope="col" class="n">
+          Amount
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      {rows.map((r) => (
+        <tr>
+          <th scope="row">{r[0]}</th>
+          <td class="n">{r[1]}</td>
+        </tr>
+      ))}
+    </tbody>
+  </Schedule>
+</>
 <p class="small">
   Without the CPP and EI credits and the enhanced CPP deduction, the same income
   would show{" "}
-  <Fragment
-    set:html={cents(
-      nlIncomeTax(income, {
-        ...t,
-        cpp: undefined,
-        ei: undefined,
-      }),
-    )}
-  />
+  {cents(
+    nlIncomeTax(income, {
+      ...t,
+      cpp: undefined,
+      ei: undefined,
+    }),
+  )}
   .
 </p>

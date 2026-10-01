@@ -1,0 +1,127 @@
+---
+import Schedule from "./Schedule.astro";
+import { num, money } from "../../lib/format.mjs";
+import { datasetLabel, ITEM_COLS } from "../common.mjs";
+import ItemRow from "./ItemRow.astro";
+const { f, D } = Astro.props;
+const itemIds = D.flagRows
+  .filter((r) => r.flag === f.id && r.item_id)
+  .map((r) => r.item_id);
+const rows = itemIds.length
+  ? D.q(
+      `SELECT * FROM items WHERE id IN (${itemIds
+        .slice(0, 5000)
+        .map(() => "?")
+        .join(",")}) ORDER BY amount DESC LIMIT 120`,
+      ...itemIds.slice(0, 5000),
+    )
+  : [];
+let dist, drows;
+if (f.id === "just-under-limit") {
+  dist = JSON.parse(D.flagSummary[f.id].detail || "{}");
+  drows = [];
+  for (const [src, lims] of Object.entries(dist))
+    for (const [lim, v] of Object.entries(lims))
+      drows.push({
+        cells: [
+          datasetLabel(src),
+          `${money(+lim)} (${v.label})`,
+          num(v.below),
+          num(v.above),
+        ],
+      });
+}
+---
+
+{f.id === "just-under-limit" && (
+  <>
+    <>
+      <h2 style="margin-block-end:1rem">Just below against just above</h2>
+      <>
+        <Schedule>
+          <thead>
+            <tr>
+              <th scope="col">Source</th>
+              <th scope="col">Limit</th>
+              <th scope="col" class="n">
+                Within 5% below
+              </th>
+              <th scope="col" class="n">
+                Within 5% above
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {drows.map((r) => (
+              <tr class={r.cls}>
+                {" "}
+                {r.cells.map((cell, i) =>
+                  i === 0 ? (
+                    <th scope="row">{cell}</th>
+                  ) : (
+                    <td
+                      class={
+                        [
+                          {
+                            label: "Source",
+                          },
+                          {
+                            label: "Limit",
+                          },
+                          {
+                            label: "Within 5% below",
+                            num: true,
+                          },
+                          {
+                            label: "Within 5% above",
+                            num: true,
+                          },
+                        ][i]?.num
+                          ? "n"
+                          : undefined
+                      }
+                    >
+                      {cell}
+                    </td>
+                  ),
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </Schedule>
+      </>
+      <h2 style="margin-block:2.5rem 1rem">The largest</h2>
+    </>
+  </>
+)}
+<>
+  <Schedule>
+    <thead>
+      <tr>
+        {ITEM_COLS.map((c) => (
+          <th
+            scope="col"
+            class={c.num ? "n" : undefined}
+            style={c.w ? `inline-size:${c.w}` : undefined}
+          >
+            {c.label}
+          </th>
+        ))}
+      </tr>
+    </thead>
+    <tbody>
+      {rows.map((r) => (
+        <ItemRow D={D} it={r} />
+      ))}
+    </tbody>
+  </Schedule>
+</>
+{itemIds.length > 120 && (
+  <>
+    <>
+      <p>
+        <a href={"/search/?f=" + f.id}>All {num(itemIds.length)} in search</a>
+      </p>
+    </>
+  </>
+)}

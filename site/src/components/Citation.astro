@@ -1,0 +1,27 @@
+---
+import { icon } from "../../lib/icons.mjs";
+const { citation } = Astro.props;
+---
+
+{citation && (
+  <>
+    <sup class="fn">
+      <a
+        href={`#note-${citation.n}`}
+        id={`ref-${citation.n}-${citation.ref}`}
+        aria-label={`Source note ${citation.n}`}
+      >
+        {citation.n}
+      </a>
+    </sup>
+    <span class="cite-source">
+      <a
+        href={citation.href || `#note-${citation.n}`}
+        aria-label={`Source ${citation.n}: ${citation.label}`}
+        rel="noopener"
+      >
+        Source {citation.n} <Fragment set:html={icon("out")} />
+      </a>
+    </span>
+  </>
+)}

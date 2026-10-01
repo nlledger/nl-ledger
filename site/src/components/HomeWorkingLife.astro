@@ -1,26 +1,16 @@
 ---
-import HtmlOneToOne from "./OneToOne.astro";
-const {
+import SpendingCallout from "./SpendingCallout.astro";
+import {
   money,
-  median,
   moneyWords,
-  career,
-  esc,
-  fy,
-  h,
-  m,
-  leaders,
   perPerson,
-  total,
-  S,
-  citeHH,
   perHousehold,
-  perHour,
-  ex,
   workTime,
-  receipt,
-  icon,
-} = Astro.props;
+} from "../../lib/format.mjs";
+import Citation from "./Citation.astro";
+import ReceiptLink from "./ReceiptLink.astro";
+import { icon } from "../../lib/icons.mjs";
+const { median, career, fy, h, m, total, S, citeHH, perHour, ex } = Astro.props;
 ---
 
 <section class="section" aria-labelledby="life-h">
@@ -28,39 +18,49 @@ const {
     <div class="section-head">
       <h2 id="life-h">What a working life buys</h2>
       <p class="lede">
-        Someone earning the median full-time wage here,{" "}
-        <Fragment set:html={money(median)} /> a year, makes about{" "}
-        <Fragment set:html={moneyWords(career)} /> over a 40-year career. In{" "}
-        {fy} the province spent that much every <Fragment set:html={h} /> hours
-        and <Fragment set:html={m} /> minutes.
+        Someone earning the median full-time wage here, {money(median)} a year,
+        makes about {moneyWords(career)} over a 40-year career. In {fy} the
+        province spent that much every {h} hours and {m} minutes.
       </p>
     </div>
     <div style="max-inline-size:40rem;margin-block-end:2.5rem">
-      <Fragment
-        set:html={leaders([
-          {
-            label: `Provincial spending for every resident, ${esc(fy.replace("-", "\u2011"))}`,
-            value: money(perPerson(total, S)),
-          },
-          {
-            label: `Provincial spending for every household${citeHH}`,
-            value: money(perHousehold(total, S)),
-          },
-          {
-            label: "Provincial spending every hour, around the clock, all year",
-            value: moneyWords(perHour, 1),
-          },
-          {
-            label: "A 40-year career at the median wage",
-            value: moneyWords(career),
-            cls: "total",
-          },
-        ]).replace('class="leaders"', 'class="leaders big"')}
-      />
+      <dl class="leaders big">
+        <div>
+          <dt>
+            <span>{`Provincial spending for every resident, ${fy.replace("-", "\u2011")}`}</span>
+          </dt>
+          <dd>{money(perPerson(total, S))}</dd>
+        </div>
+        <div>
+          <dt>
+            <span>
+              <>
+                Provincial spending for every household
+                <Citation citation={citeHH} />
+              </>
+            </span>
+          </dt>
+          <dd>{money(perHousehold(total, S))}</dd>
+        </div>
+        <div>
+          <dt>
+            <span>
+              Provincial spending every hour, around the clock, all year
+            </span>
+          </dt>
+          <dd>{moneyWords(perHour, 1)}</dd>
+        </div>
+        <div class={"total"}>
+          <dt>
+            <span>A 40-year career at the median wage</span>
+          </dt>
+          <dd>{moneyWords(career)}</dd>
+        </div>
+      </dl>
     </div>
     <div class="grid-2" style="align-items:stretch">
       {ex.map((e) => (
-        <HtmlOneToOne
+        <SpendingCallout
           {...{
             title: e.title,
             amount: e.amount,
@@ -68,11 +68,8 @@ const {
             body: (
               <>
                 {e.what} It would take someone on the median wage{" "}
-                <strong>
-                  <Fragment set:html={workTime(e.amount, S)} />
-                </strong>{" "}
-                to earn.{" "}
-                <Fragment set:html={receipt(e.url, e.page, e.locator)} />
+                <strong>{workTime(e.amount, S)}</strong> to earn.{" "}
+                <ReceiptLink url={e.url} page={e.page} locator={e.locator} />
               </>
             ),
             against: {
@@ -80,7 +77,6 @@ const {
               label: "a 40-year career at the median wage",
             },
           }}
-          money={money}
         />
       ))}
     </div>

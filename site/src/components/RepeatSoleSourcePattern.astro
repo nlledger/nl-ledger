@@ -1,0 +1,47 @@
+---
+import Schedule from "./Schedule.astro";
+import BodyAnchor from "./BodyAnchor.astro";
+import { num, moneyWords, date as fmtDate } from "../../lib/format.mjs";
+const { f, D } = Astro.props;
+const subjects = D.flagRows.filter((r) => r.flag === f.id && !r.item_id);
+const pairs = subjects
+  .map((s) => ({
+    ...s,
+    x: JSON.parse(s.detail),
+  }))
+  .sort((a, b) => b.value - a.value);
+---
+
+<>
+  <Schedule>
+    <thead>
+      <tr>
+        <th scope="col">Public body and supplier</th>
+        <th scope="col" class="n">
+          Awards
+        </th>
+        <th scope="col" class="n">
+          Value
+        </th>
+        <th scope="col">Period</th>
+      </tr>
+    </thead>
+    <tbody>
+      {pairs.slice(0, 80).map((s) => (
+        <tr>
+          <th scope="row">
+            <>
+              <BodyAnchor D={D} name={s.x.buyer} /> →{" "}
+              <a href={"/supplier/" + D.keyHash(s.x.supplier_key) + "/"}>
+                {s.x.supplier}
+              </a>
+            </>
+          </th>
+          <td class="n">{num(s.x.awards)}</td>
+          <td class="n">{moneyWords(s.value)}</td>
+          <td>{`${fmtDate(s.x.first)} to ${fmtDate(s.x.last)}`}</td>
+        </tr>
+      ))}
+    </tbody>
+  </Schedule>
+</>

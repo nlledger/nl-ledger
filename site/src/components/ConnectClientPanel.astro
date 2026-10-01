@@ -1,6 +1,13 @@
 ---
-const { c, esc, chat, copyBlock, at, actionButton, list, icon, VERIFIED } =
-  Astro.props;
+import ConnectCopyBlock from "./ConnectCopyBlock.astro";
+import { icon } from "../../lib/icons.mjs";
+const { c } = Astro.props;
+const chat = c.group === "chat";
+const at = c.action ? (c.action.after ?? c.steps.length) : -1;
+const VERIFIED = {
+  tested:
+    "Tested on 29 September 2026: it connected and answered questions from the records.",
+};
 ---
 
 <article
@@ -13,30 +20,121 @@ const { c, esc, chat, copyBlock, at, actionButton, list, icon, VERIFIED } =
     <h3 id={"h-" + c.id}>{c.name}</h3>
     <p class={chat ? undefined : "muted small"}>{c.lead}</p>
   </header>
-  <Fragment
-    set:html={
-      chat
-        ? await Promise.all(
-            c.copy.map(async (x) => await copyBlock(x.label, x.text)),
-          )
-        : ""
-    }
-  />
-  <Fragment set:html={c.action && at === 0 ? actionButton(c.action) : ""} />
-  <Fragment set:html={list(c.steps.slice(0, Math.max(0, at)), 1)} />
-  <Fragment set:html={c.action && at > 0 ? actionButton(c.action) : ""} />
-  <Fragment
-    set:html={list(c.steps.slice(Math.max(0, at)), Math.max(0, at) + 1)}
-  />
-  <Fragment
-    set:html={
-      chat
-        ? ""
-        : await Promise.all(
-            c.copy.map(async (x) => await copyBlock(x.label, x.text)),
-          )
-    }
-  />
+  {chat
+    ? c.copy.map((x) => <ConnectCopyBlock label={x.label} text={x.text} />)
+    : ""}
+  {c.action && at === 0 ? (
+    <>
+      <p class="client-act">
+        <a
+          class="btn solo"
+          href={c.action.href}
+          {...(c.action.app ? {} : { target: "_blank", rel: "noopener" })}
+          {...(c.action.copies ? { "data-copy-open": c.action.copies } : {})}
+        >
+          <Fragment set:html={icon(c.action.app ? "plug" : "out")} />
+          {c.action.label}
+        </a>
+        {c.action.app ? (
+          <>
+            <span class="small muted">
+              Opens the app if it is installed on this computer.
+            </span>
+          </>
+        ) : (
+          ""
+        )}
+      </p>
+    </>
+  ) : (
+    ""
+  )}
+  {c.steps.slice(0, Math.max(0, at)).length ? (
+    <>
+      <ol class="steps" {...(1 > 1 ? { start: 1 } : {})}>
+        {c.steps.slice(0, Math.max(0, at)).map((s) => (
+          <>
+            <li>
+              {typeof s === "string" ? (
+                s
+              ) : (
+                <>
+                  {s.text}
+                  <span class="step-dl">
+                    <a class="btn ghost" href={s.download.href} download>
+                      <Fragment set:html={icon("out")} />
+                      {s.download.label}
+                    </a>
+                  </span>
+                </>
+              )}
+            </li>
+          </>
+        ))}
+      </ol>
+    </>
+  ) : (
+    ""
+  )}
+  {c.action && at > 0 ? (
+    <>
+      <p class="client-act">
+        <a
+          class="btn solo"
+          href={c.action.href}
+          {...(c.action.app ? {} : { target: "_blank", rel: "noopener" })}
+          {...(c.action.copies ? { "data-copy-open": c.action.copies } : {})}
+        >
+          <Fragment set:html={icon(c.action.app ? "plug" : "out")} />
+          {c.action.label}
+        </a>
+        {c.action.app ? (
+          <>
+            <span class="small muted">
+              Opens the app if it is installed on this computer.
+            </span>
+          </>
+        ) : (
+          ""
+        )}
+      </p>
+    </>
+  ) : (
+    ""
+  )}
+  {c.steps.slice(Math.max(0, at)).length ? (
+    <>
+      <ol
+        class="steps"
+        {...(Math.max(0, at) + 1 > 1 ? { start: Math.max(0, at) + 1 } : {})}
+      >
+        {c.steps.slice(Math.max(0, at)).map((s) => (
+          <>
+            <li>
+              {typeof s === "string" ? (
+                s
+              ) : (
+                <>
+                  {s.text}
+                  <span class="step-dl">
+                    <a class="btn ghost" href={s.download.href} download>
+                      <Fragment set:html={icon("out")} />
+                      {s.download.label}
+                    </a>
+                  </span>
+                </>
+              )}
+            </li>
+          </>
+        ))}
+      </ol>
+    </>
+  ) : (
+    ""
+  )}
+  {chat
+    ? ""
+    : c.copy.map((x) => <ConnectCopyBlock label={x.label} text={x.text} />)}
   {c.note ? (
     <>
       <p class="small">{c.note}</p>
@@ -45,13 +143,12 @@ const { c, esc, chat, copyBlock, at, actionButton, list, icon, VERIFIED } =
     ""
   )}
   <p class="client-check small">
-    <Fragment
-      set:html={
-        c.verified === "tested"
-          ? `${icon("check")}${esc(VERIFIED.tested)} `
-          : ""
-      }
-    />
+    {c.verified === "tested" && (
+      <>
+        <Fragment set:html={icon("check")} />
+        {VERIFIED.tested}{" "}
+      </>
+    )}
     <a href={c.doc} rel="noopener">
       {c.docName || c.name}'s own instructions
     </a>

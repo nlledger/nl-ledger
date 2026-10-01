@@ -1,0 +1,8 @@
+---
+// Dynamic tag keeps JSON text in a slot rather than Astro's literal script parser.
+const Script = "script";
+---
+
+<Script type="application/ld+json">
+  <slot />
+</Script>

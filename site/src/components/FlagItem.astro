@@ -1,0 +1,28 @@
+---
+import { icon } from "../../lib/icons.mjs";
+const { f, count = "", method = false } = Astro.props;
+---
+
+<li class="flagitem">
+  <span class="q" aria-hidden="true">
+    <Fragment set:html={icon("query")} />
+  </span>
+  <h3>
+    <a href={`/flags/${f.id}/`}>
+      {f.title}
+      <Fragment set:html={icon("arrow")} />
+    </a>
+  </h3>
+  <span class="count">{count}</span>
+  <p>
+    {f.short}
+    {method && (
+      <>
+        {" "}
+        <a class="method" href={`/method/${f.id}/`}>
+          Method<span class="vh"> for {f.title}</span>
+        </a>
+      </>
+    )}
+  </p>
+</li>

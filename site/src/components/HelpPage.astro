@@ -1,16 +1,18 @@
 ---
-const { pagehead, SITE, WAYS, REPO, icon } = Astro.props;
+import PageHead from "./PageHead.astro";
+import { SITE } from "../../lib/format.mjs";
+import { icon } from "../../lib/icons.mjs";
+import { REPO } from "../../lib/html.mjs";
+const { WAYS } = Astro.props;
 ---
 
-<Fragment
-  set:html={await pagehead({
-    crumbs: [
-      ["/", "Home"],
-      [null, "Help build this"],
-    ],
-    title: "Help build this",
-    lede: `${SITE.name} is built in the open, and anyone can help make it more accurate and more complete. Most help needs no programming: a link and a sentence is enough.`,
-  })}
+<PageHead
+  crumbs={[
+    ["/", "Home"],
+    [null, "Help build this"],
+  ]}
+  title={"Help build this"}
+  lede={`${SITE.name} is built in the open, and anyone can help make it more accurate and more complete. Most help needs no programming: a link and a sentence is enough.`}
 />
 <section class="section">
   <div class="wrap">
@@ -75,7 +77,7 @@ const { pagehead, SITE, WAYS, REPO, icon } = Astro.props;
         records, with no accounts, only <a href="https://nodejs.org">Node</a>{" "}
         22.13 or newer is needed:
       </p>
-      <pre><code>git clone <Fragment set:html={REPO} />.git &amp;&amp; cd nl-ledger &amp;&amp; ./dev.sh</code></pre>
+      <pre><code>git clone {REPO}.git &amp;&amp; cd nl-ledger &amp;&amp; ./dev.sh</code></pre>
       <p>
         Then open <code>localhost:8787</code>. The{" "}
         <a href={REPO + "#readme"}>README</a> and the{" "}

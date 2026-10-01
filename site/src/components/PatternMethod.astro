@@ -1,18 +1,19 @@
 ---
+import { datasetLabel } from "../common.mjs";
 import Caveat from "./Caveat.astro";
-const { pagehead, f, esc, datasetLabel, cat, methodCode } = Astro.props;
+import PageHead from "./PageHead.astro";
+import MethodCode from "./MethodCode.astro";
+const { f, cat } = Astro.props;
 ---
 
-<Fragment
-  set:html={await pagehead({
-    crumbs: [
-      ["/", "Home"],
-      ["/method/", "Methods"],
-      [null, f.title],
-    ],
-    title: `Method: ${esc(f.title)}`,
-    lede: esc(f.short),
-  })}
+<PageHead
+  crumbs={[
+    ["/", "Home"],
+    ["/method/", "Methods"],
+    [null, f.title],
+  ]}
+  title={`Method: ${f.title}`}
+  lede={f.short}
 />
 <section class="section">
   <div class="wrap prose">
@@ -38,24 +39,20 @@ const { pagehead, f, esc, datasetLabel, cat, methodCode } = Astro.props;
     </ul>
     <h2>What it cannot tell you</h2>
     <p>{f.limits}</p>
-    {<Caveat text={esc(cat.caveat)} />}
+    <Caveat text={cat.caveat} />
     <p style="margin-block-start:1.5rem">
       This page and the calculation are generated from one definition, so they
       cannot drift apart. <a href={"/flags/" + f.id + "/"}>See the results</a>.
     </p>
-    <Fragment
-      set:html={await methodCode(
+    <MethodCode
+      files={[
         [
-          [
-            "pipeline/flags.py",
-            `defines this pattern (the entry with id "${esc(f.id)}") and counts it`,
-          ],
+          "pipeline/flags.py",
+          `defines this pattern (the entry with id "${f.id}") and counts it`,
         ],
-        {
-          title: f.title,
-          path: `/method/${esc(f.id)}/`,
-        },
-      )}
+      ]}
+      title={f.title}
+      path={`/method/${f.id}/`}
     />
   </div>
 </section>

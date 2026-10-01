@@ -1,0 +1,48 @@
+---
+import { computeReceipt, RECEIPT_ASSUMPTIONS } from "../../lib/receipt.mjs";
+import { money, pct } from "../../lib/format.mjs";
+import PersonalReceiptRow from "./PersonalReceiptRow.astro";
+const { R, income } = Astro.props;
+const c = computeReceipt(R, income);
+const max = c.lines[0]?.yours || 1;
+const rest = c.lines.slice(7);
+const restTotal = rest.reduce((s, d) => s + d.yours, 0);
+---
+
+<article class="receipt" aria-live="polite">
+  <h3>Receipt, {R.year}</h3>
+  <p class="small">
+    Employment income {money(c.income)} · estimated provincial income tax{" "}
+    {money(c.tax, { cents: true })} · {pct(c.tax / Math.max(1, c.income), 1)} of
+    income
+  </p>
+  <p class="small">
+    {RECEIPT_ASSUMPTIONS} The amounts below illustrate spending shares, not
+    where a person’s tax was paid.
+  </p>
+  {c.tax === 0 && (
+    <p class="small">
+      This employment-income estimate is zero after the credits included here,
+      so the illustration is empty. Everyone still pays sales tax and other
+      levies.
+    </p>
+  )}
+  {c.lines.slice(0, 7).map((d) => (
+    <PersonalReceiptRow d={d} max={max} fraction={c.fraction} />
+  ))}
+  {rest.length > 0 && (
+    <details class="rc-more">
+      <summary>
+        <span>{rest.length} more departments</span>
+        <span class="amt">{money(restTotal, { cents: true })}</span>
+      </summary>
+      {rest.map((d) => (
+        <PersonalReceiptRow d={d} max={max} fraction={c.fraction} />
+      ))}
+    </details>
+  )}
+  <div class="rc-total">
+    <span>Estimated provincial income tax</span>
+    <span>{money(c.tax, { cents: true })}</span>
+  </div>
+</article>

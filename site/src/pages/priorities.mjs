@@ -1,28 +1,15 @@
-import { renderComponent } from "../../lib/render.mjs";
+import {
+  components_PrioritiesPage_astro as PrioritiesPage,
+  components_DepartmentPage_astro as DepartmentPage,
+  components_EstimatesDepartmentPage_astro as EstimatesDepartmentPage,
+} from "../../.render/components.mjs";
+import { renderAstro } from "../../lib/render.mjs";
 // Priorities (department and program spending, planned against actual) and one page per department.
 import { card, cardAmount, organisationCard } from "../../lib/share-card.mjs";
-import {
-  esc,
-  html,
-  icon,
-  Notes,
-  leaders,
-  bar,
-  receipt,
-  schedule,
-} from "../../lib/html.mjs";
-import {
-  money,
-  moneyWords,
-  num,
-  pct,
-  perPerson,
-  workTime,
-} from "../../lib/format.mjs";
+import { Notes } from "../../lib/html.mjs";
+import { moneyWords } from "../../lib/format.mjs";
 import { desc, datasetLd, LICENSE } from "../seo.mjs";
-import { pagehead, itemRow, ITEM_COLS, caveat, bodyHref } from "../common.mjs";
 import { bodyKeysFor } from "../receiptdata.mjs";
-
 function progTotals(D, fy, kind, dept) {
   // per program: actual (col1), amended (col2), original (col3) gross from object lines
   return D.q(
@@ -34,7 +21,6 @@ function progTotals(D, fy, kind, dept) {
     dept,
   );
 }
-
 export async function priorities(D, R) {
   const out = [];
   const S = D.stats;
@@ -68,29 +54,6 @@ export async function priorities(D, R) {
   const health = find(/^Health/);
   const edu = find(/^Education/);
   const roads = find(/^Transportation/);
-  const cmp = [
-    {
-      label: `Interest on the province's borrowing${citeInt}`,
-      value: moneyWords(interest.v),
-      v: interest.v,
-    },
-    {
-      label: `<a href="/department/${esc(health.slug)}/">${esc(health.name)}</a>`,
-      value: moneyWords(health.gross),
-      v: health.gross,
-    },
-    {
-      label: `<a href="/department/${esc(edu.slug)}/">${esc(edu.name)}</a>`,
-      value: moneyWords(edu.gross),
-      v: edu.gross,
-    },
-    {
-      label: `<a href="/department/${esc(roads.slug)}/">${esc(roads.name)}</a> (roads, ferries, buildings)`,
-      value: moneyWords(roads.gross),
-      v: roads.gross,
-    },
-  ];
-
   // Professional services by program
   const prof = D.q(
     `SELECT department, program, sum(col1) v, min(page) page, source_url FROM programs WHERE fiscal_year=? AND kind='actual'
@@ -105,16 +68,14 @@ export async function priorities(D, R) {
   // Year over year
   const names = depts.map((d) => d.name);
   const years = D.years;
-  const yoy = names
-    .slice(0, 12)
-    .map((n) => ({
-      name: n,
-      vals: years.map(
-        (y) =>
-          D.deptYear[y].find((d) => d.name.toLowerCase() === n.toLowerCase())
-            ?.gross,
-      ),
-    }));
+  const yoy = names.slice(0, 12).map((n) => ({
+    name: n,
+    vals: years.map(
+      (y) =>
+        D.deptYear[y].find((d) => d.name.toLowerCase() === n.toLowerCase())
+          ?.gross,
+    ),
+  }));
 
   // Federal money in
   const mtp = D.federal.public_accounts.mtp_2024_25;
@@ -126,20 +87,13 @@ export async function priorities(D, R) {
     label:
       "Public Accounts of Canada 2025, Volume III, major transfers to other levels of government by province, Newfoundland and Labrador, 2024-25 ($ millions as published)",
   });
-
-  const body = await renderComponent("components_PrioritiesPage_astro", {
-    pagehead,
-    esc,
+  const body = await renderAstro(PrioritiesPage, {
     fy,
-    moneyWords,
     R,
     citeTot,
     depts,
-    bar,
     max,
-    pct,
-    leaders,
-    cmp,
+    citeInt,
     S,
     citeSC,
     interest,
@@ -147,13 +101,10 @@ export async function priorities(D, R) {
     edu,
     roads,
     profTotal,
-    schedule,
     prof,
     D,
-    receipt,
     years,
     yoy,
-    icon,
     citeMtp,
     mtpRows,
   });
@@ -192,17 +143,19 @@ export async function priorities(D, R) {
   ]);
   return out;
 }
-
 export async function departments(D, R) {
   const out = [];
   const S = D.stats;
-  const fy = R.year;
   // every department that appears in any year's report, plus the estimates
   const all = new Map();
   for (const y of D.years)
     for (const d of D.deptYear[y]) {
       const k = d.name.toLowerCase();
-      if (!all.has(k)) all.set(k, { name: d.name, years: [] });
+      if (!all.has(k))
+        all.set(k, {
+          name: d.name,
+          years: [],
+        });
       all.get(k).years.push(y);
     }
   const estYear = D.one(
@@ -214,10 +167,13 @@ export async function departments(D, R) {
   ).map((r) => r.department);
   for (const n of est) {
     const k = n.toLowerCase();
-    if (!all.has(k)) all.set(k, { name: n, years: [] });
+    if (!all.has(k))
+      all.set(k, {
+        name: n,
+        years: [],
+      });
     all.get(k).est = true;
   }
-
   for (const dep of all.values()) {
     const notes = new Notes();
     const slug = D.slug(dep.name);
@@ -264,112 +220,22 @@ export async function departments(D, R) {
       )?.gross,
     }));
     const tmax = Math.max(...trend.map((t) => t.v || 0), 1);
-
-    const figs = sum
-      ? await renderComponent("components_PrioritiesDepartments_astro", {
-          moneyWords,
-          sum,
-          latest,
-          cite,
-          money,
-          perPerson,
-          S,
-          workTime,
-        })
-      : "";
-
-    const progTable = progs.length
-      ? await schedule({
-          caption: `Programs, ${esc(latest)}`,
-          id: "programs",
-          cols: [
-            { label: "Program" },
-            { label: "Spent", num: true },
-            { label: "Amended", num: true },
-            { label: "Original estimate", num: true },
-            { label: "Source", num: true },
-          ],
-          rows: progs.map((p) => ({
-            cells: [
-              `${esc(p.program)}<span class="meta">${esc(p.program_code)} · ${p.account === "CAPITAL" ? "capital" : "current"}</span>`,
-              money(p.c1),
-              money(p.c2),
-              money(p.c3),
-              receipt(p.source_url, p.page),
-            ],
-          })),
-          foot: [
-            {
-              cells: [
-                "Gross spending",
-                money(progs.reduce((s, p) => s + p.c1, 0)),
-                money(progs.reduce((s, p) => s + p.c2, 0)),
-                money(progs.reduce((s, p) => s + p.c3, 0)),
-                "",
-              ],
-            },
-          ],
-        })
-      : `<p>The ${esc(latest || "")} report prints no program detail for this department.</p>`;
-
-    const estTable = estProgs.length
-      ? await schedule({
-          caption: `Budget estimates, ${esc(estYear)}`,
-          cols: [
-            { label: "Program" },
-            { label: `Estimate ${esc(estYear)}`, num: true },
-            { label: "Revised, year before", num: true },
-            { label: "Budget, year before", num: true },
-            { label: "Source", num: true },
-          ],
-          rows: estProgs.map((p) => ({
-            cells: [
-              `${esc(p.program)}<span class="meta">${esc(p.program_code)}</span>`,
-              money(p.c1),
-              money(p.c2),
-              money(p.c3),
-              receipt(p.source_url, p.page),
-            ],
-          })),
-          foot: [
-            {
-              cells: [
-                "Gross",
-                money(estProgs.reduce((s, p) => s + p.c1, 0)),
-                money(estProgs.reduce((s, p) => s + p.c2, 0)),
-                money(estProgs.reduce((s, p) => s + p.c3, 0)),
-                "",
-              ],
-            },
-          ],
-        })
-      : "";
-
-    const body = await renderComponent("components_DepartmentPage_astro", {
-      pagehead,
+    const body = await renderAstro(DepartmentPage, {
       dep,
-      esc,
       estYear,
-      figs,
       trend,
-      schedule,
-      bar,
       tmax,
-      moneyWords,
-      progTable,
-      estTable,
       prof,
       latest,
-      money,
-      receipt,
       awards,
-      num,
       awardTotal,
       noComp,
-      ITEM_COLS,
-      itemRow,
       D,
-      bodyHref,
+      sum,
+      cite,
+      S,
+      progs,
+      estProgs,
     });
     // The department's budget in the Estimates as tabled, the figure /budget/ shows.
     const budgeted =
@@ -415,21 +281,13 @@ export async function departments(D, R) {
     url: estRows[0].source_url,
     label: `Estimates of the Program Expenditure and Revenue of the Consolidated Revenue Fund ${estYear}, gross expenditure summed from each department's program lines`,
   });
-  const body = await renderComponent(
-    "components_EstimatesDepartmentPage_astro",
-    {
-      pagehead,
-      estYear,
-      esc,
-      moneyWords,
-      estTotal,
-      cite,
-      schedule,
-      estRows,
-      D,
-      receipt,
-    },
-  );
+  const body = await renderAstro(EstimatesDepartmentPage, {
+    estYear,
+    estTotal,
+    cite,
+    estRows,
+    D,
+  });
   out.push([
     `/department/estimates-${estYear}/`,
     {

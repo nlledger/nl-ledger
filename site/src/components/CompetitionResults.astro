@@ -1,43 +1,53 @@
 ---
-const { schedule, prov, bodyAnchor, D, num, bar, moneyWords, pct, fed } =
-  Astro.props;
+import Schedule from "./Schedule.astro";
+import BodyAnchor from "./BodyAnchor.astro";
+import { num, moneyWords, pct } from "../../lib/format.mjs";
+import Bar from "./Bar.astro";
+const { prov, D, fed } = Astro.props;
 ---
 
 <h2 style="margin-block-end:1rem">Provincial public bodies</h2>
-<Fragment
-  set:html={await schedule({
-    cols: [
-      {
-        label: "Public body",
-      },
-      {
-        label: "",
-        w: "28%",
-      },
-      {
-        label: "Without competition",
-        num: true,
-      },
-      {
-        label: "Of all reported",
-        num: true,
-      },
-      {
-        label: "Share",
-        num: true,
-      },
-    ],
-    rows: prov.slice(0, 40).map((s) => ({
-      cells: [
-        `${bodyAnchor(D, s.subject)}<span class="meta">${num(s.x.exception_awards)} of ${num(s.x.awards)} awards</span>`,
-        bar(s.value, 1),
-        moneyWords(s.x.exception_amount),
-        moneyWords(s.x.amount),
-        pct(s.value),
-      ],
-    })),
-  })}
-/>
+<>
+  <Schedule>
+    <thead>
+      <tr>
+        <th scope="col">Public body</th>
+        <th scope="col" style={"inline-size:" + "28%"}>
+          {""}
+        </th>
+        <th scope="col" class="n">
+          Without competition
+        </th>
+        <th scope="col" class="n">
+          Of all reported
+        </th>
+        <th scope="col" class="n">
+          Share
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      {prov.slice(0, 40).map((s) => (
+        <tr>
+          <th scope="row">
+            <>
+              <BodyAnchor D={D} name={s.subject} />
+              <span class="meta">
+                {num(s.x.exception_awards)} of {num(s.x.awards)} awards
+              </span>
+            </>
+          </th>
+          <td>
+            <Bar value={s.value} max={1} />
+          </td>
+          <td class="n">{moneyWords(s.x.exception_amount)}</td>
+          <td class="n">{moneyWords(s.x.amount)}</td>
+          <td class="n">{pct(s.value)}</td>
+        </tr>
+      ))}
+    </tbody>
+  </Schedule>
+</>
 <h2 style="margin-block:2.5rem 1rem">
   Federal departments, contracts selected by supplier NL postal code
 </h2>
@@ -46,32 +56,33 @@ const { schedule, prov, bodyAnchor, D, num, bar, moneyWords, pct, fed } =
   spending in NL or all department contracts. An address does not locate the
   work or benefit.
 </p>
-<Fragment
-  set:html={await schedule({
-    cols: [
-      {
-        label: "Department",
-      },
-      {
-        label: "Non-competitive",
-        num: true,
-      },
-      {
-        label: "Of all",
-        num: true,
-      },
-      {
-        label: "Share",
-        num: true,
-      },
-    ],
-    rows: fed.map((s) => ({
-      cells: [
-        `${bodyAnchor(D, s.subject)}`,
-        moneyWords(s.x.exception_amount),
-        moneyWords(s.x.amount),
-        pct(s.value),
-      ],
-    })),
-  })}
-/>
+<>
+  <Schedule>
+    <thead>
+      <tr>
+        <th scope="col">Department</th>
+        <th scope="col" class="n">
+          Non-competitive
+        </th>
+        <th scope="col" class="n">
+          Of all
+        </th>
+        <th scope="col" class="n">
+          Share
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      {fed.map((s) => (
+        <tr>
+          <th scope="row">
+            <BodyAnchor D={D} name={s.subject} />
+          </th>
+          <td class="n">{moneyWords(s.x.exception_amount)}</td>
+          <td class="n">{moneyWords(s.x.amount)}</td>
+          <td class="n">{pct(s.value)}</td>
+        </tr>
+      ))}
+    </tbody>
+  </Schedule>
+</>

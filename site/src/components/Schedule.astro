@@ -1,50 +1,65 @@
 ---
-const { id, compact, pin, caption, cols, rows, foot } = Astro.props;
+const {
+  id,
+  compact = false,
+  pin = true,
+  caption,
+  cols = [],
+  rows = [],
+  foot,
+} = Astro.props;
 ---
 
 <p class="sched-hint">Scroll sideways for more columns.</p>
 <div class="sched-wrap" id={id}>
   <table class={`sched${compact ? " compact" : ""}${pin ? " pin-rows" : ""}`}>
-    {caption && <caption set:html={caption} />}
-    <thead>
-      <tr>
-        {cols.map((c) => (
-          <th
-            scope="col"
-            class={c.num ? "n" : undefined}
-            style={c.w ? `inline-size:${c.w}` : undefined}
-            set:html={c.label}
-          />
-        ))}
-      </tr>
-    </thead>
-    <tbody>
-      {rows.map((r) => (
-        <tr class={r.cls}>
-          {r.cells.map((cell, i) =>
-            i === 0 ? (
-              <th scope="row" set:html={cell} />
-            ) : (
-              <td class={cols[i]?.num ? "n" : undefined} set:html={cell} />
-            ),
-          )}
-        </tr>
-      ))}
-    </tbody>
-    {foot && (
-      <tfoot>
-        {foot.map((r) => (
-          <tr class={r.cls || "total"}>
-            {r.cells.map((cell, i) =>
-              i === 0 ? (
-                <th scope="row" set:html={cell} />
-              ) : (
-                <td class={cols[i]?.num ? "n" : undefined} set:html={cell} />
-              ),
-            )}
+    {caption && <caption>{caption}</caption>}
+    {Astro.slots.has("default") ? (
+      <slot />
+    ) : (
+      <>
+        <thead>
+          <tr>
+            {cols.map((c) => (
+              <th
+                scope="col"
+                class={c.num ? "n" : undefined}
+                style={c.w ? `inline-size:${c.w}` : undefined}
+              >
+                {c.label}
+              </th>
+            ))}
           </tr>
-        ))}
-      </tfoot>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr class={r.cls}>
+              {r.cells.map((cell, i) =>
+                i === 0 ? (
+                  <th scope="row">{cell}</th>
+                ) : (
+                  <td class={cols[i]?.num ? "n" : undefined}>{cell}</td>
+                ),
+              )}
+            </tr>
+          ))}
+        </tbody>
+        {foot && (
+          <tfoot>
+            {foot.map((r) => (
+              <tr class={r.cls || "total"}>
+                {r.cells.map((cell, i) =>
+                  i === 0 ? (
+                    <th scope="row">{cell}</th>
+                  ) : (
+                    <td class={cols[i]?.num ? "n" : undefined}>{cell}</td>
+                  ),
+                )}
+              </tr>
+            ))}
+          </tfoot>
+        )}
+      </>
     )}
   </table>
 </div>

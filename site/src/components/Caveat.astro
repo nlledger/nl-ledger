@@ -5,5 +5,5 @@ const { text } = Astro.props;
 
 <div class="caveat">
   <Fragment set:html={icon("query")} />
-  <p>{typeof text === "string" ? <Fragment set:html={text} /> : text}</p>
+  <p>{text}</p>
 </div>

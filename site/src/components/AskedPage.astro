@@ -1,16 +1,18 @@
 ---
-const { pagehead, ASKED, ASKED_STATE, fmtDate } = Astro.props;
+import PageHead from "./PageHead.astro";
+import { date as fmtDate } from "../../lib/format.mjs";
+const { ASKED, ASKED_STATE } = Astro.props;
 ---
 
-<Fragment
-  set:html={await pagehead({
-    crumbs: [
-      ["/", "Home"],
-      [null, "What people asked for"],
-    ],
-    title: "What people asked for",
-    lede: "Suggestions from readers, and what was done about each. Names are left out.",
-  })}
+<PageHead
+  crumbs={[
+    ["/", "Home"],
+    [null, "What people asked for"],
+  ]}
+  title={"What people asked for"}
+  lede={
+    "Suggestions from readers, and what was done about each. Names are left out."
+  }
 />
 <section class="section">
   <div class="wrap">
@@ -20,7 +22,7 @@ const { pagehead, ASKED, ASKED_STATE, fmtDate } = Astro.props;
           <li>
             <h3>{a.asked}</h3>
             <span class={"state " + (a.state === "done" ? "" : "open")}>
-              <Fragment set:html={ASKED_STATE[a.state]} />
+              {ASKED_STATE[a.state]}
             </span>
             <p>
               {a.what}

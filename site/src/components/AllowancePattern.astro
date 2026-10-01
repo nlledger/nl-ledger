@@ -1,0 +1,49 @@
+---
+import Schedule from "./Schedule.astro";
+import { money } from "../../lib/format.mjs";
+import AllowanceResults from "./AllowanceResults.astro";
+const { f, D } = Astro.props;
+const subjects = D.flagRows.filter((r) => r.flag === f.id && !r.item_id);
+const rows = subjects.map((s) => ({
+  ...s,
+  x: JSON.parse(s.detail),
+}));
+---
+
+{rows.length ? (
+  <>
+    <Schedule>
+      <thead>
+        <tr>
+          <th scope="col">Member</th>
+          <th scope="col">Year and category</th>
+          <th scope="col" class="n">
+            Over by
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((s) => (
+          <tr>
+            <th scope="row">{s.subject}</th>
+            <td>{`${s.x.fiscal_year}: ${s.x.category}`}</td>
+            <td class="n">
+              {money(s.value, {
+                cents: true,
+              })}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </Schedule>
+  </>
+) : (
+  <AllowanceResults
+    reports={
+      D.one(
+        "SELECT count(DISTINCT source_file) n FROM items WHERE dataset='mha'",
+      ).n
+    }
+    broken={D.issues.filter((i) => i.source === "MHA expense report").length}
+  />
+)}

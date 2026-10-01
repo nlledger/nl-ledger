@@ -1,0 +1,8 @@
+---
+const { value, max, cls = "", minimum = 0.4 } = Astro.props;
+const width = max > 0 ? Math.max(minimum, (value / max) * 100) : 0;
+---
+
+<span class={`bar ${cls}`} aria-hidden="true">
+  <span style={`inline-size:${width.toFixed(2)}%`}></span>
+</span>

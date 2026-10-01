@@ -1,41 +1,21 @@
-import { renderComponent } from "../../lib/render.mjs";
+import {
+  components_PublicBodyPage_astro as PublicBodyPage,
+  components_BodiesIndex_astro as BodiesIndex,
+  components_FederalPage_astro as FederalPage,
+  components_SmallPurchasesPage_astro as SmallPurchasesPage,
+} from "../../.render/components.mjs";
+import { renderAstro } from "../../lib/render.mjs";
 // A page per buyer: provincial public bodies from the award reports, federal departments,
 // and the two towns. Plus the federal overview and the small-purchases page.
-import { card, cardAmount, organisationCard } from "../../lib/share-card.mjs";
-import {
-  esc,
-  html,
-  icon,
-  Notes,
-  leaders,
-  bar,
-  receipt,
-  schedule,
-} from "../../lib/html.mjs";
-import {
-  money,
-  moneyWords,
-  num,
-  pct,
-  date as fmtDate,
-} from "../../lib/format.mjs";
-import { desc, clip, datasetLd, orgPageLd, LICENSE } from "../seo.mjs";
-import {
-  pagehead,
-  itemRow,
-  ITEM_COLS,
-  caveat,
-  datasetLabel,
-  federalSummary,
-} from "../common.mjs";
+import { card, organisationCard } from "../../lib/share-card.mjs";
+import { esc, Notes } from "../../lib/html.mjs";
+import { moneyWords, num, pct, date as fmtDate } from "../../lib/format.mjs";
+import { desc, datasetLd, orgPageLd, LICENSE } from "../seo.mjs";
 import { FEDERAL_RULE } from "../../lib/federal.mjs";
-
-import { BUYER_SETS, bodyList, bodyData } from "../bodydata.mjs";
-
+import { bodyList, bodyData } from "../bodydata.mjs";
 export async function bodies(D, R) {
   const out = [];
   const list = bodyList(D);
-
   for (const b of list) {
     const notes = new Notes();
     const slug = D.slug(b.buyer);
@@ -53,7 +33,6 @@ export async function bodies(D, R) {
         (d) =>
           D.slug(d.name) === D.slug(b.buyer.replace(/^Department of /, "")),
       );
-
     const flagNotes = subjectFlags.map((f) => {
       const x = JSON.parse(f.detail || "{}");
       const cat = D.flagById[f.flag];
@@ -65,37 +44,22 @@ export async function bodies(D, R) {
         return `${esc(x.supplier)} appears on ${pct(f.value)} of its reported award values.`;
       return esc(cat?.title || f.flag);
     });
-
-    const body = await renderComponent("components_PublicBodyPage_astro", {
-      pagehead,
+    const body = await renderAstro(PublicBodyPage, {
       b,
-      esc,
-      num,
-      moneyWords,
       sets,
-      datasetLabel,
       dept,
       D,
-      FEDERAL_RULE,
-      leaders,
       byDs,
-      fmtDate,
       flagNotes,
       subjectFlags,
       methods,
-      schedule,
-      bar,
       mmax,
       byYear,
       ymax,
-      federalSummary,
       suppliers,
       smax,
-      ITEM_COLS,
       top,
-      itemRow,
       recent,
-      icon,
     });
     const what =
       b.level === "federal"
@@ -142,14 +106,9 @@ export async function bodies(D, R) {
     ],
     ["Towns and cities", list.filter((b) => b.level === "municipal")],
   ].filter(([, rows]) => rows.length);
-  const body = await renderComponent("components_BodiesIndex_astro", {
-    pagehead,
+  const body = await renderAstro(BodiesIndex, {
     groups,
-    schedule,
     D,
-    esc,
-    num,
-    moneyWords,
   });
   out.push([
     "/bodies/",
@@ -166,13 +125,11 @@ export async function bodies(D, R) {
       body,
     },
   ]);
-
   out.push(await federal(D, R));
   if (D.one("SELECT count(*) n FROM items WHERE dataset='paradise'").n)
     out.push(await smallPurchases(D, R));
   return out;
 }
-
 async function federal(D, R) {
   const notes = new Notes();
   const F = D.federal;
@@ -197,23 +154,14 @@ async function federal(D, R) {
   const mtp = Object.entries(F.public_accounts.mtp_2024_25)
     .filter(([, v]) => v > 0)
     .sort((a, b) => b[1] - a[1]);
-  const body = await renderComponent("components_FederalPage_astro", {
-    pagehead,
-    FEDERAL_RULE,
-    moneyWords,
+  const body = await renderAstro(FederalPage, {
     c,
-    num,
     citeC,
     g,
     citeG,
-    federalSummary,
     D,
-    schedule,
     deps,
-    esc,
-    pct,
     gdeps,
-    leaders,
     mtp,
   });
   return [
@@ -245,7 +193,6 @@ async function federal(D, R) {
     },
   ];
 }
-
 async function smallPurchases(D, R) {
   const notes = new Notes();
   const p = D.one(
@@ -261,14 +208,10 @@ async function smallPurchases(D, R) {
   const vendors = D.q(
     "SELECT supplier, supplier_key, count(*) n, sum(CASE WHEN currency='CAD' THEN amount END) amount FROM items WHERE dataset='paradise' GROUP BY supplier_key ORDER BY amount DESC LIMIT 15",
   );
-  const vmax = vendors[0].amount;
   const months = D.q(
     "SELECT substr(date,1,7) m, sum(CASE WHEN currency='CAD' THEN amount END) amount, count(*) n FROM items WHERE dataset='paradise' AND date >= '2023-01' GROUP BY m ORDER BY m",
   );
   const mmax = Math.max(...months.map((m) => m.amount));
-  const words = D.q(
-    `SELECT lower(description) d, count(*) n, sum(CASE WHEN currency='CAD' THEN amount END) amount FROM items WHERE dataset='paradise' AND description != '' GROUP BY d ORDER BY n DESC LIMIT 12`,
-  );
   const sj = D.one(
     "SELECT count(*) n, sum(CASE WHEN currency='CAD' THEN amount END) amount, sum(json_extract(extra,'$.payee_withheld')) w FROM items WHERE dataset='stjohns'",
   );
@@ -279,29 +222,17 @@ async function smallPurchases(D, R) {
     url: "https://www.paradise.ca/government-engage/cheque-register/",
     label: "Town of Paradise, cheque and payment registers, monthly PDFs",
   });
-  const body = await renderComponent("components_SmallPurchasesPage_astro", {
-    pagehead,
-    num,
+  const body = await renderAstro(SmallPurchasesPage, {
     p,
-    esc,
-    fmtDate,
     citeP,
-    money,
     median,
-    pct,
     under1k,
-    schedule,
     months,
-    bar,
     mmax,
-    moneyWords,
     vendors,
     D,
-    words,
     sj,
-    ITEM_COLS,
     sjTop,
-    itemRow,
   });
   return [
     "/small-purchases/",

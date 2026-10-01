@@ -1,17 +1,10 @@
 ---
-const {
-  depts,
-  pages,
-  esc,
-  words,
-  mobileSources,
-  dv,
-  cell,
-  share,
-  sourceAction,
-  c,
-  fromReport,
-} = Astro.props;
+import { share, words } from "../../lib/budget-format.mjs";
+import BudgetSources from "./BudgetSources.astro";
+import DifferenceBar from "./DifferenceBar.astro";
+import BudgetCell from "./BudgetCell.astro";
+import BudgetReceipt from "./BudgetReceipt.astro";
+const { depts, pages, c, fromReport, maxDiff } = Astro.props;
 ---
 
 <ul class="legend">
@@ -61,36 +54,29 @@ const {
                   <a href={"/department/" + d.slug + "/"}>{d.name}</a>
                 </>
               ) : (
-                esc(d.name)
+                d.name
               )}
               <span class="meta show-sm">
-                <Fragment set:html={words(d.budget)} /> budgeted,{" "}
-                <Fragment set:html={words(d.spent)} /> spent
+                {words(d.budget)} budgeted, {words(d.spent)} spent
               </span>
-              <Fragment
-                set:html={mobileSources([
+              <BudgetSources
+                pairs={[
                   [d.budget_source, "Budget source"],
                   [d.spent_source, "Actual source"],
-                ])}
+                ]}
               />
             </th>
             <td class="hide-sm">
-              <Fragment set:html={dv(d)} />
+              <DifferenceBar d={d} maxDiff={maxDiff} />
             </td>
-            <Fragment set:html={cell(d.budget, " hide-sm")} />
-            <Fragment set:html={cell(d.spent, " hide-sm")} />
-            <Fragment set:html={cell(d.difference)} />
-            <td class={"n" + (d.share < 0 ? " neg" : "")}>
-              <Fragment set:html={share(d.share)} />
-            </td>
+            <BudgetCell value={d.budget} extra={" hide-sm"} />
+            <BudgetCell value={d.spent} extra={" hide-sm"} />
+            <BudgetCell value={d.difference} />
+            <td class={"n" + (d.share < 0 ? " neg" : "")}>{share(d.share)}</td>
             <td class="n hide-sm">
-              <Fragment
-                set:html={sourceAction(d.budget_source, "Budget source")}
-              />{" "}
+              <BudgetReceipt source={d.budget_source} label={"Budget source"} />{" "}
               ·{" "}
-              <Fragment
-                set:html={sourceAction(d.spent_source, "Actual source")}
-              />
+              <BudgetReceipt source={d.spent_source} label={"Actual source"} />
             </td>
           </tr>
         </>
@@ -98,16 +84,12 @@ const {
     </tbody>
     <tfoot>
       <tr class="total">
-        <th scope="row">
-          All <Fragment set:html={depts.length} /> departments
-        </th>
+        <th scope="row">All {depts.length} departments</th>
         <td class="hide-sm"></td>
-        <Fragment set:html={cell(c.gross.budget, " hide-sm")} />
-        <Fragment set:html={cell(c.gross.actual, " hide-sm")} />
-        <Fragment set:html={cell(c.difference)} />
-        <td class={"n" + (c.share < 0 ? " neg" : "")}>
-          <Fragment set:html={share(c.share)} />
-        </td>
+        <BudgetCell value={c.gross.budget} extra={" hide-sm"} />
+        <BudgetCell value={c.gross.actual} extra={" hide-sm"} />
+        <BudgetCell value={c.difference} />
+        <td class={"n" + (c.share < 0 ? " neg" : "")}>{share(c.share)}</td>
         <td class="hide-sm"></td>
       </tr>
     </tfoot>
@@ -120,11 +102,7 @@ const {
   summary statements (Actual source). Amounts in parentheses are spending below
   the budget. A department can be given more, or less, during the year; those
   amended estimates are on each department's page.
-  <Fragment
-    set:html={
-      fromReport.length
-        ? ` ${fromReport.map((d) => esc(d.name)).join(", ")}: not in that year's Estimates under this name, so the budget is the Original column of the Report.`
-        : ""
-    }
-  />
+  {fromReport.length
+    ? ` ${fromReport.map((d) => d.name).join(", ")}: not in that year's Estimates under this name, so the budget is the Original column of the Report.`
+    : ""}
 </p>

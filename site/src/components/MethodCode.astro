@@ -1,5 +1,9 @@
 ---
-const { files, REPO, form, icon } = Astro.props;
+import { icon } from "../../lib/icons.mjs";
+import { REPO } from "../../lib/html.mjs";
+import { SITE } from "../../lib/format.mjs";
+const { files, title, path } = Astro.props;
+const form = `${REPO}/issues/new?template=challenge-method.yml&page=${encodeURIComponent(`${SITE.url}${path}`)}&title=${encodeURIComponent(`Method: ${title}`)}`;
 ---
 
 <aside class="codeat" aria-labelledby="codeat-h">

@@ -1,0 +1,14 @@
+---
+import { slug } from "../../lib/format.mjs";
+const { name, links, sunshine = false } = Astro.props;
+const sl = slug(name);
+const href = links?.body?.includes(sl)
+  ? `/body/${sl}/`
+  : sunshine && links?.pay?.includes(sl)
+    ? `/pay/${sl}/`
+    : links?.department?.includes(sl)
+      ? `/department/${sl}/`
+      : null;
+---
+
+{href ? <a href={href}>{name}</a> : name}

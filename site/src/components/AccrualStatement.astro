@@ -1,7 +1,11 @@
 ---
+import { march } from "../../lib/budget-format.mjs";
 import BudgetCashRow from "./StatementRow.astro";
-const { a, cell, march, fy, citeDebtBudget, DOCS, rcpt, pp, money, citePP } =
-  Astro.props;
+import BudgetCell from "./BudgetCell.astro";
+import Citation from "./Citation.astro";
+import BudgetReceipt from "./BudgetReceipt.astro";
+import { money } from "../../lib/format.mjs";
+const { a, fy, citeDebtBudget, DOCS, pp, citePP } = Astro.props;
 ---
 
 <p class="sched-hint">Scroll sideways for more columns.</p>
@@ -25,44 +29,39 @@ const { a, cell, march, fy, citeDebtBudget, DOCS, rcpt, pp, money, citePP } =
       </tr>
     </thead>
     <tbody>
-      {<BudgetCashRow label={"Revenue"} x={a.revenue} cell={cell} />}
-      {<BudgetCashRow label={"Expense"} x={a.expense} cell={cell} />}
+      <BudgetCashRow label={"Revenue"} x={a.revenue} />
+      <BudgetCashRow label={"Expense"} x={a.expense} />
       <tr class="total">
         <th scope="row">Surplus or (deficit)</th>
-        <Fragment set:html={cell(a.balance.budget)} />
-        <Fragment set:html={cell(a.balance.actual)} />
-        <Fragment set:html={cell(a.balance.actual - a.balance.budget)} />
+        <BudgetCell value={a.balance.budget} />
+        <BudgetCell value={a.balance.actual} />
+        <BudgetCell value={a.balance.actual - a.balance.budget} />
       </tr>
-      {
-        <BudgetCashRow
-          label={
-            <>
-              Net debt at <Fragment set:html={march(fy)} />
-              <Fragment set:html={citeDebtBudget} />
-              <span class="meta">what is owed, less financial assets held</span>
-            </>
-          }
-          x={a.net_debt}
-          cell={cell}
-        />
-      }
+      <BudgetCashRow
+        label={
+          <>
+            Net debt at {march(fy)}
+            <Citation citation={citeDebtBudget} />
+            <span class="meta">what is owed, less financial assets held</span>
+          </>
+        }
+        x={a.net_debt}
+      />
     </tbody>
   </table>
 </div>
 <p class="small muted">
   Accrual basis, audited: departments together with Crown corporations, boards
   and authorities. {DOCS.public_accounts},{" "}
-  <Fragment set:html={rcpt(a.balance.source)} /> and{" "}
-  <Fragment set:html={rcpt(a.net_debt.source)} />. The budget column is the
+  <BudgetReceipt source={a.balance.source} /> and{" "}
+  <BudgetReceipt source={a.net_debt.source} />. The budget column is the
   Original Budget the statements print, unaudited.
   {pp ? (
     <>
       {" "}
       Net debt for each person in the province, as the province works it out:{" "}
-      <strong>
-        <Fragment set:html={money(pp.value)} />
-      </strong>
-      <Fragment set:html={citePP} />.
+      <strong>{money(pp.value)}</strong>
+      <Citation citation={citePP} />.
     </>
   ) : (
     ""

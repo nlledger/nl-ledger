@@ -1,16 +1,18 @@
 ---
-const {
+import { icon } from "../../lib/icons.mjs";
+import {
   TURNSTILE_SITEKEY,
-  feedbackContext,
-  page,
-  error,
-  icon,
   FEEDBACK_KINDS,
-  kind,
   FEEDBACK_MAX,
-  field,
-  note,
-  email,
+} from "../../lib/html.mjs";
+import { feedbackContext } from "../../lib/privacy.mjs";
+const {
+  page = "/",
+  error = "",
+  kind = "",
+  field = "",
+  note = "",
+  email = "",
 } = Astro.props;
 ---
 

@@ -1,0 +1,13 @@
+---
+import PayPatternResults from "./PayPatternResults.astro";
+const { f, D } = Astro.props;
+const subjects = D.flagRows.filter((r) => r.flag === f.id && !r.item_id);
+const rows = subjects
+  .map((s) => ({
+    ...s,
+    x: JSON.parse(s.detail),
+  }))
+  .sort((a, b) => b.value - a.value);
+---
+
+<PayPatternResults f={f} rows={rows} D={D} />

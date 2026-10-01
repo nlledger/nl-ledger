@@ -1,36 +1,28 @@
 ---
+import Schedule from "./Schedule.astro";
 import Caveat from "./Caveat.astro";
-const {
-  pagehead,
-  e,
-  esc,
-  perYear,
-  src,
-  coverage,
-  schedule,
-  years,
-  grid,
-  num,
-  moneyWords,
-  titles,
-  money,
-  top,
-  bh,
-  icon,
-} = Astro.props;
+import PageHead from "./PageHead.astro";
+import { num, moneyWords, money } from "../../lib/format.mjs";
+import { icon } from "../../lib/icons.mjs";
+const { e, perYear, src, coverage, years, grid, titles, top, bh } = Astro.props;
 ---
 
-<Fragment
-  set:html={await pagehead({
-    flagged: true,
-    crumbs: [
-      ["/", "Home"],
-      ["/pay/", "Pay over $100,000"],
-      [null, e.buyer],
-    ],
-    title: esc(e.buyer),
-    lede: `Compensation disclosure lists for ${esc(perYear.join(", "))}. ${src.map((s) => `<a href="${esc(s.source_url)}">${esc(s.y)} list</a>`).join(" · ")}`,
-  })}
+<PageHead
+  flagged={true}
+  crumbs={[
+    ["/", "Home"],
+    ["/pay/", "Pay over $100,000"],
+    [null, e.buyer],
+  ]}
+  title={e.buyer}
+  lede={
+    <>
+      Compensation disclosure lists for {perYear.join(", ")}.{" "}
+      {src
+        .map((source) => <a href={source.source_url}>{source.y} list</a>)
+        .flatMap((node, index) => (index ? [" · ", node] : [node]))}
+    </>
+  }
 />
 <section class="section">
   <div class="wrap">
@@ -39,64 +31,93 @@ const {
       entire payroll. Amounts are rounded to $100 by the publisher. A year
       marked “Not available” is missing data, not zero people or zero pay.
     </p>
-    {coverage.length ? <Caveat text={coverage.join(" ")} /> : ""}
+    {coverage.length ? (
+      <Caveat
+        text={coverage
+          .map(({ year, issue }) =>
+            issue ? (
+              <>
+                {year} list could not be downloaded when the records were
+                gathered{issue.issue === "404" ? " (page not found)" : ""}. See
+                the government's <a href={issue.listing}>{year} listing</a> and
+                its <a href={issue.url}>linked file</a>.
+              </>
+            ) : (
+              <>
+                {year}: no list was loaded; the reason is not established here.
+              </>
+            ),
+          )
+          .flatMap((node, index) => (index ? [" ", node] : [node]))}
+      />
+    ) : (
+      ""
+    )}
     <div class="grid-2 pay-breakdown">
       <div>
-        <Fragment
-          set:html={await schedule({
-            compact: true,
-            caption: "By year",
-            cols: [
-              {
-                label: "Year",
-              },
-              {
-                label: "People over $100,000",
-                num: true,
-              },
-              {
-                label: "Published pay over $100,000",
-                num: true,
-              },
-            ],
-            rows: years.map((y) => {
-              const g = grid.get(e.buyer)[y];
-              return {
-                cells: g
-                  ? [esc(y), num(g.n), moneyWords(g.a)]
-                  : [
-                      esc(y),
-                      '<span class="muted">Not available</span>',
-                      '<span class="muted">Not available</span>',
-                    ],
-              };
-            }),
-          })}
-        />
+        <>
+          <Schedule compact>
+            <caption>By year</caption>
+            <thead>
+              <tr>
+                <th scope="col">Year</th>
+                <th scope="col" class="n">
+                  People over $100,000
+                </th>
+                <th scope="col" class="n">
+                  Published pay over $100,000
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {years.map((y) => {
+                const g = grid.get(e.buyer)[y];
+                return (
+                  <tr>
+                    <th scope="row">{y}</th>
+                    <td class="n">
+                      {g ? num(g.n) : <span class="muted">Not available</span>}
+                    </td>
+                    <td class="n">
+                      {g ? (
+                        moneyWords(g.a)
+                      ) : (
+                        <span class="muted">Not available</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </Schedule>
+        </>
       </div>
       <div>
-        <Fragment
-          set:html={await schedule({
-            compact: true,
-            caption: `Most common job titles, ${esc(perYear[perYear.length - 1])}`,
-            cols: [
-              {
-                label: "Title as published",
-              },
-              {
-                label: "People",
-                num: true,
-              },
-              {
-                label: "Average",
-                num: true,
-              },
-            ],
-            rows: titles.map((t) => ({
-              cells: [esc(t.description), num(t.n), money(t.avg)],
-            })),
-          })}
-        />
+        <>
+          <Schedule compact>
+            <caption>{`Most common job titles, ${perYear[perYear.length - 1]}`}</caption>
+            <thead>
+              <tr>
+                <th scope="col">Title as published</th>
+                <th scope="col" class="n">
+                  People
+                </th>
+                <th scope="col" class="n">
+                  Average
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {titles.map((t) => (
+                <tr>
+                  <th scope="row">{t.description}</th>
+                  <td class="n">{num(t.n)}</td>
+                  <td class="n">{money(t.avg)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </Schedule>
+        </>
       </div>
     </div>
   </div>
@@ -106,54 +127,65 @@ const {
     <h2 style="margin-block-end:1rem">
       Highest paid, {perYear[perYear.length - 1]}
     </h2>
-    <Fragment
-      set:html={await schedule({
-        cols: [
-          {
-            label: "Name as published",
-          },
-          {
-            label: "Base",
-            num: true,
-          },
-          {
-            label: "Overtime",
-            num: true,
-          },
-          {
-            label: "Other",
-            num: true,
-          },
-          {
-            label: "Total",
-            num: true,
-          },
-          {
-            label: "Row",
-            num: true,
-          },
-        ],
-        rows: top.map((p) => {
-          const x = JSON.parse(p.extra || "{}");
-          const other =
-            (x.bonus || 0) +
-            (x.shift || 0) +
-            (x.retro || 0) +
-            (x.severance || 0) +
-            (x.other || 0);
-          return {
-            cells: [
-              `${esc(p.person)}<span class="meta">${esc(p.description)}${x.unit ? ` · ${esc(x.unit)}` : ""}</span>`,
-              money(x.base),
-              money(x.overtime),
-              money(other),
-              money(p.amount),
-              `<a class="rcpt" href="${esc(p.source_url)}" title="${esc(p.locator)}">${esc(p.locator.replace(/^sheet [^,]+, /, ""))}</a>`,
-            ],
-          };
-        }),
-      })}
-    />
+    <>
+      <Schedule>
+        <thead>
+          <tr>
+            <th scope="col">Name as published</th>
+            <th scope="col" class="n">
+              Base
+            </th>
+            <th scope="col" class="n">
+              Overtime
+            </th>
+            <th scope="col" class="n">
+              Other
+            </th>
+            <th scope="col" class="n">
+              Total
+            </th>
+            <th scope="col" class="n">
+              Row
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {top.map((p) => {
+            const x = JSON.parse(p.extra || "{}");
+            const other =
+              (x.bonus || 0) +
+              (x.shift || 0) +
+              (x.retro || 0) +
+              (x.severance || 0) +
+              (x.other || 0);
+            return (
+              <tr>
+                <th scope="row">
+                  <>
+                    {p.person}
+                    <span class="meta">
+                      {p.description}
+                      {x.unit ? ` · ${x.unit}` : ""}
+                    </span>
+                  </>
+                </th>
+                <td class="n">{money(x.base)}</td>
+                <td class="n">{money(x.overtime)}</td>
+                <td class="n">{money(other)}</td>
+                <td class="n">{money(p.amount)}</td>
+                <td class="n">
+                  <>
+                    <a class="rcpt" href={p.source_url} title={p.locator}>
+                      {p.locator.replace(/^sheet [^,]+, /, "")}
+                    </a>
+                  </>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </Schedule>
+    </>
     <p>
       <a href={"/search/?ds=sunshine&b=" + bh}>
         Search everyone on {e.buyer}'s lists{" "}

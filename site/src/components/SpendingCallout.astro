@@ -1,14 +1,13 @@
 ---
-const { money, amount, href, title, body, against } = Astro.props;
+import { money } from "../../lib/format.mjs";
+const { amount, href, title, body, against } = Astro.props;
 ---
 
 <aside class="one">
   <p class="one-tag" aria-hidden="true">
     1:1
   </p>
-  <p class="one-amt">
-    <Fragment set:html={money(amount)} />
-  </p>
+  <p class="one-amt">{money(amount)}</p>
   <p class="one-title">
     {href ? (
       <>
@@ -20,9 +19,7 @@ const { money, amount, href, title, body, against } = Astro.props;
   </p>
   {body ? (
     <>
-      <p class="one-body">
-        {typeof body === "string" ? <Fragment set:html={body} /> : body}
-      </p>
+      <p class="one-body">{body}</p>
     </>
   ) : (
     ""
@@ -46,9 +43,7 @@ const { money, amount, href, title, body, against } = Astro.props;
                   }
                 ></span>
               </span>
-              <span>
-                <Fragment set:html={txt} />
-              </span>
+              <span>{txt}</span>
             </p>
           </>
         );

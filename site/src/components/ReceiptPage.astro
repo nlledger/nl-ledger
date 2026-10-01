@@ -1,6 +1,8 @@
 ---
-const { R, receiptForm, raw, valid, num, income, money, a, renderReceipt } =
-  Astro.props;
+import ReceiptForm from "./ReceiptForm.astro";
+import { num, money } from "../../lib/format.mjs";
+import PersonalReceipt from "./PersonalReceipt.astro";
+const { R, raw, valid, income, a } = Astro.props;
 ---
 
 <header class="pagehead">
@@ -19,15 +21,14 @@ const { R, receiptForm, raw, valid, num, income, money, a, renderReceipt } =
 <section class="section">
   <div class="wrap grid-2">
     <div>
-      <Fragment
-        set:html={await receiptForm({
-          id: "inc",
-          value: raw && !valid ? raw : num(income),
-          error:
-            raw && !valid
-              ? "Enter an amount in dollars, for example 55000. The median-wage illustration is shown until you enter a valid income."
-              : "",
-        })}
+      <ReceiptForm
+        id={"inc"}
+        value={raw && !valid ? raw : num(income)}
+        error={
+          raw && !valid
+            ? "Enter an amount in dollars, for example 55000. The median-wage illustration is shown until you enter a valid income."
+            : ""
+        }
       />
       <p class="small muted">
         With JavaScript, the calculation stays in your browser. Without it, or
@@ -38,11 +39,11 @@ const { R, receiptForm, raw, valid, num, income, money, a, renderReceipt } =
       </p>
       <p class="small muted">
         The median full-time wage in the province is{" "}
-        <Fragment set:html={money(a.stats.median_annual_wage.value)} />.
+        {money(a.stats.median_annual_wage.value)}.
       </p>
     </div>
     <div data-receipt-out>
-      <Fragment set:html={renderReceipt(R, income, a.stats)} />
+      <PersonalReceipt R={R} income={income} stats={a.stats} />
     </div>
   </div>
 </section>

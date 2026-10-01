@@ -1,0 +1,84 @@
+---
+import HomeCover from "./HomeCover.astro";
+import HomeAi from "./HomeAi.astro";
+import HomeReceipt from "./HomeReceipt.astro";
+import HomeWorkingLife from "./HomeWorkingLife.astro";
+import HomePriorities from "./HomePriorities.astro";
+import HomeRecipients from "./HomeRecipients.astro";
+import HomePatterns from "./HomePatterns.astro";
+import HomeSources from "./HomeSources.astro";
+import HomeHelp from "./HomeHelp.astro";
+const {
+  total,
+  cite,
+  fy,
+  S,
+  citePop,
+  people,
+  citeWage,
+  ledger,
+  R,
+  EXAMPLE,
+  citeTax,
+  depts,
+  citeRev,
+  median,
+  career,
+  h,
+  m,
+  citeHH,
+  perHour,
+  ex,
+  top,
+  max,
+  D,
+  levelTotals,
+} = Astro.props;
+---
+
+<HomeCover
+  total={total}
+  cite={cite}
+  fy={fy}
+  S={S}
+  citePop={citePop}
+  people={people}
+  citeWage={citeWage}
+  ledger={ledger}
+  R={R}
+/>
+<HomeReceipt
+  S={S}
+  citeTax={citeTax}
+  fy={fy}
+  depts={depts}
+  citeRev={citeRev}
+  median={median}
+  R={R}
+/>
+<HomeWorkingLife
+  median={median}
+  career={career}
+  fy={fy}
+  h={h}
+  m={m}
+  total={total}
+  S={S}
+  citeHH={citeHH}
+  perHour={perHour}
+  ex={ex}
+/>
+<HomePriorities
+  fy={fy}
+  top={top}
+  max={max}
+  S={S}
+  depts={depts}
+  total={total}
+  D={D}
+/>
+<HomeAi R={R} EXAMPLE={EXAMPLE} />
+<HomeRecipients R={R} levelTotals={levelTotals} />
+<HomePatterns D={D} />
+<HomeSources R={R} />
+<HomeHelp />

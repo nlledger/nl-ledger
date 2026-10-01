@@ -1,6 +1,8 @@
 ---
 import BudgetCashRow from "./StatementRow.astro";
-const { c, cell, need, DOCS, fy, rcpt } = Astro.props;
+import BudgetCell from "./BudgetCell.astro";
+import BudgetReceipt from "./BudgetReceipt.astro";
+const { c, need, DOCS, fy } = Astro.props;
 ---
 
 <p class="sched-hint">Scroll sideways for more columns.</p>
@@ -24,87 +26,69 @@ const { c, cell, need, DOCS, fy, rcpt } = Astro.props;
       </tr>
     </thead>
     <tbody>
-      {
-        <BudgetCashRow
-          label={
-            <>
-              Current account
-              <span class="meta">
-                salaries, supplies, operating grants, interest
-              </span>
-            </>
-          }
-          x={c.current}
-          cell={cell}
-        />
-      }
-      {
-        <BudgetCashRow
-          label={
-            <>
-              Capital account
-              <span class="meta">
-                construction, infrastructure, major equipment, loans
-              </span>
-            </>
-          }
-          x={c.capital}
-          cell={cell}
-        />
-      }
+      <BudgetCashRow
+        label={
+          <>
+            Current account
+            <span class="meta">
+              salaries, supplies, operating grants, interest
+            </span>
+          </>
+        }
+        x={c.current}
+      />
+      <BudgetCashRow
+        label={
+          <>
+            Capital account
+            <span class="meta">
+              construction, infrastructure, major equipment, loans
+            </span>
+          </>
+        }
+        x={c.capital}
+      />
       <tr class="total">
         <th scope="row">Spending by departments</th>
-        <Fragment set:html={cell(c.gross.budget)} />
-        <Fragment set:html={cell(c.gross.actual)} />
-        <Fragment set:html={cell(c.difference)} />
+        <BudgetCell value={c.gross.budget} />
+        <BudgetCell value={c.gross.actual} />
+        <BudgetCell value={c.difference} />
       </tr>
-      {
-        <BudgetCashRow
-          label={
-            <>
-              Revenue tied to that spending
-              <span class="meta">
-                federal cost-sharing, fees; "related revenue"
-              </span>
-            </>
-          }
-          x={c.related}
-          cell={cell}
-        />
-      }
-      {
-        <BudgetCashRow
-          label={
-            <>
-              Other provincial and federal revenue
-              <span class="meta">taxes, royalties, transfers</span>
-            </>
-          }
-          x={c.revenue}
-          cell={cell}
-        />
-      }
-      {
-        <BudgetCashRow
-          label={
-            <>
-              Cash{" "}
-              <Fragment
-                set:html={need.actual < 0 ? "left over" : "requirement"}
-              />
-              <span class="meta">spending the revenue did not cover</span>
-            </>
-          }
-          x={need}
-          cell={cell}
-        />
-      }
+      <BudgetCashRow
+        label={
+          <>
+            Revenue tied to that spending
+            <span class="meta">
+              federal cost-sharing, fees; "related revenue"
+            </span>
+          </>
+        }
+        x={c.related}
+      />
+      <BudgetCashRow
+        label={
+          <>
+            Other provincial and federal revenue
+            <span class="meta">taxes, royalties, transfers</span>
+          </>
+        }
+        x={c.revenue}
+      />
+      <BudgetCashRow
+        label={
+          <>
+            Cash {need.actual < 0 ? "left over" : "requirement"}
+            <span class="meta">spending the revenue did not cover</span>
+          </>
+        }
+        x={need}
+      />
     </tbody>
   </table>
 </div>
 <p class="small muted">
   Modified cash basis, government departments only: the basis the House of
   Assembly votes on. Budgeted: {DOCS[c.budget_source.doc]} {fy},{" "}
-  <Fragment set:html={rcpt(c.budget_source)} />. Spent: {DOCS.report} {fy},{" "}
-  <Fragment set:html={rcpt(c.actual_source)} />.
+  <BudgetReceipt source={c.budget_source} />. Spent: {DOCS.report} {fy},{" "}
+  <BudgetReceipt source={c.actual_source} />.
 </p>

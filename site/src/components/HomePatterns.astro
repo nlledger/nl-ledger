@@ -1,6 +1,9 @@
 ---
 import Caveat from "./Caveat.astro";
-const { esc, D, num, flagItem, icon } = Astro.props;
+import FlagItem from "./FlagItem.astro";
+import { icon } from "../../lib/icons.mjs";
+import { num } from "../../lib/format.mjs";
+const { D } = Astro.props;
 ---
 
 <section class="section" aria-labelledby="fl-h">
@@ -14,26 +17,22 @@ const { esc, D, num, flagItem, icon } = Astro.props;
         written down.
       </p>
     </div>
-    {<Caveat text={esc(D.catalog.caveat)} />}
+    <Caveat text={D.catalog.caveat} />
     <ul class="flaglist" style="margin-block-start:1rem">
-      <Fragment
-        set:html={D.catalog.flags.slice(0, 8).map((f) => {
-          const s = D.flagSummary[f.id] || {};
-          const count = s.items
-            ? `${num(s.items)} items`
-            : s.subjects
-              ? `${num(s.subjects)} found`
-              : "none found";
-          return flagItem(f, {
-            count,
-          });
-        })}
-      />
+      {D.catalog.flags.slice(0, 8).map((f) => {
+        const s = D.flagSummary[f.id] || {};
+        const count = s.items
+          ? `${num(s.items)} items`
+          : s.subjects
+            ? `${num(s.subjects)} found`
+            : "none found";
+        return <FlagItem f={f} count={count} />;
+      })}
     </ul>
     <p style="margin-block-start:1.5rem">
       <a href="/flags/">
-        All <Fragment set:html={D.catalog.flags.length} /> patterns and how each
-        is worked out <Fragment set:html={icon("arrow")} />
+        All {D.catalog.flags.length} patterns and how each is worked out{" "}
+        <Fragment set:html={icon("arrow")} />
       </a>
     </p>
   </div>

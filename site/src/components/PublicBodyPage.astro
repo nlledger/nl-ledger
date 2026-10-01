@@ -1,54 +1,65 @@
 ---
+import Schedule from "./Schedule.astro";
+import { ITEM_COLS, datasetLabel } from "../common.mjs";
 import Caveat from "./Caveat.astro";
+import PageHead from "./PageHead.astro";
+import { num, moneyWords, date as fmtDate } from "../../lib/format.mjs";
+import Bar from "./Bar.astro";
+import ItemRow from "./ItemRow.astro";
+import { icon } from "../../lib/icons.mjs";
+import { FEDERAL_RULE } from "../../lib/federal.mjs";
+import FederalSummary from "./FederalSummary.astro";
 const {
-  pagehead,
   b,
-  esc,
-  num,
-  moneyWords,
   sets,
-  datasetLabel,
   dept,
   D,
-  FEDERAL_RULE,
-  leaders,
   byDs,
-  fmtDate,
   flagNotes,
   subjectFlags,
   methods,
-  schedule,
-  bar,
   mmax,
   byYear,
   ymax,
-  federalSummary,
   suppliers,
   smax,
-  ITEM_COLS,
   top,
   itemRow,
   recent,
-  icon,
 } = Astro.props;
 ---
 
-<Fragment
-  set:html={await pagehead({
-    flagged: true,
-    crumbs: [
-      ["/", "Home"],
-      ["/bodies/", "Public bodies"],
-      [null, b.buyer],
-    ],
-    title: esc(b.buyer),
-    lede: `${num(b.n)} records, ${moneyWords(b.amount)} in CAD published record values across all years, from ${sets
-      .map(datasetLabel)
-      .map((s) => esc(s.toLowerCase()))
-      .join(
-        ", ",
-      )}.${sets.length > 1 ? " Sources can overlap; this sum is not a deduplicated spending total." : ""} Values are not total money paid.${dept ? ` <a href="/department/${D.slug(dept.name)}/">Program spending for ${esc(dept.name)}</a>.` : ""}`,
-  })}
+<PageHead
+  flagged={true}
+  crumbs={[
+    ["/", "Home"],
+    ["/bodies/", "Public bodies"],
+    [null, b.buyer],
+  ]}
+  title={b.buyer}
+  lede={
+    <>
+      {num(b.n)} records, {moneyWords(b.amount)} in CAD published record values
+      across all years, from{" "}
+      {sets
+        .map(datasetLabel)
+        .map((label) => label.toLowerCase())
+        .join(", ")}
+      .
+      {sets.length > 1 &&
+        " Sources can overlap; this sum is not a deduplicated spending total."}{" "}
+      Values are not total money paid.
+      {dept && (
+        <>
+          {" "}
+          <a href={`/department/${D.slug(dept.name)}/`}>
+            Program spending for {dept.name}
+          </a>
+          .
+        </>
+      )}
+    </>
+  }
 />
 <section class="section">
   <div class="wrap grid-2">
@@ -70,14 +81,21 @@ const {
       ) : (
         ""
       )}
-      <Fragment
-        set:html={leaders(
-          byDs.map((d) => ({
-            label: `${esc(datasetLabel(d.dataset))} <span class="muted small">${num(d.n)}, ${esc(fmtDate(d.d0))} to ${esc(fmtDate(d.d1))}</span>`,
-            value: moneyWords(d.amount),
-          })),
-        )}
-      />
+      <dl class="leaders">
+        {byDs.map((d) => (
+          <div>
+            <dt>
+              <span>
+                {datasetLabel(d.dataset)}{" "}
+                <span class="muted small">
+                  {num(d.n)}, {fmtDate(d.d0)} to {fmtDate(d.d1)}
+                </span>
+              </span>
+            </dt>
+            <dd>{moneyWords(d.amount)}</dd>
+          </div>
+        ))}
+      </dl>
       {flagNotes.length ? (
         <>
           <h3 style="margin-block:2rem .6rem">Patterns</h3>
@@ -85,7 +103,7 @@ const {
             {flagNotes.map((t, i) => (
               <>
                 <li>
-                  <Fragment set:html={t} />{" "}
+                  {t}{" "}
                   <a href={"/flags/" + subjectFlags[i].flag + "/"}>
                     How this is worked out
                   </a>
@@ -93,13 +111,11 @@ const {
               </>
             ))}
           </ul>
-          {
-            <Caveat
-              text={
-                "A flag is a question, not a finding. It is not evidence that anything wrong happened."
-              }
-            />
-          }
+          <Caveat
+            text={
+              "A flag is a question, not a finding. It is not evidence that anything wrong happened."
+            }
+          />
         </>
       ) : (
         ""
@@ -113,36 +129,36 @@ const {
             CAD record values, all years; sources can overlap. Federal addresses
             do not locate work or benefits.
           </p>
-          <Fragment
-            set:html={await schedule({
-              compact: true,
-              cols: [
-                {
-                  label: "Method",
-                },
-                {
-                  label: "",
-                  w: "40%",
-                },
-                {
-                  label: "Awards",
-                  num: true,
-                },
-                {
-                  label: "Value",
-                  num: true,
-                },
-              ],
-              rows: methods.map((m) => ({
-                cells: [
-                  esc(m.m),
-                  bar(m.amount || 0, mmax),
-                  num(m.n),
-                  moneyWords(m.amount || 0),
-                ],
-              })),
-            })}
-          />
+          <>
+            <Schedule compact>
+              <thead>
+                <tr>
+                  <th scope="col">Method</th>
+                  <th scope="col" style={"inline-size:" + "40%"}>
+                    {""}
+                  </th>
+                  <th scope="col" class="n">
+                    Awards
+                  </th>
+                  <th scope="col" class="n">
+                    Value
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {methods.map((m) => (
+                  <tr>
+                    <th scope="row">{m.m}</th>
+                    <td>
+                      <Bar value={m.amount || 0} max={mmax} />
+                    </td>
+                    <td class="n">{num(m.n)}</td>
+                    <td class="n">{moneyWords(m.amount || 0)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </Schedule>
+          </>
         </>
       ) : (
         ""
@@ -154,31 +170,32 @@ const {
             CAD reported values, not annual payments. Sources can overlap;
             federal addresses do not locate work or benefits.
           </p>
-          <Fragment
-            set:html={await schedule({
-              compact: true,
-              cols: [
-                {
-                  label: "Year",
-                },
-                {
-                  label: "",
-                  w: "50%",
-                },
-                {
-                  label: "Value",
-                  num: true,
-                },
-              ],
-              rows: byYear.map((y) => ({
-                cells: [
-                  esc(y.y),
-                  bar(y.amount || 0, ymax),
-                  moneyWords(y.amount || 0),
-                ],
-              })),
-            })}
-          />
+          <>
+            <Schedule compact>
+              <thead>
+                <tr>
+                  <th scope="col">Year</th>
+                  <th scope="col" style={"inline-size:" + "50%"}>
+                    {""}
+                  </th>
+                  <th scope="col" class="n">
+                    Value
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {byYear.map((y) => (
+                  <tr>
+                    <th scope="row">{y.y}</th>
+                    <td>
+                      <Bar value={y.amount || 0} max={ymax} />
+                    </td>
+                    <td class="n">{moneyWords(y.amount || 0)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </Schedule>
+          </>
         </>
       ) : (
         ""
@@ -190,12 +207,12 @@ const {
   <>
     <section class="section">
       <div class="wrap">
-        <Fragment
-          set:html={await federalSummary(
-            D,
-            "buyer_key=? AND dataset IN ('fed_contract','fed_grant','canadabuys')",
-            b.buyer_key,
-          )}
+        <FederalSummary
+          D={D}
+          where={
+            "buyer_key=? AND dataset IN ('fed_contract','fed_grant','canadabuys')"
+          }
+          args={[b.buyer_key]}
         />
       </div>
     </section>
@@ -210,64 +227,107 @@ const {
       CAD record values, all years; sources can overlap. Federal addresses do
       not locate work or benefits.
     </p>
-    <Fragment
-      set:html={await schedule({
-        cols: [
-          {
-            label: "Supplier",
-          },
-          {
-            label: "",
-            w: "34%",
-          },
-          {
-            label: "Records",
-            num: true,
-          },
-          {
-            label: "Value",
-            num: true,
-          },
-        ],
-        rows: suppliers.map((s) => ({
-          cells: [
-            `<a href="/supplier/${D.keyHash(s.supplier_key)}/">${esc(s.supplier)}</a>`,
-            bar(s.amount || 0, smax),
-            num(s.n),
-            moneyWords(s.amount || 0),
-          ],
-        })),
-      })}
-    />
+    <>
+      <Schedule>
+        <thead>
+          <tr>
+            <th scope="col">Supplier</th>
+            <th scope="col" style={"inline-size:" + "34%"}>
+              {""}
+            </th>
+            <th scope="col" class="n">
+              Records
+            </th>
+            <th scope="col" class="n">
+              Value
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {suppliers.map((s) => (
+            <tr>
+              <th scope="row">
+                <>
+                  <a href={"/supplier/" + D.keyHash(s.supplier_key) + "/"}>
+                    {s.supplier}
+                  </a>
+                </>
+              </th>
+              <td>
+                <Bar value={s.amount || 0} max={smax} />
+              </td>
+              <td class="n">{num(s.n)}</td>
+              <td class="n">{moneyWords(s.amount || 0)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </Schedule>
+    </>
   </div>
 </section>
 <section class="section">
   <div class="wrap">
     <h2 style="margin-block-end:1rem">Largest records</h2>
-    <Fragment
-      set:html={await schedule({
-        cols: ITEM_COLS,
-        rows: top.map((a) =>
-          itemRow(D, a, {
-            showBuyer: false,
-          }),
-        ),
-      })}
-    />
+    <>
+      <Schedule>
+        <thead>
+          <tr>
+            {ITEM_COLS.map((c) => (
+              <th
+                scope="col"
+                class={c.num ? "n" : undefined}
+                style={c.w ? `inline-size:${c.w}` : undefined}
+              >
+                {c.label}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {top.map((a) => (
+            <ItemRow
+              D={D}
+              it={a}
+              {...{
+                showBuyer: false,
+              }}
+            />
+          ))}
+        </tbody>
+      </Schedule>
+    </>
     <h2 style="margin-block:2.5rem 1rem">Most recent</h2>
-    <Fragment
-      set:html={await schedule({
-        cols: ITEM_COLS,
-        rows: recent.map((a) =>
-          itemRow(D, a, {
-            showBuyer: false,
-          }),
-        ),
-      })}
-    />
+    <>
+      <Schedule>
+        <thead>
+          <tr>
+            {ITEM_COLS.map((c) => (
+              <th
+                scope="col"
+                class={c.num ? "n" : undefined}
+                style={c.w ? `inline-size:${c.w}` : undefined}
+              >
+                {c.label}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {recent.map((a) => (
+            <ItemRow
+              D={D}
+              it={a}
+              {...{
+                showBuyer: false,
+              }}
+            />
+          ))}
+        </tbody>
+      </Schedule>
+    </>
     <p style="margin-block-start:1.5rem">
       <a href={"/search/?b=" + D.keyHash(b.buyer_key)}>
-        Search all <Fragment set:html={num(b.n)} /> records for {b.buyer}{" "}
+        Search all {num(b.n)} records for {b.buyer}{" "}
         <Fragment set:html={icon("arrow")} />
       </a>
     </p>

@@ -1,28 +1,23 @@
 ---
-const {
-  pagehead,
-  esc,
-  FEDERAL_RULE,
-  num,
-  F,
-  money,
-  schedule,
-  moneyWords,
-  REPO,
-  methodCode,
-} = Astro.props;
+import Schedule from "./Schedule.astro";
+import PageHead from "./PageHead.astro";
+import { num, money, moneyWords } from "../../lib/format.mjs";
+import MethodCode from "./MethodCode.astro";
+import { FEDERAL_RULE } from "../../lib/federal.mjs";
+import { REPO } from "../../lib/html.mjs";
+const { F } = Astro.props;
 ---
 
-<Fragment
-  set:html={await pagehead({
-    crumbs: [
-      ["/", "Home"],
-      ["/method/", "Methods"],
-      [null, "Federal amendments"],
-    ],
-    title: "Method: federal amendments",
-    lede: "The federal disclosure files repeat a contract every time it changes. Added up as published, they count the same money many times.",
-  })}
+<PageHead
+  crumbs={[
+    ["/", "Home"],
+    ["/method/", "Methods"],
+    [null, "Federal amendments"],
+  ]}
+  title={"Method: federal amendments"}
+  lede={
+    "The federal disclosure files repeat a contract every time it changes. Added up as published, they count the same money many times."
+  }
 />
 <section class="section">
   <div class="wrap prose">
@@ -59,11 +54,11 @@ const {
       </li>
     </ol>
     <p>
-      As published: <Fragment set:html={num(F.contracts.raw_rows)} /> rows,{" "}
-      <Fragment set:html={money(F.contracts.raw_value)} />. Counted once:{" "}
-      <Fragment set:html={num(F.contracts.procurements)} /> contracts,{" "}
-      <Fragment set:html={money(F.contracts.dedup_value)} />. "Non-competitive"
-      means the department coded the solicitation procedure TN.
+      As published: {num(F.contracts.raw_rows)} rows,{" "}
+      {money(F.contracts.raw_value)}. Counted once:{" "}
+      {num(F.contracts.procurements)} contracts,{" "}
+      {money(F.contracts.dedup_value)}. "Non-competitive" means the department
+      coded the solicitation procedure TN.
     </p>
     <h2>Grants and contributions</h2>
     <p>
@@ -90,40 +85,39 @@ const {
       Four departments report each amendment as the change in value instead. For
       these every row of the agreement is added up.
     </p>
-    <Fragment
-      set:html={await schedule({
-        cols: [
-          {
-            label: "Department",
-          },
-          {
-            label: "Evidence in its own rows",
-            w: "44%",
-          },
-          {
-            label: "Rows added up",
-            num: true,
-          },
-          {
-            label: "Latest row only",
-            num: true,
-          },
-          {
-            label: `Paid ${esc(Object.values(F.grants.change_reporting)[0].paid_years)}`,
-            num: true,
-          },
-        ],
-        rows: Object.values(F.grants.change_reporting).map((c) => ({
-          cells: [
-            esc(c.department),
-            esc(c.evidence),
-            moneyWords(c.summed),
-            moneyWords(c.latest_only),
-            moneyWords(c.paid),
-          ],
-        })),
-      })}
-    />
+    <>
+      <Schedule>
+        <thead>
+          <tr>
+            <th scope="col">Department</th>
+            <th scope="col" style={"inline-size:" + "44%"}>
+              Evidence in its own rows
+            </th>
+            <th scope="col" class="n">
+              Rows added up
+            </th>
+            <th scope="col" class="n">
+              Latest row only
+            </th>
+            <th
+              scope="col"
+              class="n"
+            >{`Paid ${Object.values(F.grants.change_reporting)[0].paid_years}`}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {Object.values(F.grants.change_reporting).map((c) => (
+            <tr>
+              <th scope="row">{c.department}</th>
+              <td>{c.evidence}</td>
+              <td class="n">{moneyWords(c.summed)}</td>
+              <td class="n">{moneyWords(c.latest_only)}</td>
+              <td class="n">{moneyWords(c.paid)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </Schedule>
+    </>
     <p>
       The last column is what the department paid NL recipients in four fiscal
       years, from the{" "}
@@ -135,17 +129,15 @@ const {
       for every year on file, so those rows cannot be agreement totals. If
       Canadian Heritage and the Public Health Agency were read as reporting
       totals, the grants total would be{" "}
-      <Fragment
-        set:html={moneyWords(
-          ["pch", "phac-aspc"].reduce(
-            (t, o) =>
-              t +
-              F.grants.change_reporting[o].summed -
-              F.grants.change_reporting[o].latest_only,
-            0,
-          ),
-        )}
-      />{" "}
+      {moneyWords(
+        ["pch", "phac-aspc"].reduce(
+          (t, o) =>
+            t +
+            F.grants.change_reporting[o].summed -
+            F.grants.change_reporting[o].latest_only,
+          0,
+        ),
+      )}{" "}
       lower.
     </p>
     <h3>Grouping rows into agreements</h3>
@@ -170,10 +162,9 @@ const {
       </li>
     </ol>
     <p>
-      As published: <Fragment set:html={num(F.grants.raw_rows)} /> rows,{" "}
-      <Fragment set:html={money(F.grants.raw_value)} />. Counted once:{" "}
-      <Fragment set:html={num(F.grants.agreements)} /> agreements,{" "}
-      <Fragment set:html={money(F.grants.dedup_value)} />. The code is{" "}
+      As published: {num(F.grants.raw_rows)} rows, {money(F.grants.raw_value)}.
+      Counted once: {num(F.grants.agreements)} agreements,{" "}
+      {money(F.grants.dedup_value)}. The code is{" "}
       <a href={REPO + "/blob/main/pipeline/parse_federal.py"}>
         parse_federal.py
       </a>
@@ -188,20 +179,16 @@ const {
       record-value sum, not spending. Foreign and unstated currency never enter
       CAD totals.
     </p>
-    <Fragment
-      set:html={await methodCode(
+    <MethodCode
+      files={[
         [
-          [
-            "pipeline/parse_federal.py",
-            "reads the federal files and keeps each contract and grant once",
-          ],
-          ["pipeline/reconcile.py", "checks totals against the sources' own"],
+          "pipeline/parse_federal.py",
+          "reads the federal files and keeps each contract and grant once",
         ],
-        {
-          title: "counting federal contracts once",
-          path: "/method/federal/",
-        },
-      )}
+        ["pipeline/reconcile.py", "checks totals against the sources' own"],
+      ]}
+      title={"counting federal contracts once"}
+      path={"/method/federal/"}
     />
   </div>
 </section>

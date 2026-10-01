@@ -51,7 +51,7 @@ for (const currency of ["CAD", "USD", "unstated", marker]) {
     const renders = {
       "Worker result": await resultItem(it, {}, links),
       "Worker record": (await itemPage(it, { flags: {}, stats, links })).body,
-      "static item row": itemRow(D, row).cells.join(""),
+      "static item row": await itemRow(D, row),
       "static federal summary": await federalSummary(D, "1=1"),
       "Worker supplier breakdown": (
         await supplierPage(
@@ -127,7 +127,7 @@ check(
   "Worker source fields and receipt page",
   (await itemPage(sourceRecord, { flags: {}, stats, links })).body,
 );
-check("source receipt helper", receipt(sourceRecord.u, marker, marker));
+check("source receipt helper", await receipt(sourceRecord.u, marker, marker));
 check(
   "supplier source years",
   (
@@ -275,7 +275,7 @@ const receiptResponse = await receiptRoute({
   },
 });
 check("Worker receipt source years", await receiptResponse.text());
-const ld = ldScript({ name: "</script>" + marker });
+const ld = await ldScript({ name: "</script>" + marker });
 assert.equal(
   (ld.match(/<\/script>/g) || []).length,
   1,
@@ -346,14 +346,20 @@ checks += 3;
       { flags: {}, stats, links, hash: "abcdef1234" },
     )
   ).body;
-  assert.ok(body.includes('href="/search/?s=abcdef1234&amp;n=aaaa11112222"'), "combined name link keeps its filter");
-  assert.ok(!body.includes("&amp;amp;"), "combined name link is not double-escaped");
+  assert.ok(
+    body.includes('href="/search/?s=abcdef1234&amp;n=aaaa11112222"'),
+    "combined name link keeps its filter",
+  );
+  assert.ok(
+    !body.includes("&amp;amp;"),
+    "combined name link is not double-escaped",
+  );
   checks += 2;
 }
 
 // Angle brackets inside an attribute must not let table code read data as markup.
 {
-  const hostile = '/x</td><td><img src=x onerror=alert(1)>';
+  const hostile = "/x</td><td><img src=x onerror=alert(1)>";
   const table =
     '<table class="sched"><thead><tr><th scope="col">Name</th><th scope="col">Value</th></tr></thead>' +
     `<tbody><tr><td><a href="${hostile.replace(/"/g, "&quot;")}">Row</a></td><td>$1</td></tr></tbody></table>`;
@@ -372,6 +378,18 @@ checks += 3;
   }
   checks += 4;
 }
+
+const slotted = await layout({
+  title: "Layout slots",
+  body: "<p>Page content</p>",
+  head: '<meta name="layout-slot-check" content="present">',
+  scripts: "<script>window.layoutSlotCheck=true</script>",
+});
+assert.match(slotted, /<meta name="layout-slot-check" content="present">/);
+assert.match(slotted, /<p>Page content<\/p>/);
+assert.match(slotted, /<script>window.layoutSlotCheck=true<\/script>/);
+
+checks += 3;
 
 console.log(
   `source escaping: ${checks} static/Worker checks; missing/zero/CAD/USD/unstated/marker; source fields, attributes and JSON-LD; plain-text MCP formatter retained`,

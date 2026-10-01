@@ -1,0 +1,12 @@
+---
+import { icon } from "../../lib/icons.mjs";
+const { flags, catalog } = Astro.props;
+const names = (flags || []).map((f) => catalog?.[f]?.title || f).join("; ");
+---
+
+{flags?.length > 0 && (
+  <a class="q" href={`/flags/${flags[0]}/`} title={names}>
+    <Fragment set:html={icon("query")} />
+    <span class="vh">Flagged: {names}</span>
+  </a>
+)}

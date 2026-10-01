@@ -1,0 +1,7 @@
+---
+import { bodyAnchorHref } from "../common.mjs";
+const { D, name } = Astro.props;
+const href = bodyAnchorHref(D, name);
+---
+
+{href ? <a href={href}>{name}</a> : name}

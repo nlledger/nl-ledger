@@ -1,12 +1,6 @@
 ---
-const {
-  crumbs = [],
-  title,
-  lede,
-  extra = "",
-  flagged = false,
-  standing,
-} = Astro.props;
+import Standing from "./Standing.astro";
+const { crumbs = [], title, lede, extra = "", flagged = false } = Astro.props;
 ---
 
 <header class="pagehead">
@@ -21,15 +15,9 @@ const {
         ))}
       </p>
     )}
-    <h1>
-      <Fragment set:html={title} />
-    </h1>
-    {lede && (
-      <p class="lede">
-        <Fragment set:html={lede} />
-      </p>
-    )}
-    {flagged && <Fragment set:html={standing()} />}
-    <Fragment set:html={extra} />
+    <h1>{title}</h1>
+    {lede && <p class="lede">{lede}</p>}
+    {flagged && <Standing />}
+    {extra}
   </div>
 </header>

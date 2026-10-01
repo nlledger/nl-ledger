@@ -1,13 +1,11 @@
 import { experimental_AstroContainer } from "astro/container";
-
-let registry;
-// Node builds compile before rendering; the Worker bundles the same registry.
-export async function renderComponent(name, props) {
-  const components = await (registry ||= import("../.render/components.mjs"));
-  // Request props and rendering state never cross requests.
+// Only JavaScript entry points render strings. Components import and nest directly.
+export async function renderAstro(
+  component,
+  props,
+  slots = {},
+  partial = true,
+) {
   const container = await experimental_AstroContainer.create();
-  return container.renderToString(components[name], {
-    props,
-    partial: !name.startsWith("layouts_"),
-  });
+  return container.renderToString(component, { props, slots, partial });
 }

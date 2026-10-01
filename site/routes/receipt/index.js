@@ -1,9 +1,7 @@
-import { renderComponent } from "../../lib/render.mjs";
-import { renderReceipt } from "../../lib/receipt.mjs";
-import { receiptForm, esc } from "../../lib/html.mjs";
-import { money, num } from "../../lib/format.mjs";
+import { components_ReceiptPage_astro as ReceiptPage } from "../../.render/components.mjs";
+import { renderAstro } from "../../lib/render.mjs";
+import { esc } from "../../lib/html.mjs";
 import { assets, page } from "../_shared.js";
-
 let R = null;
 export async function onRequestGet(ctx) {
   const a = await assets(ctx);
@@ -16,16 +14,12 @@ export async function onRequestGet(ctx) {
   const income = valid
     ? Math.min(10_000_000, Math.floor(Number(cleaned)))
     : a.stats.median_annual_wage.value;
-  const body = await renderComponent("components_ReceiptPage_astro", {
+  const body = await renderAstro(ReceiptPage, {
     R,
-    receiptForm,
     raw,
     valid,
-    num,
     income,
-    money,
     a,
-    renderReceipt,
   });
   const res = await page(ctx, a, {
     title: "NL employment income tax illustration",

@@ -1,34 +1,23 @@
 ---
-const {
-  esc,
-  s,
-  num,
-  moneyWords,
-  money,
-  combinedNames,
-  hash,
-  standing,
-  FEDERAL_RULE,
-  OVERLAP_RULE,
-  schedule,
-  DATASET_LABEL,
+import Schedule from "./Schedule.astro";
+import { num, moneyWords, money, DATASET_LABEL } from "../../lib/format.mjs";
+import SupplierNames from "./SupplierNames.astro";
+import Standing from "./Standing.astro";
+import {
   SCOPE_LABEL,
   REVIEW_LABEL,
   periodText,
   nativeAmount,
-  dsRows,
-  bodyLink,
-  links,
-  years,
-  bar,
-  ymax,
-  flagRows,
-  flagItem,
-  resultItem,
-  flags,
-  icon,
-  spotError,
-} = Astro.props;
+  FEDERAL_RULE,
+  OVERLAP_RULE,
+} from "../../lib/federal.mjs";
+import BodyLink from "./BodyLink.astro";
+import Bar from "./Bar.astro";
+import FlagItem from "./FlagItem.astro";
+import SearchResult from "./SearchResult.astro";
+import { icon } from "../../lib/icons.mjs";
+import SpotError from "./SpotError.astro";
+const { s, hash, dsRows, links, years, ymax, flagRows, flags } = Astro.props;
 ---
 
 <header class="pagehead">
@@ -38,28 +27,19 @@ const {
     </p>
     <h1>{s.name}</h1>
     <p class="lede">
-      <Fragment set:html={num(s.n)} />{" "}
-      <Fragment set:html={s.n === 1 ? "record" : "records"} /> across provincial
-      and federal sources: <Fragment set:html={moneyWords(s.total)} /> in
-      included CAD record values across all years
-      <Fragment
-        set:html={
-          s.overlap
-            ? `; ${moneyWords(s.overlap)} in federal payment and award notice values excluded from this total because these sources can overlap contracts and grants`
-            : ""
-        }
-      />
-      <Fragment set:html={s.city ? `. Listed in ${esc(s.city)}` : ""} />.
-      <Fragment
-        set:html={
-          s.names
-            ? ` Also printed as: ${s.names
-                .filter((n) => n !== s.name)
-                .map(esc)
-                .join("; ")}.`
-            : ""
-        }
-      />
+      {num(s.n)} {s.n === 1 ? "record" : "records"} across provincial and
+      federal sources: {moneyWords(s.total)} in included CAD record values
+      across all years
+      {s.overlap
+        ? `; ${moneyWords(s.overlap)} in federal payment and award notice values excluded from this total because these sources can overlap contracts and grants`
+        : ""}
+      {s.city ? `. Listed in ${s.city}` : ""}.
+      {s.names
+        ? ` Also printed as: ${s.names
+            .filter((n) => n !== s.name)
+
+            .join("; ")}.`
+        : ""}
     </p>
     {s.businessNumbers?.length > 1 ? (
       <>
@@ -67,9 +47,11 @@ const {
           <p>
             The records carry more than one business number, listed as
             published:{" "}
-            <Fragment set:html={s.businessNumbers.map(esc).join("; ")} />. This
-            page groups the organisation the publisher named; it does not verify
-            who holds each number.
+            {s.businessNumbers.flatMap((node, index) =>
+              index ? ["; ", node] : [node],
+            )}
+            . This page groups the organisation the publisher named; it does not
+            verify who holds each number.
           </p>
         </div>
       </>
@@ -81,13 +63,9 @@ const {
         <div class="combined small">
           <p>
             <strong>
-              <Fragment
-                set:html={
-                  s.identityUnresolved
-                    ? "Identity unresolved."
-                    : "Different organisations identified by named source records."
-                }
-              />
+              {s.identityUnresolved
+                ? "Identity unresolved."
+                : "Different organisations identified by named source records."}
             </strong>{" "}
             Other pieces have the same or a closely matched published name. This
             page's total covers only its own records; read the other pieces
@@ -97,24 +75,17 @@ const {
             {s.related.map((r) => (
               <>
                 <li>
-                  <a href={"/supplier/" + r.h + "/"}>{r.name}</a>:{" "}
-                  <Fragment set:html={num(r.n)} />{" "}
-                  <Fragment set:html={r.n === 1 ? "record" : "records"} />;{" "}
-                  <Fragment
-                    set:html={money(r.total, {
-                      cents: true,
-                    })}
-                  />{" "}
+                  <a href={"/supplier/" + r.h + "/"}>{r.name}</a>: {num(r.n)}{" "}
+                  {r.n === 1 ? "record" : "records"};{" "}
+                  {money(r.total, {
+                    cents: true,
+                  })}{" "}
                   in included record values
-                  <Fragment
-                    set:html={
-                      r.overlap
-                        ? `; ${money(r.overlap, {
-                            cents: true,
-                          })} excluded because sources can overlap`
-                        : ""
-                    }
-                  />
+                  {r.overlap
+                    ? `; ${money(r.overlap, {
+                        cents: true,
+                      })} excluded because sources can overlap`
+                    : ""}
                   .
                 </li>
               </>
@@ -142,17 +113,15 @@ const {
     ) : (
       ""
     )}
-    <Fragment set:html={s.combined ? await combinedNames(s, hash) : ""} />
-    <Fragment set:html={standing()} />
+    {s.combined ? <SupplierNames s={s} hash={hash} /> : ""}
+    <Standing />
   </div>
 </header>
 <section class="section">
   <div class="wrap">
     <div class="figs">
       <div>
-        <span class="big">
-          <Fragment set:html={moneyWords(s.total)} />
-        </span>
+        <span class="big">{moneyWords(s.total)}</span>
         <span class="what">
           included CAD record values, all years; not total money paid
           (agreements can span several years)
@@ -168,73 +137,102 @@ const {
     <p class="small">
       {FEDERAL_RULE} {OVERLAP_RULE}
     </p>
-    <Fragment
-      set:html={
-        s.breakdown?.length
-          ? await schedule({
-              caption:
-                "Reported values by source, location evidence and currency",
-              cols: [
-                {
-                  label: "Source and evidence",
-                },
-                {
-                  label: "Records",
-                  num: true,
-                },
-                {
-                  label: "Native value",
-                  num: true,
-                },
-              ],
-              rows: s.breakdown.map((g) => ({
-                cells: [
-                  esc(DATASET_LABEL[g.source] || g.source) +
-                    `<span class="meta">${esc(g.amount_kind)}; ${esc(SCOPE_LABEL[g.scope_status] || "Provincial records")}; ${g.scope_review_state ? esc(REVIEW_LABEL[g.scope_review_state]) + "; " : ""}${esc(g.counting_basis)}; ${g.included_in_summary ? "included" : esc(g.exclusion_reason)}. Periods: ${esc(periodText(g.periods))}. ${esc(g.missing_amounts)} amounts not stated; ${esc(g.zero_amounts)} published zeros.</span>`,
-                  num(g.records),
-                  esc(
-                    nativeAmount(
-                      g.records === g.missing_amounts ? null : g.value,
-                      g.currency,
-                    ),
-                  ),
-                ],
-              })),
-            })
-          : ""
-      }
-    />
+    {s.breakdown?.length ? (
+      <>
+        <Schedule>
+          <caption>
+            Reported values by source, location evidence and currency
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Source and evidence</th>
+              <th scope="col" class="n">
+                Records
+              </th>
+              <th scope="col" class="n">
+                Native value
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {s.breakdown.map((g) => (
+              <tr>
+                <th scope="row">
+                  <>
+                    {DATASET_LABEL[g.source] || g.source}
+                    <>
+                      <span class="meta">
+                        {g.amount_kind};{" "}
+                        {SCOPE_LABEL[g.scope_status] || "Provincial records"};{" "}
+                        {g.scope_review_state
+                          ? REVIEW_LABEL[g.scope_review_state] + "; "
+                          : ""}
+                        {g.counting_basis};{" "}
+                        {g.included_in_summary
+                          ? "included"
+                          : g.exclusion_reason}
+                        . Periods: {periodText(g.periods)}. {g.missing_amounts}{" "}
+                        amounts not stated; {g.zero_amounts} published zeros.
+                      </span>
+                    </>
+                  </>
+                </th>
+                <td class="n">{num(g.records)}</td>
+                <td class="n">
+                  {nativeAmount(
+                    g.records === g.missing_amounts ? null : g.value,
+                    g.currency,
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </Schedule>
+      </>
+    ) : (
+      ""
+    )}
     <div class="grid-2 supplier-breakdown">
       <div class="supplier-schedules">
-        <Fragment
-          set:html={await schedule({
-            compact: true,
-            caption: "By source, supported CAD values only",
-            cols: [
-              {
-                label: "Source",
-              },
-              {
-                label: "Records",
-                num: true,
-              },
-              {
-                label: "Value",
-                num: true,
-              },
-            ],
-            rows: dsRows.map(([d, [n, a]]) => ({
-              cells: [
-                esc(DATASET_LABEL[d] || d) +
-                  (["pa_pss", "pa_tp", "canadabuys"].includes(d)
-                    ? '<span class="meta">excluded from the total; can overlap contracts and grants</span>'
-                    : ""),
-                num(n),
-                moneyWords(a),
-              ],
-            })),
-          })}
-        />
+        <>
+          <Schedule compact>
+            <caption>By source, supported CAD values only</caption>
+            <thead>
+              <tr>
+                <th scope="col">Source</th>
+                <th scope="col" class="n">
+                  Records
+                </th>
+                <th scope="col" class="n">
+                  Value
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {dsRows.map(([d, [n, a]]) => (
+                <tr>
+                  <th scope="row">
+                    <>
+                      {DATASET_LABEL[d] || d}
+                      {["pa_pss", "pa_tp", "canadabuys"].includes(d) ? (
+                        <>
+                          <span class="meta">
+                            excluded from the total; can overlap contracts and
+                            grants
+                          </span>
+                        </>
+                      ) : (
+                        ""
+                      )}
+                    </>
+                  </th>
+                  <td class="n">{num(n)}</td>
+                  <td class="n">{moneyWords(a)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </Schedule>
+        </>
         {s.buyers?.length ? (
           <>
             <>
@@ -244,91 +242,93 @@ const {
                 paid these amounts.
               </p>
             </>
-            <Fragment
-              set:html={await schedule({
-                compact: true,
-                caption: "Public bodies named in these records",
-                cols: [
-                  {
-                    label: "Public body",
-                  },
-                  {
-                    label: "Records",
-                    num: true,
-                  },
-                  {
-                    label: "Included value",
-                    num: true,
-                  },
-                  {
-                    label: "Excluded value",
-                    num: true,
-                  },
-                ],
-                rows: s.buyers.map((b) => ({
-                  cells: [
-                    bodyLink(b.name, links),
-                    num(b.n),
-                    moneyWords(b.included),
-                    moneyWords(b.excluded),
-                  ],
-                })),
-                foot: [
-                  {
-                    cells: [
-                      "All public bodies",
-                      num(s.n),
-                      moneyWords(s.total),
-                      moneyWords(s.overlap),
-                    ],
-                  },
-                ],
-              })}
-            />
+            <>
+              <Schedule compact>
+                <caption>Public bodies named in these records</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Public body</th>
+                    <th scope="col" class="n">
+                      Records
+                    </th>
+                    <th scope="col" class="n">
+                      Included value
+                    </th>
+                    <th scope="col" class="n">
+                      Excluded value
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {s.buyers.map((b) => (
+                    <tr>
+                      <th scope="row">
+                        <BodyLink name={b.name} links={links} />
+                      </th>
+                      <td class="n">{num(b.n)}</td>
+                      <td class="n">{moneyWords(b.included)}</td>
+                      <td class="n">{moneyWords(b.excluded)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr class="total">
+                    <th scope="row">All public bodies</th>
+                    <td class="n">{num(s.n)}</td>
+                    <td class="n">{moneyWords(s.total)}</td>
+                    <td class="n">{moneyWords(s.overlap)}</td>
+                  </tr>
+                </tfoot>
+              </Schedule>
+            </>
           </>
         ) : (
           ""
         )}
       </div>
       <div>
-        <Fragment
-          set:html={
-            years.length > 1
-              ? await schedule({
-                  compact: true,
-                  caption: "Included CAD values by original record year",
-                  cols: [
-                    {
-                      label: "Year",
-                    },
-                    {
-                      label: "",
-                      w: "55%",
-                    },
-                    {
-                      label: "Value",
-                      num: true,
-                    },
-                  ],
-                  rows: years.map(([y, v]) => ({
-                    cells: [esc(y), bar(v, ymax), moneyWords(v)],
-                  })),
-                })
-              : ""
-          }
-        />
+        {years.length > 1 ? (
+          <>
+            <Schedule compact>
+              <caption>Included CAD values by original record year</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Year</th>
+                  <th scope="col" style={"inline-size:" + "55%"}>
+                    {""}
+                  </th>
+                  <th scope="col" class="n">
+                    Value
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {years.map(([y, v]) => (
+                  <tr>
+                    <th scope="row">{y}</th>
+                    <td>
+                      <Bar value={v} max={ymax} />
+                    </td>
+                    <td class="n">{moneyWords(v)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </Schedule>
+          </>
+        ) : (
+          ""
+        )}
         {flagRows.length ? (
           <>
             <h3 style="margin-block:1.5rem .6rem">Patterns</h3>
             <ul class="flaglist">
-              <Fragment
-                set:html={flagRows.map((x) =>
-                  flagItem(x.f, {
-                    count: `${num(x.n)} ${x.n === 1 ? "record" : "records"}`,
-                    method: true,
-                  }),
-                )}
-              />
+              {flagRows.map((x) => (
+                <FlagItem
+                  f={x.f}
+                  count={`${num(x.n)} ${x.n === 1 ? "record" : "records"}`}
+                  method={true}
+                />
+              ))}
             </ul>
           </>
         ) : (
@@ -342,32 +342,24 @@ const {
   <div class="wrap">
     <h2 style="margin-block-end:1rem">Largest records</h2>
     <ol class="results">
-      <Fragment
-        set:html={(
-          await Promise.all(
-            s.top.map(
-              async (it) =>
-                await resultItem(
-                  {
-                    ...it,
-                    s: undefined,
-                    k: undefined,
-                    fy: undefined,
-                  },
-                  flags,
-                  links,
-                ),
-            ),
-          )
-        ).join("")}
-      />
+      {s.top.map((it) => (
+        <SearchResult
+          it={{
+            ...it,
+            s: undefined,
+            k: undefined,
+            fy: undefined,
+          }}
+          flags={flags}
+          links={links}
+        />
+      ))}
     </ol>
     {s.n > s.top.length ? (
       <>
         <p style="margin-block-start:1.5rem">
           <a href={"/search/?s=" + hash}>
-            All <Fragment set:html={num(s.n)} /> records{" "}
-            <Fragment set:html={icon("arrow")} />
+            All {num(s.n)} records <Fragment set:html={icon("arrow")} />
           </a>
         </p>
       </>
@@ -377,5 +369,5 @@ const {
   </div>
 </section>
 <div class="wrap">
-  <Fragment set:html={spotError()} />
+  <SpotError />
 </div>

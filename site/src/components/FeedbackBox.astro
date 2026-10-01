@@ -1,5 +1,7 @@
 ---
-const { icon, feedbackForm, page } = Astro.props;
+import { icon } from "../../lib/icons.mjs";
+import FeedbackForm from "./FeedbackForm.astro";
+const { page } = Astro.props;
 ---
 
 <section class="fb" id="feedback" aria-labelledby="fb-h">
@@ -17,10 +19,6 @@ const { icon, feedbackForm, page } = Astro.props;
         </a>
       </p>
     </div>
-    <Fragment
-      set:html={await feedbackForm({
-        page,
-      })}
-    />
+    <FeedbackForm page={page} />
   </div>
 </section>

@@ -1,33 +1,24 @@
 ---
+import { SITE, date as fmtDate } from "../../lib/format.mjs";
+import { NAV, REPO, STANDING } from "../../lib/html.mjs";
+import { icon } from "../../lib/icons.mjs";
+import FeedbackBox from "../components/FeedbackBox.astro";
+import Notes from "../components/Notes.astro";
 import Wordmark from "../components/Wordmark.astro";
-const themeScript =
-  'try{var t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t}catch(e){}';
 const {
+  assetVersion,
   full,
   desc,
-  SITE,
   path,
   shareOrigin,
   sharePath,
   share,
   robots,
-  ASSET_VERSION,
-  head,
-  ld,
   bodyClass,
-  NAV,
-  icon,
   feedback,
-  REPO,
-  mobileTables,
-  body,
   notes,
-  feedbackBox,
   at,
-  STANDING,
   updated,
-  fmtDate,
-  scripts,
 } = Astro.props;
 ---
 
@@ -99,10 +90,10 @@ const {
       type="font/woff2"
       crossorigin
     />
-    <link rel="stylesheet" href={"/site.css?v=" + ASSET_VERSION} />
-    <script is:inline set:html={themeScript} />
-    <Fragment set:html={head} />
-    <Fragment set:html={ld} />
+    <link rel="stylesheet" href={"/site.css?v=" + assetVersion} />
+    <slot name="theme" />
+    <slot name="head" />
+    <slot name="structured-data" />
   </head>
   <body class={bodyClass}>
     <a class="skip" href="#main">
@@ -239,27 +230,22 @@ const {
       </p>
     </aside>
     <main id="main">
-      <Fragment set:html={mobileTables(body)} />
-      <Fragment set:html={notes ? await notes.render() : ""} />
+      <slot />
+      {notes?.list.length > 0 && <Notes list={notes.list} />}
     </main>
-    <Fragment set:html={feedback ? await feedbackBox(at || path) : ""} />
+    {feedback && <FeedbackBox page={at || path} />}
     <footer class="foot">
       <div class="foot-in">
         <div class="foot-statement">
           <p class="foot-lede">
-            <strong>
-              <Fragment set:html={SITE.name} /> is an independent project, in
-              beta.
-            </strong>{" "}
-            It republishes public records from the Government of Newfoundland
-            and Labrador, the Government of Canada, and the House of Assembly.
-            Every figure links to the record it came from.
+            <strong>{SITE.name} is an independent project, in beta.</strong> It
+            republishes public records from the Government of Newfoundland and
+            Labrador, the Government of Canada, and the House of Assembly. Every
+            figure links to the record it came from.
           </p>
           <p class="foot-flag">
             <Fragment set:html={icon("query")} />
-            <span>
-              <Fragment set:html={STANDING} />
-            </span>
+            <span>{STANDING}</span>
           </p>
           <p class="foot-open">
             <strong>Open source.</strong> The code, the data pipeline and the
@@ -295,7 +281,7 @@ const {
         )}
       </div>
     </footer>
-    <script is:inline src={"/app.js?v=" + ASSET_VERSION} defer></script>
-    <Fragment set:html={scripts} />
+    <script is:inline src={"/app.js?v=" + assetVersion} defer></script>
+    <slot name="scripts" />
   </body>
 </html>

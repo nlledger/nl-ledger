@@ -1,5 +1,7 @@
 ---
-const { num, R, icon, esc, leaders, levelTotals, moneyWords } = Astro.props;
+import { num, moneyWords } from "../../lib/format.mjs";
+import { icon } from "../../lib/icons.mjs";
+const { R, levelTotals } = Astro.props;
 ---
 
 <section class="section" aria-labelledby="wh-h">
@@ -8,10 +10,9 @@ const { num, R, icon, esc, leaders, levelTotals, moneyWords } = Astro.props;
       <div class="section-head">
         <h2 id="wh-h">Reported record values by source</h2>
         <p class="lede">
-          <Fragment set:html={num(R.itemCount)} /> line items from provincial
-          and federal records: contract awards (including sole-source), grants,
-          MHA and minister expense claims and salaries over $100,000 (the
-          sunshine list).
+          {num(R.itemCount)} line items from provincial and federal records:
+          contract awards (including sole-source), grants, MHA and minister
+          expense claims and salaries over $100,000 (the sunshine list).
         </p>
       </div>
       <form
@@ -48,14 +49,19 @@ const { num, R, icon, esc, leaders, levelTotals, moneyWords } = Astro.props;
         ))}
       </ul>
       <h3 style="margin-block:2rem .8rem">Source summaries, all years</h3>
-      <Fragment
-        set:html={leaders(
-          levelTotals.map((l) => ({
-            label: `<span class="sw lv-${esc(l.level)}"></span>${esc(l.label)}`,
-            value: moneyWords(l.amount),
-          })),
-        )}
-      />
+      <dl class="leaders">
+        {levelTotals.map((level) => (
+          <div>
+            <dt>
+              <span>
+                <span class={`sw lv-${level.level}`}></span>
+                {level.label}
+              </span>
+            </dt>
+            <dd>{moneyWords(level.amount)}</dd>
+          </div>
+        ))}
+      </dl>
       <p class="small muted" style="margin-block-start:.8rem">
         Federal records are selected by reported supplier or recipient
         addresses, including labelled conflicts. Addresses do not establish
@@ -96,9 +102,7 @@ const { num, R, icon, esc, leaders, levelTotals, moneyWords } = Astro.props;
                     <a href={r.href}>{r.name}</a>
                     <span class="meta">{r.sources}</span>
                   </th>
-                  <td class="n">
-                    <Fragment set:html={moneyWords(r.amount)} />
-                  </td>
+                  <td class="n">{moneyWords(r.amount)}</td>
                 </tr>
               </>
             ))}

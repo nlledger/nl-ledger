@@ -1,16 +1,18 @@
 ---
-const { pagehead, GH, fmtDate, D, SITE } = Astro.props;
+import PageHead from "./PageHead.astro";
+import { SITE, date as fmtDate } from "../../lib/format.mjs";
+const { GH, D } = Astro.props;
 ---
 
-<Fragment
-  set:html={await pagehead({
-    crumbs: [
-      ["/", "Home"],
-      [null, "Corrections"],
-    ],
-    title: "Corrections",
-    lede: "Every change to a published figure is logged here with the date and the reason.",
-  })}
+<PageHead
+  crumbs={[
+    ["/", "Home"],
+    [null, "Corrections"],
+  ]}
+  title={"Corrections"}
+  lede={
+    "Every change to a published figure is logged here with the date and the reason."
+  }
 />
 <section class="section">
   <div class="wrap prose">
@@ -111,7 +113,7 @@ const { pagehead, GH, fmtDate, D, SITE } = Astro.props;
       source it links to, that is an error on this site and belongs in this log.
       Email{" "}
       <a href={"mailto:" + SITE.corrections + "?subject=Correction%20request"}>
-        <Fragment set:html={SITE.corrections} />
+        {SITE.corrections}
       </a>{" "}
       or <a href="/help/#figure">report it on GitHub</a>.
     </p>

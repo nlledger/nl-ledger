@@ -1,0 +1,12 @@
+---
+import { SITE } from "../../lib/format.mjs";
+---
+
+<p class="spot-error small muted">
+  <span>Spot an error?</span> <a href="#feedback">Say so in the box below</a>,
+  or email{" "}
+  <a href={`mailto:${SITE.corrections}?subject=Correction%20request`}>
+    {SITE.corrections}
+  </a>
+  . <a href="/about/#corrections">What to send</a>.
+</p>
