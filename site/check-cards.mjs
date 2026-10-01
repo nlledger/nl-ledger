@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { cardImageName } from "./lib/card-image-name.mjs";
 import {
   card,
   cardAmount,
@@ -16,6 +18,20 @@ import { onRequestGet } from "./routes/share.js";
 import { onRequestGet as search } from "./routes/search/index.js";
 import { onRequestGet as supplier } from "./routes/supplier/[h].js";
 import worker from "./worker.mjs";
+const digest = (png) => createHash("sha256").update(png).digest("hex");
+const legacy = JSON.parse(
+  readFileSync(new URL("./lib/share-card-legacy.json", import.meta.url)),
+);
+for (const { image, sha256 } of legacy.images) {
+  const png = readFileSync(new URL("./static" + image, import.meta.url));
+  assert.equal(digest(png), sha256, `Preserved live PNG: ${image}`);
+  if (existsSync(new URL("./dist/data/share-cards.json", import.meta.url)))
+    assert.equal(
+      digest(readFileSync(new URL("./dist" + image, import.meta.url))),
+      sha256,
+      `Built legacy URL: ${image}`,
+    );
+}
 let checks = 0;
 const check = (value, message) => {
   assert.ok(value, message);
@@ -335,6 +351,11 @@ if (existsSync("site/dist/data/share-cards.json")) {
       png.readUInt32BE(16) === 1200 && png.readUInt32BE(20) === 630,
       `PNG dimensions ${entry.path}`,
     );
+    if (!entry.fallback)
+      check(
+        entry.image === `/share/static/${digest(png)}.png`,
+        `PNG bytes name the image: ${entry.path}`,
+      );
     fitText(entry.title, { maxSize: 54, minSize: 28, maxLines: 3 });
     fitText(entry.label, { maxSize: 26, minSize: 22, maxLines: 3 });
   }
@@ -357,6 +378,28 @@ if (existsSync("site/dist/data/share-cards.json")) {
 }
 if (existsSync(new URL("./node_modules/satori", import.meta.url))) {
   const { render } = await import("./src/card-render-node.mjs");
+  const original = Buffer.from(
+    await render(card("Stable image", "$0", "Published values")),
+  );
+  const identical = Buffer.from(
+    await render({
+      ...card("Stable image", "$0", "Published values"),
+      unused: "code-only input",
+    }),
+  );
+  check(
+    original.equals(identical) &&
+      cardImageName(original) === cardImageName(identical),
+    "byte-identical renders retain their name when render inputs differ",
+  );
+  const changed = Buffer.from(
+    await render(card("Changed image", "$1", "Published values")),
+  );
+  check(
+    !original.equals(changed) &&
+      cardImageName(original) !== cardImageName(changed),
+    "changed PNG gets a new name",
+  );
   for (const c of [
     card("Dépenses publiques", "$0.01", "Valeurs publiées"),
     card("Large values", "$999.9 billion", "Published values"),

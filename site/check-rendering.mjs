@@ -11,7 +11,6 @@ if (!before || !after)
 const bytes = (root, file) => readFileSync(join(root, file));
 const cards = (root) => JSON.parse(bytes(root, "data/share-cards.json"));
 const oldCards = new Map(cards(before).map((card) => [card.path, card]));
-const imageNames = new Map();
 let imageCount = 0;
 for (const card of cards(after)) {
   const old = oldCards.get(card.path);
@@ -26,17 +25,15 @@ for (const card of cards(after)) {
     bytes(before, old.image),
     `Share pixels: ${card.path}`,
   );
-  imageNames.set(card.image, old.image);
+  assert.equal(
+    card.image,
+    old.image,
+    `Byte-identical share image renamed: ${card.path}`,
+  );
   oldCards.delete(card.path);
   imageCount++;
 }
 assert.equal(oldCards.size, 0, "No share-card pages removed");
-// Image names include dependency/template source hashes. Remap only after proving byte identity.
-const normalizeImage = (value) =>
-  value.replace(
-    /\/share\/static\/[a-f0-9]+\.png/g,
-    (name) => imageNames.get(name) || name,
-  );
 function canonical(node) {
   if (node.nodeName === "#text")
     return { tag: "#text", text: node.value.replace(/\s+/g, " ").trim() };
@@ -44,7 +41,7 @@ function canonical(node) {
   return {
     tag: node.tagName || node.nodeName,
     attrs: node.attrs
-      ?.map(({ name, value }) => [name, normalizeImage(value)])
+      ?.map(({ name, value }) => [name, value])
       .sort(([a], [b]) => a.localeCompare(b)),
     children: children
       ?.map((child) => {
