@@ -8,7 +8,7 @@ import { renderAstro } from "../../lib/render.mjs";
 // A page per buyer: provincial public bodies from the award reports, federal departments,
 // and the two towns. Plus the federal overview and the small-purchases page.
 import { card, organisationCard } from "../../lib/share-card.mjs";
-import { esc, Notes } from "../../lib/html.mjs";
+import { Notes } from "../../lib/html.mjs";
 import { moneyWords, num, pct, date as fmtDate } from "../../lib/format.mjs";
 import { desc, datasetLd, orgPageLd, LICENSE } from "../seo.mjs";
 import { FEDERAL_RULE } from "../../lib/federal.mjs";
@@ -41,8 +41,8 @@ export async function bodies(D, R) {
       if (f.flag === "year-end")
         return `${pct(x.last_month_amount / x.amount)} of its dated ${x.source === "paradise" ? "payments" : "awards"} by value fell in the last month of the fiscal year, ${f.value.toFixed(1)} times an even share.`;
       if (f.flag === "dominant-supplier")
-        return `${esc(x.supplier)} appears on ${pct(f.value)} of its reported award values.`;
-      return esc(cat?.title || f.flag);
+        return `${x.supplier} appears on ${pct(f.value)} of its reported award values.`;
+      return cat?.title || f.flag;
     });
     const body = await renderAstro(PublicBodyPage, {
       b,

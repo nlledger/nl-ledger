@@ -47,6 +47,11 @@ for (const f of files) {
     if (!ok) (linked.get(path) || linked.set(path, []).get(path)).push(page);
   }
 }
+// Text escaped twice shows entities to readers ("K&amp;D"); flag any double-escaped entity.
+for (const f of files) {
+  const m = readFileSync(f, "utf8").match(/&amp;(amp|lt|gt|quot|#39|#x27|apos);/);
+  if (m) problems.push(`double-escaped ${m[0]} in ${f.slice(DIST.length)}`);
+}
 for (const [d, pages] of descs) if (pages.length > 1) problems.push(`same description on ${pages.length} pages (${pages.slice(0, 3).join(", ")}): ${d.slice(0, 60)}`);
 for (const [path, pages] of linked) problems.push(`broken link ${path} from ${pages[0]}${pages.length > 1 ? ` and ${pages.length - 1} more` : ""}`);
 if (existsSync(join(DIST, "sitemap.xml"))) {
