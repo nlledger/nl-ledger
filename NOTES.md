@@ -128,7 +128,7 @@ cf deploy --dry-run            # build and checks only
 | D1: 5 million rows read a day | Every filter is an indexed full-text token, no table scans. Search, supplier and record pages cached at the edge for an hour |
 | Workers: 10 ms CPU | Pages are rendered from small documents; supplier pages read one of 512 JSON shards |
 | Workers static assets: 20,000 files a version | 922 files: 410 static pages plus 512 shards; supplier, search, record and receipt pages are rendered on request |
-| Workers: 100,000 requests a day | Only search, supplier, record, receipt and `/mcp` requests count. Static asset requests are free and unlimited |
+| Workers: 100,000 requests a day | Dynamic routes and status-aware `/_astro/*` and `/share/static/*` requests count. Other static asset requests are free and unlimited |
 
 ## What is verified
 

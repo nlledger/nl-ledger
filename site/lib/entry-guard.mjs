@@ -23,8 +23,10 @@ function tooDeep(path) {
 export function protectEntry(handle) {
   return async (request, env, ctx) => {
     const response = await guarded(async () => {
-      if (!tooDeep(new URL(request.url).pathname))
-        return handle(request, env, ctx);
+      const path = new URL(request.url).pathname;
+      if (/^\/(?:_astro|share\/static)\//.test(path))
+        return env.ASSETS.fetch(request);
+      if (!tooDeep(path)) return handle(request, env, ctx);
       const page = await env.ASSETS.fetch(
         new Request(new URL("/404.html", request.url)),
       );
@@ -38,6 +40,7 @@ export function protectEntry(handle) {
     const headers = new Headers(response.headers);
     for (const [name, value] of Object.entries(SECURITY_HEADERS))
       if (!headers.has(name)) headers.set(name, value);
+    if (response.status === 404) headers.set("cache-control", "no-store");
     // Receipt addresses can carry an income even when Astro redirects first.
     if (/^\/receipt(?:\/|$)/.test(new URL(request.url).pathname)) {
       headers.set("referrer-policy", "no-referrer");

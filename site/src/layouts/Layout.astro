@@ -115,12 +115,14 @@ const {
         </a>
         <nav class="nav" aria-label="Main">
           {NAV.map(([href, label]) => (
-            <a
-              href={href}
-              aria-current={path.startsWith(href) ? "page" : undefined}
-            >
-              {label}{" "}
-            </a>
+            <>
+              <a
+                href={href}
+                aria-current={path.startsWith(href) ? "page" : undefined}
+              >
+                {label}
+              </a>{" "}
+            </>
           ))}
         </nav>
         <form class="mast-search" action="/search/" role="search">
@@ -160,19 +162,21 @@ const {
           </summary>
           <nav class="phone-nav" id="phone-nav" aria-label="Main">
             {NAV.map(([href, label]) => (
-              <a
-                href={href}
-                aria-current={path.startsWith(href) ? "page" : undefined}
-              >
-                {label}{" "}
-              </a>
+              <>
+                <a
+                  href={href}
+                  aria-current={path.startsWith(href) ? "page" : undefined}
+                >
+                  {label}
+                </a>{" "}
+              </>
             ))}
             <a
               href={(feedback ? "" : "/feedback/") + "#feedback"}
               aria-current={path === "/feedback/" ? "page" : undefined}
             >
               Feedback
-            </a>
+            </a>{" "}
             <a
               class="phone-source"
               href={REPO}
@@ -269,14 +273,13 @@ const {
           </p>
         </div>
         <nav class="foot-nav" aria-label="About this site">
-          <a href="/about/">What is this?</a>
-          <a href="/sources/">Sources and report card</a>
-          <a href="/method/">Methods</a>
-          <a href="/corrections/">Corrections</a>
-          <a href="/terms/">Terms of use</a>
-          <a href="/asked/">What people asked for</a>
-          <a href="/data/">Ask your AI</a>
-          <a href="/help/">Help build this</a>
+          <a href="/about/">What is this?</a>{" "}
+          <a href="/sources/">Sources and report card</a>{" "}
+          <a href="/method/">Methods</a> <a href="/corrections/">Corrections</a>{" "}
+          <a href="/terms/">Terms of use</a>{" "}
+          <a href="/asked/">What people asked for</a>{" "}
+          <a href="/data/">Ask your AI</a>{" "}
+          <a href="/help/">Help build this</a>{" "}
         </nav>
         <p class="foot-meta">
           Contains information licensed under the Open Government Licence –

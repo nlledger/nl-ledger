@@ -9,15 +9,15 @@ export const SECURITY_HEADERS = Object.freeze({
     "frame-ancestors 'self'; object-src 'none'; base-uri 'self'",
 });
 
-// Wildcard rules also apply to missing assets. Only exact files get immutable caching.
+// Hashed asset paths run through the entry guard so only misses get no-store.
 export const STATIC_HEADERS = `/*
 ${Object.entries(SECURITY_HEADERS)
   .map(([name, value]) => `  ${name}: ${value}`)
   .join("\n")}
 /_astro/*
-  Cache-Control: no-store
+  Cache-Control: public, max-age=31536000, immutable
 /share/static/*
-  Cache-Control: public, max-age=0, must-revalidate
+  Cache-Control: public, max-age=31536000, immutable
 /fonts/archivo-roman.woff2
   Cache-Control: public, max-age=31536000, immutable
 /fonts/archivo-italic.woff2

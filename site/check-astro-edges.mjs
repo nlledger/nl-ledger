@@ -109,6 +109,46 @@ console.error = oldError;
 assert.equal(failed.status, 500);
 assert.equal(failed.headers.get("cache-control"), "no-store");
 
+// Static asset hits bypass Astro, preserve bytes/cache, and misses become no-store.
+for (const path of ["/_astro/font.hash.ttf", "/share/static/hash.png"]) {
+  for (const status of [200, 304, 404]) {
+    for (const method of ["GET", "HEAD"]) {
+      const response = await protectEntry(() => {
+        throw new Error("must use assets");
+      })(
+        new Request(`https://nlledger.ca${path}`, { method }),
+        {
+          ASSETS: {
+            fetch: async () =>
+              new Response(status === 304 ? null : "asset", {
+                status,
+                headers: {
+                  "cache-control": "public, max-age=31536000, immutable",
+                },
+              }),
+          },
+        },
+        {},
+      );
+      assert.equal(response.status, status);
+      assert.equal(
+        response.headers.get("cache-control"),
+        status === 404 ? "no-store" : "public, max-age=31536000, immutable",
+      );
+      assert.equal(
+        await response.text(),
+        method === "HEAD" || status === 304 ? "" : "asset",
+      );
+    }
+  }
+}
+const config = read("cloudflare.config.ts");
+for (const path of ["/_astro/*", "/share/static/*"])
+  assert.ok(
+    config.includes(JSON.stringify(path)),
+    "hashed assets must run Worker first",
+  );
+
 // Test actual compiler output, including map-generated navigation and inline groups.
 const markup = await layout({
   title: "Check",
@@ -132,18 +172,39 @@ const home = await renderComponent("components_HomeAi_astro", {
 });
 const text = (n) =>
   n.nodeName === "#text" ? n.value : (n.childNodes || []).map(text).join("");
+let navCount = 0;
 function walk(n) {
   if (
     n.attrs?.some(
       (a) => a.name === "class" && ["nav", "phone-nav"].includes(a.value),
     )
   ) {
+    navCount++;
     const t = text(n);
-    assert.ok(/Budget\s+/.test(t), "navigation labels need separators");
+    const links = n.childNodes.filter((c) => c.tagName === "a");
+    assert.ok(links.length >= 7, "navigation retains every primary label");
+    for (const link of links.slice(0, 7))
+      assert.equal(
+        text(link),
+        text(link).trim(),
+        "no padding inside nav links",
+      );
+    const labels = links.map(text);
+    if (n.attrs.some((a) => a.name === "class" && a.value === "phone-nav"))
+      assert.match(
+        t,
+        /Ask AI Feedback GitHub /,
+        "phone-menu utility links also need spaces",
+      );
+    assert.ok(
+      t.startsWith(labels.slice(0, 7).join(" ") + " "),
+      "navigation requires literal spaces between labels, not indentation",
+    );
   }
   for (const c of n.childNodes || []) walk(c);
 }
 walk(parse(markup));
+assert.equal(navCount, 2, "desktop and phone navigation were both checked");
 assert.match(
   text(parse(connect[1].body)),
   /Copy\s+Ask Claude\s+Ask ChatGPT/,
@@ -173,14 +234,15 @@ for (const line of STATIC_HEADERS.split("\n")) {
   if (line && !/^\s/.test(line)) section = line;
   if (/max-age=31536000|immutable/.test(line))
     assert.ok(
-      !section.includes("*"),
-      "immutable rules must name existing files",
+      !section.includes("*") ||
+        ["/_astro/*", "/share/static/*"].includes(section),
+      "immutable wildcards must use status-aware Worker routing",
     );
 }
 assert.match(
   STATIC_HEADERS,
-  /\/_astro\/\*\n  Cache-Control: no-store/,
-  "adapter must see our explicit Astro cache policy",
+  /\/_astro\/\*\n  Cache-Control: public, max-age=31536000, immutable/,
+  "existing hashed Astro assets keep immutable caching",
 );
 if (
   process.argv.includes("--built") ||
@@ -196,11 +258,11 @@ if (
     if (line && !/^\s/.test(line)) rule = line;
     if (/max-age=31536000|immutable/.test(line)) {
       assert.ok(
-        !rule.includes("*"),
-        "missing assets must not get immutable wildcard caching",
+        !rule.includes("*") || ["/_astro/*", "/share/static/*"].includes(rule),
+        "immutable wildcard needs status-aware routing",
       );
       assert.ok(
-        existsSync(`${root}/.astro-build/client${rule}`),
+        rule.includes("*") || existsSync(`${root}/.astro-build/client${rule}`),
         `immutable rule names a missing file: ${rule}`,
       );
     }
@@ -231,6 +293,38 @@ if (
 }
 const origin = process.argv.find((a) => /^https?:/.test(a));
 if (origin) {
+  const { readdirSync } = await import("node:fs");
+  const astroAsset = readdirSync(`${root}/.astro-build/client/_astro`)[0];
+  const card = JSON.parse(read("dist/data/share-cards.json"))[0].image;
+  for (const path of [`/_astro/${astroAsset}`, card]) {
+    for (const method of ["GET", "HEAD"]) {
+      const r = await fetch(origin + path, { method });
+      assert.equal(r.status, 200, path);
+      assert.match(r.headers.get("cache-control"), /max-age=31536000/);
+      assert.match(r.headers.get("cache-control"), /immutable/);
+      if (method === "GET") {
+        assert.deepEqual(
+          Buffer.from(await r.arrayBuffer()),
+          readFileSync(`${root}/.astro-build/client${path}`),
+        );
+        const etag = r.headers.get("etag");
+        assert.ok(etag, "assets retain validators");
+        const cached = await fetch(origin + path, {
+          headers: { "If-None-Match": etag },
+        });
+        assert.equal(cached.status, 304);
+        assert.match(cached.headers.get("cache-control"), /immutable/);
+        assert.equal(await cached.text(), "");
+      }
+    }
+  }
+  for (const path of ["/_astro/missing.js", "/share/static/missing.png"]) {
+    for (const method of ["GET", "HEAD"]) {
+      const r = await fetch(origin + path, { method });
+      assert.equal(r.status, 404);
+      assert.equal(r.headers.get("cache-control"), "no-store");
+    }
+  }
   for (const [path, status] of [
     ["/search//?q=x", 301],
     ["/search///?q=x", 301],
@@ -243,6 +337,7 @@ if (origin) {
     ["/data/missing.json", 404],
     ["/not-found/", 404],
     ["/", 200],
+    ["/search/?q=snow+clearing", 200],
   ]) {
     const r = await fetch(origin + path, { redirect: "manual" });
     assert.equal(r.status, status, path);
