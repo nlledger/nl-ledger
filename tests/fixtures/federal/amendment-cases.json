@@ -293,25 +293,25 @@
       },
       "source_rows": [
         {
-          "line": 13389,
           "reference_number": "C-2022-2023-Q1-00014",
           "reporting_period": "2022-2023-Q1",
           "value": "77452.5",
-          "source_url": "https://search.open.canada.ca/contracts/record/aafc-aac,C-2022-2023-Q1-00014"
+          "source_url": "https://search.open.canada.ca/contracts/record/aafc-aac,C-2022-2023-Q1-00014",
+          "csv_record": 13389
         },
         {
-          "line": 14638,
           "reference_number": "C-2022-2023-Q4-00007",
           "reporting_period": "2022-2023-Q4",
           "value": "90637.25",
-          "source_url": "https://search.open.canada.ca/contracts/record/aafc-aac,C-2022-2023-Q4-00007"
+          "source_url": "https://search.open.canada.ca/contracts/record/aafc-aac,C-2022-2023-Q4-00007",
+          "csv_record": 14638
         },
         {
-          "line": 15640,
           "reference_number": "C-2023-2024-Q2-00283",
           "reporting_period": "2023-2024-Q2",
           "value": "105281.53",
-          "source_url": "https://search.open.canada.ca/contracts/record/aafc-aac,C-2023-2024-Q2-00283"
+          "source_url": "https://search.open.canada.ca/contracts/record/aafc-aac,C-2023-2024-Q2-00283",
+          "csv_record": 15640
         }
       ]
     },
@@ -336,88 +336,88 @@
       },
       "source_rows": [
         {
-          "line": 513609,
           "reference_number": "C-2020-2021-Q1-00820",
           "reporting_period": "2020-2021-Q1",
           "value": "18769300",
-          "source_url": "https://search.open.canada.ca/contracts/record/hc-sc,C-2020-2021-Q1-00820"
+          "source_url": "https://search.open.canada.ca/contracts/record/hc-sc,C-2020-2021-Q1-00820",
+          "csv_record": 513609
         },
         {
-          "line": 520029,
           "reference_number": "C-2020-2021-Q2-00526",
           "reporting_period": "2020-2021-Q2",
           "value": "46041850",
-          "source_url": "https://search.open.canada.ca/contracts/record/hc-sc,C-2020-2021-Q2-00526"
+          "source_url": "https://search.open.canada.ca/contracts/record/hc-sc,C-2020-2021-Q2-00526",
+          "csv_record": 520029
         },
         {
-          "line": 520512,
           "reference_number": "C-2020-2021-Q3-00619",
           "reporting_period": "2020-2021-Q3",
           "value": "67099400",
-          "source_url": "https://search.open.canada.ca/contracts/record/hc-sc,C-2020-2021-Q3-00619"
+          "source_url": "https://search.open.canada.ca/contracts/record/hc-sc,C-2020-2021-Q3-00619",
+          "csv_record": 520512
         },
         {
-          "line": 521251,
           "reference_number": "C-2021-2022-Q1-00600",
           "reporting_period": "2021-2022-Q1",
           "value": "88758073.84",
-          "source_url": "https://search.open.canada.ca/contracts/record/hc-sc,C-2021-2022-Q1-00600"
+          "source_url": "https://search.open.canada.ca/contracts/record/hc-sc,C-2021-2022-Q1-00600",
+          "csv_record": 521251
         },
         {
-          "line": 521664,
           "reference_number": "C-2021-2022-Q2-00438",
           "reporting_period": "2021-2022-Q2",
           "value": "110416747.68",
-          "source_url": "https://search.open.canada.ca/contracts/record/hc-sc,C-2021-2022-Q2-00438"
+          "source_url": "https://search.open.canada.ca/contracts/record/hc-sc,C-2021-2022-Q2-00438",
+          "csv_record": 521664
         },
         {
-          "line": 521999,
           "reference_number": "C-2021-2022-Q3-00536",
           "reporting_period": "2021-2022-Q3",
           "value": "132075421.52",
-          "source_url": "https://search.open.canada.ca/contracts/record/hc-sc,C-2021-2022-Q3-00536"
+          "source_url": "https://search.open.canada.ca/contracts/record/hc-sc,C-2021-2022-Q3-00536",
+          "csv_record": 521999
         },
         {
-          "line": 522931,
           "reference_number": "C-2022-2023-Q1-00529",
           "reporting_period": "2022-2023-Q1",
           "value": "153734095.36",
-          "source_url": "https://search.open.canada.ca/contracts/record/hc-sc,C-2022-2023-Q1-00529"
+          "source_url": "https://search.open.canada.ca/contracts/record/hc-sc,C-2022-2023-Q1-00529",
+          "csv_record": 522931
         },
         {
-          "line": 523217,
           "reference_number": "C-2022-2023-Q2-00498",
           "reporting_period": "2022-2023-Q2",
           "value": "175392769.2",
-          "source_url": "https://search.open.canada.ca/contracts/record/hc-sc,C-2022-2023-Q2-00498"
+          "source_url": "https://search.open.canada.ca/contracts/record/hc-sc,C-2022-2023-Q2-00498",
+          "csv_record": 523217
         },
         {
-          "line": 523686,
           "reference_number": "C-2022-2023-Q3-00658",
           "reporting_period": "2022-2023-Q3",
           "value": "197051443.04",
-          "source_url": "https://search.open.canada.ca/contracts/record/hc-sc,C-2022-2023-Q3-00658"
+          "source_url": "https://search.open.canada.ca/contracts/record/hc-sc,C-2022-2023-Q3-00658",
+          "csv_record": 523686
         },
         {
-          "line": 524602,
           "reference_number": "C-2023-2024-Q1-00468",
           "reporting_period": "2023-2024-Q1",
           "value": "217356891.03",
-          "source_url": "https://search.open.canada.ca/contracts/record/hc-sc,C-2023-2024-Q1-00468"
+          "source_url": "https://search.open.canada.ca/contracts/record/hc-sc,C-2023-2024-Q1-00468",
+          "csv_record": 524602
         },
         {
-          "line": 524910,
           "reference_number": "C-2023-2024-Q2-00445",
           "reporting_period": "2023-2024-Q2",
           "value": "237662339.02",
-          "source_url": "https://search.open.canada.ca/contracts/record/hc-sc,C-2023-2024-Q2-00445"
+          "source_url": "https://search.open.canada.ca/contracts/record/hc-sc,C-2023-2024-Q2-00445",
+          "csv_record": 524910
         },
         {
-          "line": 525257,
           "reference_number": "C-2023-2024-Q3-00581",
           "reporting_period": "2023-2024-Q3",
           "value": "255261335.35",
-          "source_url": "https://search.open.canada.ca/contracts/record/hc-sc,C-2023-2024-Q3-00581"
+          "source_url": "https://search.open.canada.ca/contracts/record/hc-sc,C-2023-2024-Q3-00581",
+          "csv_record": 525257
         }
       ]
     }

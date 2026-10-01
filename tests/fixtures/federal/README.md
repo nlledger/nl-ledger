@@ -8,8 +8,9 @@ including amendments that precede originals in the file.
 
 `amendment-cases.json` records why each chain is included, its expected latest
 reference and recipient, number of versions, exact value, publisher links, and
-line numbers in the original cached file (CSV header is line 1; JSONL starts at
-line 1). It also records the full cached files' SHA-256 hashes and the contracts
+locators in the original cached file (`csv_record` counts CSV records with the
+header as record 1, matching the parser; `line` counts JSONL lines from 1). CSV
+fields contain embedded newlines, so CSV record numbers are not physical lines. It also records the full cached files' SHA-256 hashes and the contracts
 fetch time, 2026-09-29. Federal sources use the Open Government Licence – Canada.
 The grants cache was selected by publisher-reported `recipient_province = NL`.
 
