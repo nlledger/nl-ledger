@@ -1,10 +1,16 @@
 ---
-const { inline, label, body, icon } = Astro.props;
+import { icon } from "../../lib/icons.mjs";
+import { MCP_URL } from "../connect.mjs";
+const { inline = false, label, text = "" } = Astro.props;
+const address = MCP_URL.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const chunks = String(text).split(
+  new RegExp('("' + address + '"|' + address + ")", "g"),
+);
 ---
 
 <div class={"copy" + (inline ? " inline" : "")}>
   <span class="copy-label">{label}</span>
-  <pre tabindex="0"><code><Fragment set:html={body} /></code></pre>
+  <pre tabindex="0"><code>{inline ? text : chunks.map(chunk => chunk.includes(MCP_URL) ? <span class="nobr">{chunk}</span> : chunk)}</code></pre>
   <button class="copy-btn" type="button" data-copy hidden>
     <Fragment set:html={icon("copy", "i-copy")} />
     <Fragment set:html={icon("check", "i-done")} />

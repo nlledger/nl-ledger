@@ -1,30 +1,25 @@
 ---
-const { moneyWords, sum, latest, cite, money, perPerson, S, workTime } =
-  Astro.props;
+import { moneyWords, money, perPerson, workTime } from "../../lib/format.mjs";
+import Citation from "./Citation.astro";
+const { sum, latest, cite, S } = Astro.props;
 ---
 
 <div class="figs">
   <div>
-    <span class="big">
-      <Fragment set:html={moneyWords(sum.gross)} />
-    </span>
+    <span class="big">{moneyWords(sum.gross)}</span>
     <span class="what">
       spent by the province in {latest}
-      <Fragment set:html={cite} />
+      <Citation citation={cite} />
     </span>
   </div>
   <div>
-    <span class="big">
-      <Fragment set:html={money(perPerson(sum.gross, S))} />
-    </span>
+    <span class="big">{money(perPerson(sum.gross, S))}</span>
     <span class="what">
       of provincial spending for every person in the province
     </span>
   </div>
   <div>
-    <span class="big">
-      <Fragment set:html={workTime(sum.gross, S)} />
-    </span>
+    <span class="big">{workTime(sum.gross, S)}</span>
     <span class="what">
       of work at the median full-time wage to earn what the province spent
     </span>

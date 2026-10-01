@@ -1,0 +1,15 @@
+---
+const { text } = Astro.props;
+const match = String(text).match(/ (billion|million)$/);
+---
+
+{match ? (
+  <>
+    {text.slice(0, -match[0].length)}
+    <span class="unit" data-s={match[1][0].toUpperCase()}>
+      {match[0]}
+    </span>
+  </>
+) : (
+  text
+)}

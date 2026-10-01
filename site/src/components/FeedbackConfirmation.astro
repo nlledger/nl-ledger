@@ -1,6 +1,6 @@
 ---
 import FeedbackHead from "./FeedbackHead.astro";
-const { early, f, esc, KINDS, token } = Astro.props;
+const { early, f, KINDS, token } = Astro.props;
 ---
 
 <FeedbackHead
@@ -26,9 +26,7 @@ const { early, f, esc, KINDS, token } = Astro.props;
       )}
       <div>
         <dt>About the page</dt>
-        <dd>
-          <Fragment set:html={f.page ? esc(f.page) : "No page given"} />
-        </dd>
+        <dd>{f.page ? f.page : "No page given"}</dd>
       </div>
       <div>
         <dt>Your note</dt>
@@ -36,11 +34,7 @@ const { early, f, esc, KINDS, token } = Astro.props;
       </div>
       <div>
         <dt>Reply to</dt>
-        <dd>
-          <Fragment
-            set:html={f.email ? esc(f.email) : "No email address, so no reply"}
-          />
-        </dd>
+        <dd>{f.email ? f.email : "No email address, so no reply"}</dd>
       </div>
     </dl>
     <div class="fb-confirm-act">

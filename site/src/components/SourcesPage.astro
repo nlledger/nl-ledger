@@ -1,34 +1,23 @@
 ---
-const {
-  pagehead,
-  SOURCES,
-  DATASETS,
-  counts,
-  esc,
-  datasetLabel,
-  LICENCES,
-  SOURCE_LICENCE,
-  num,
-  moneyWords,
-  fmtDate,
-  schedule,
-  OTHER,
-  REPO,
-  card,
-  D,
-  isBrokenPublisherLink,
-} = Astro.props;
+import { isBrokenPublisherLink } from "../../lib/page-format.mjs";
+import Schedule from "./Schedule.astro";
+import { datasetLabel } from "../common.mjs";
+import PageHead from "./PageHead.astro";
+import { num, moneyWords, date as fmtDate } from "../../lib/format.mjs";
+import { REPO } from "../../lib/html.mjs";
+const { SOURCES, DATASETS, counts, LICENCES, SOURCE_LICENCE, OTHER, card, D } =
+  Astro.props;
 ---
 
-<Fragment
-  set:html={await pagehead({
-    crumbs: [
-      ["/", "Home"],
-      [null, "Sources"],
-    ],
-    title: "Sources and report card",
-    lede: "Where every figure comes from, what each source covers, and how well each publisher does at publishing it.",
-  })}
+<PageHead
+  crumbs={[
+    ["/", "Home"],
+    [null, "Sources"],
+  ]}
+  title={"Sources and report card"}
+  lede={
+    "Where every figure comes from, what each source covers, and how well each publisher does at publishing it."
+  }
 />
 <section class="section">
   <div class="wrap">
@@ -59,39 +48,40 @@ const {
             </p>
             <p class="small">
               <strong>
-                <Fragment set:html={num(c.n || 0)} /> records (CAD values only;
-                native currency and missing amounts are shown on each record)
-                <Fragment set:html={c.a ? `, ${moneyWords(c.a)}` : ""} />
+                {num(c.n || 0)} records (CAD values only; native currency and
+                missing amounts are shown on each record)
+                {c.a ? `, ${moneyWords(c.a)}` : ""}
               </strong>
-              <Fragment
-                set:html={
-                  c.d0
-                    ? `, dated ${esc(fmtDate(c.d0))} to ${esc(fmtDate(c.d1))}`
-                    : ""
-                }
-              />
-              . <a href={"/search/?ds=" + s.ds}>Search them</a>.
+              {c.d0 ? `, dated ${fmtDate(c.d0)} to ${fmtDate(c.d1)}` : ""}.{" "}
+              <a href={"/search/?ds=" + s.ds}>Search them</a>.
             </p>
           </article>
         </>
       );
     })}
     <h2 style="margin-block:2.5rem 1rem">Other sources</h2>
-    <Fragment
-      set:html={await schedule({
-        cols: [
-          {
-            label: "Source",
-          },
-          {
-            label: "Used for",
-          },
-        ],
-        rows: OTHER.map(([t, u, w]) => ({
-          cells: [`<a href="${u}">${esc(t)}</a>`, esc(w)],
-        })),
-      })}
-    />
+    <>
+      <Schedule>
+        <thead>
+          <tr>
+            <th scope="col">Source</th>
+            <th scope="col">Used for</th>
+          </tr>
+        </thead>
+        <tbody>
+          {OTHER.map(([t, u, w]) => (
+            <tr>
+              <th scope="row">
+                <>
+                  <a href={u}>{t}</a>
+                </>
+              </th>
+              <td>{w}</td>
+            </tr>
+          ))}
+        </tbody>
+      </Schedule>
+    </>
   </div>
 </section>
 <section class="section" id="licences">
@@ -104,40 +94,39 @@ const {
         <a href={REPO + "/blob/main/LICENSE"}>MIT licence</a>.
       </p>
     </div>
-    <Fragment
-      set:html={await schedule({
-        compact: true,
-        cols: [
-          {
-            label: "Source",
-          },
-          {
-            label: "Publisher",
-          },
-          {
-            label: "Licence",
-          },
-          {
-            label: "Attribution and conditions",
-          },
-        ],
-        rows: [
-          ...SOURCES.filter((s) => DATASETS.includes(s.ds)).map((s) => [
-            datasetLabel(s.ds),
-            s.publisher,
-            LICENCES[SOURCE_LICENCE[s.ds]],
-          ]),
-          ...OTHER.map(([t, , , k]) => [t, "", LICENCES[k]]),
-        ].map(([src, pub, l]) => ({
-          cells: [
-            esc(src),
-            esc(pub),
-            `<a href="${esc(l.url)}">${esc(l.name)}</a>`,
-            esc(l.wording ? `Required wording: "${l.wording}"` : l.note),
-          ],
-        })),
-      })}
-    />
+    <>
+      <Schedule compact>
+        <thead>
+          <tr>
+            <th scope="col">Source</th>
+            <th scope="col">Publisher</th>
+            <th scope="col">Licence</th>
+            <th scope="col">Attribution and conditions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {[
+            ...SOURCES.filter((s) => DATASETS.includes(s.ds)).map((s) => [
+              datasetLabel(s.ds),
+              s.publisher,
+              LICENCES[SOURCE_LICENCE[s.ds]],
+            ]),
+            ...OTHER.map(([t, , , k]) => [t, "", LICENCES[k]]),
+          ].map(([src, pub, l]) => (
+            <tr>
+              <th scope="row">{src}</th>
+              <td>{pub}</td>
+              <td>
+                <>
+                  <a href={l.url}>{l.name}</a>
+                </>
+              </td>
+              <td>{l.wording ? `Required wording: "${l.wording}"` : l.note}</td>
+            </tr>
+          ))}
+        </tbody>
+      </Schedule>
+    </>
     <p class="small">
       Statistics Canada tables: the required wording is completed with the
       table's number and reference date, as listed under Other sources. Every
@@ -176,82 +165,87 @@ const {
       alone do not remove an award. Each counted record keeps its other
       printings and receipts.
     </p>
-    <Fragment
-      set:html={await schedule({
-        compact: true,
-        cols: [
-          {
-            label: "Other printing",
-          },
-          {
-            label: "Why it is counted once",
-          },
-        ],
-        rows: D.issues
-          .filter(
-            (i) =>
-              i.source === "PPA contract awards" &&
-              /counted once with/.test(i.issue),
-          )
-          .map((i) => ({
-            cells: [
-              `<a href="${esc(i.url)}">${esc(i.url.split("/").pop())}</a>`,
-              esc(i.issue),
-            ],
-          })),
-      })}
-    />
+    <>
+      <Schedule compact>
+        <thead>
+          <tr>
+            <th scope="col">Other printing</th>
+            <th scope="col">Why it is counted once</th>
+          </tr>
+        </thead>
+        <tbody>
+          {D.issues
+            .filter(
+              (i) =>
+                i.source === "PPA contract awards" &&
+                /counted once with/.test(i.issue),
+            )
+            .map((i) => (
+              <tr>
+                <th scope="row">
+                  <>
+                    <a href={i.url}>{i.url.split("/").pop()}</a>
+                  </>
+                </th>
+                <td>{i.issue}</td>
+              </tr>
+            ))}
+        </tbody>
+      </Schedule>
+    </>
     <h3 style="margin-block:2rem .8rem">Broken links found</h3>
-    <Fragment
-      set:html={await schedule({
-        compact: true,
-        cols: [
-          {
-            label: "Source",
-          },
-          {
-            label: "Link",
-          },
-          {
-            label: "Problem",
-          },
-        ],
-        rows: D.issues
-          .filter((i) => isBrokenPublisherLink(i.issue))
-          .map((i) => ({
-            cells: [
-              esc(i.source),
-              `<a href="${esc(i.url)}">${esc(i.url.split("/").pop())}</a>`,
-              esc(i.issue),
-            ],
-          })),
-      })}
-    />
+    <>
+      <Schedule compact>
+        <thead>
+          <tr>
+            <th scope="col">Source</th>
+            <th scope="col">Link</th>
+            <th scope="col">Problem</th>
+          </tr>
+        </thead>
+        <tbody>
+          {D.issues
+            .filter((i) => isBrokenPublisherLink(i.issue))
+            .map((i) => (
+              <tr>
+                <th scope="row">{i.source}</th>
+                <td>
+                  <>
+                    <a href={i.url}>{i.url.split("/").pop()}</a>
+                  </>
+                </td>
+                <td>{i.issue}</td>
+              </tr>
+            ))}
+        </tbody>
+      </Schedule>
+    </>
     <h3 style="margin-block:2rem .8rem">Publisher total discrepancies</h3>
-    <Fragment
-      set:html={await schedule({
-        compact: true,
-        cols: [
-          {
-            label: "Source",
-          },
-          {
-            label: "Receipt",
-          },
-          {
-            label: "Discrepancy",
-          },
-        ],
-        rows: D.issues
-          .filter((i) => /publisher discrepancy/.test(i.issue))
-          .map((i) => ({
-            cells: [
-              esc(i.source),
-              `<a href="${esc(i.url)}">${esc(i.url.split("/").pop())}</a>`,
-              esc(i.issue),
-            ],
-          })),
-      })}
-    />
+    <>
+      <Schedule compact>
+        <thead>
+          <tr>
+            <th scope="col">Source</th>
+            <th scope="col">Receipt</th>
+            <th scope="col">Discrepancy</th>
+          </tr>
+        </thead>
+        <tbody>
+          {D.issues
+            .filter((i) => /publisher discrepancy/.test(i.issue))
+            .map((i) => (
+              <tr>
+                <th scope="row">{i.source}</th>
+                <td>
+                  <>
+                    <a href={i.url}>{i.url.split("/").pop()}</a>
+                  </>
+                </td>
+                <td>{i.issue}</td>
+              </tr>
+            ))}
+        </tbody>
+      </Schedule>
+    </>
   </div>
 </section>

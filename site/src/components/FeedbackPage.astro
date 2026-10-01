@@ -1,11 +1,12 @@
 ---
 import FeedbackHead from "./FeedbackHead.astro";
-const { title, lede, feedbackForm, form } = Astro.props;
+import FeedbackForm from "./FeedbackForm.astro";
+const { title, lede, form } = Astro.props;
 ---
 
 <FeedbackHead title={title} lede={lede} />
 <section class="fb fb-page" id="feedback" aria-label="Feedback">
   <div class="fb-in">
-    <Fragment set:html={await feedbackForm(form)} />
+    <FeedbackForm {...form} />
   </div>
 </section>

@@ -1,0 +1,13 @@
+---
+const { d, maxDiff } = Astro.props;
+const width = Math.max(0.6, (Math.abs(d.difference) / maxDiff) * 50);
+---
+
+{d.difference != null && (
+  <span class="dv" aria-hidden="true">
+    <span
+      class={d.difference < 0 ? "under" : "over"}
+      style={`inline-size:${width.toFixed(2)}%`}
+    ></span>
+  </span>
+)}

@@ -1,0 +1,23 @@
+---
+import CompetitionResults from "./CompetitionResults.astro";
+const { f, D } = Astro.props;
+const subjects = D.flagRows.filter((r) => r.flag === f.id && !r.item_id);
+const prov = subjects
+  .filter((s) => JSON.parse(s.detail).source === "ppa")
+  .map((s) => ({
+    ...s,
+    x: JSON.parse(s.detail),
+  }))
+  .filter((s) => s.x.amount > 250000)
+  .sort((a, b) => b.x.exception_amount - a.x.exception_amount);
+const fed = subjects
+  .filter((s) => JSON.parse(s.detail).source === "fed_contract")
+  .map((s) => ({
+    ...s,
+    x: JSON.parse(s.detail),
+  }))
+  .sort((a, b) => b.x.exception_amount - a.x.exception_amount)
+  .slice(0, 15);
+---
+
+<CompetitionResults prov={prov} D={D} fed={fed} />

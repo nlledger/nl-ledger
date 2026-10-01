@@ -1,0 +1,80 @@
+---
+import Schedule from "./Schedule.astro";
+import BodyAnchor from "./BodyAnchor.astro";
+import { moneyWords, pct } from "../../lib/format.mjs";
+import { datasetLabel } from "../common.mjs";
+const { f, D } = Astro.props;
+const subjects = D.flagRows.filter((r) => r.flag === f.id && !r.item_id);
+const rows = subjects
+  .map((s) => ({
+    ...s,
+    x: JSON.parse(s.detail),
+  }))
+  .sort((a, b) => b.value - a.value);
+---
+
+{f.id === "year-end" ? (
+  <>
+    <Schedule>
+      <thead>
+        <tr>
+          <th scope="col">Public body</th>
+          <th scope="col">Source</th>
+          <th scope="col" class="n">
+            Last month's share
+          </th>
+          <th scope="col" class="n">
+            Times an even share
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((s) => (
+          <tr>
+            <th scope="row">
+              <BodyAnchor D={D} name={s.subject} />
+            </th>
+            <td>{datasetLabel(s.x.source)}</td>
+            <td class="n">{`${moneyWords(s.x.last_month_amount)} of ${moneyWords(s.x.amount)}`}</td>
+            <td class="n">{`${s.value.toFixed(1)}×`}</td>
+          </tr>
+        ))}
+      </tbody>
+    </Schedule>
+  </>
+) : (
+  <>
+    <Schedule>
+      <thead>
+        <tr>
+          <th scope="col">Public body</th>
+          <th scope="col">Supplier</th>
+          <th scope="col" class="n">
+            Share
+          </th>
+          <th scope="col" class="n">
+            Value
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((s) => (
+          <tr>
+            <th scope="row">
+              <BodyAnchor D={D} name={s.subject} />
+            </th>
+            <td>
+              <>
+                <a href={"/supplier/" + D.keyHash(s.x.supplier_key) + "/"}>
+                  {s.x.supplier}
+                </a>
+              </>
+            </td>
+            <td class="n">{pct(s.value)}</td>
+            <td class="n">{`${moneyWords(s.x.supplier_amount)} of ${moneyWords(s.x.body_total)}`}</td>
+          </tr>
+        ))}
+      </tbody>
+    </Schedule>
+  </>
+)}

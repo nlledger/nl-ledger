@@ -1,14 +1,14 @@
 ---
+import PageHead from "./PageHead.astro";
+import Citation from "./Citation.astro";
+import { money, num } from "../../lib/format.mjs";
+import { icon } from "../../lib/icons.mjs";
 const {
-  pagehead,
   report,
-  esc,
   fy,
-  money,
   c,
   a,
   pp,
-  num,
   D,
   ownPP,
   K,
@@ -16,20 +16,19 @@ const {
   DOCS,
   LICENCES,
   DOCUMENT_LICENCE,
-  icon,
 } = Astro.props;
 ---
 
-<Fragment
-  set:html={await pagehead({
-    crumbs: [
-      ["/", "Home"],
-      ["/method/", "Methods"],
-      [null, "Budget against actual"],
-    ],
-    title: "Method: budget against actual, the deficit and net debt",
-    lede: "Which budget is set against which actual, why the deficit comes from a different document, and how each figure is checked.",
-  })}
+<PageHead
+  crumbs={[
+    ["/", "Home"],
+    ["/method/", "Methods"],
+    [null, "Budget against actual"],
+  ]}
+  title={"Method: budget against actual, the deficit and net debt"}
+  lede={
+    "Which budget is set against which actual, why the deficit comes from a different document, and how each figure is checked."
+  }
 />
 <section class="section">
   <div class="wrap prose">
@@ -81,7 +80,7 @@ const {
         accounting", which "is the same basis used to prepare the budgeted
         appropriations and revenues as per Government's Estimates presented to
         the House of Assembly"
-        <Fragment set:html={report} />. Its statements print the Original
+        <Citation citation={report} />. Its statements print the Original
         Estimates beside the Actuals.
       </li>
       <li>
@@ -93,9 +92,8 @@ const {
       <li>
         <strong>Spent</strong> is gross expenditure in the Report, before
         "related revenue" (federal cost-sharing and fees that a department
-        collects against its own spending). For {fy}:{" "}
-        <Fragment set:html={money(c.gross.budget)} /> budgeted,{" "}
-        <Fragment set:html={money(c.gross.actual)} /> spent.
+        collects against its own spending). For {fy}: {money(c.gross.budget)}{" "}
+        budgeted, {money(c.gross.actual)} spent.
       </li>
       <li>
         <strong>By department</strong>, the budget is the department's "Total:
@@ -123,13 +121,13 @@ const {
           It is not spending less revenue from the cash statement.
         </strong>{" "}
         In {fy} departments' cash spending outran their revenue by{" "}
-        <Fragment set:html={money(-c.cash_balance.actual)} />, while the annual{" "}
-        <Fragment set:html={a.balance.actual < 0 ? "deficit" : "surplus"} /> was{" "}
-        <Fragment set:html={money(Math.abs(a.balance.actual))} />. The cash
-        statement covers departments only and counts construction and equipment
-        at full price in the year they are paid for; the accounts spread those
-        costs over the assets' lives and include the results of Crown
-        corporations and other public bodies.
+        {money(-c.cash_balance.actual)}, while the annual{" "}
+        {a.balance.actual < 0 ? "deficit" : "surplus"} was{" "}
+        {money(Math.abs(a.balance.actual))}. The cash statement covers
+        departments only and counts construction and equipment at full price in
+        the year they are paid for; the accounts spread those costs over the
+        assets' lives and include the results of Crown corporations and other
+        public bodies.
       </li>
       <li>
         <strong>
@@ -148,13 +146,9 @@ const {
       </li>
       <li>
         <strong>Per person.</strong>{" "}
-        <Fragment
-          set:html={
-            pp
-              ? `The Public Accounts print net debt per capita themselves: ${money(pp.value)} for ${esc(fy)}. That figure is used as published. Dividing net debt by the population this site uses elsewhere (${num(D.stats.population.value)}, Statistics Canada, 1 July ${esc(fy.slice(0, 4))}) gives ${money(ownPP)}; the province divides by its own population figure.`
-              : `Net debt divided by the population (${num(D.stats.population.value)}, Statistics Canada).`
-          }
-        />
+        {pp
+          ? `The Public Accounts print net debt per capita themselves: ${money(pp.value)} for ${fy}. That figure is used as published. Dividing net debt by the population this site uses elsewhere (${num(D.stats.population.value)}, Statistics Canada, 1 July ${fy.slice(0, 4)}) gives ${money(ownPP)}; the province divides by its own population figure.`
+          : `Net debt divided by the population (${num(D.stats.population.value)}, Statistics Canada).`}
       </li>
       <li>
         <strong>Restatements.</strong> Each year is shown as that year's
@@ -173,41 +167,33 @@ const {
     <ul>
       <li>
         Every subtotal in the Report's cash statement recomputes from the lines
-        above it, for actuals and for original estimates:{" "}
-        <Fragment set:html={K.statement} /> of{" "}
-        <Fragment set:html={K.statement_n} />.
+        above it, for actuals and for original estimates: {K.statement} of{" "}
+        {K.statement_n}.
       </li>
       <li>
         The departments in the Report's summary statements add to the
-        statement's gross expenditure: <Fragment set:html={K.report.ok} /> of{" "}
-        <Fragment set:html={K.report.n} /> years.
+        statement's gross expenditure: {K.report.ok} of {K.report.n} years.
       </li>
       <li>
         Each department's program lines in the Estimates add to its printed
         total, and the departments add to the gross expenditure in the budget's
-        Summary of Cash Requirements: <Fragment set:html={K.estimates.ok} /> of{" "}
-        <Fragment set:html={K.estimates.n} /> years.
+        Summary of Cash Requirements: {K.estimates.ok} of {K.estimates.n} years.
       </li>
       <li>
         The Original Estimates the Report reprints equal the budget's own
-        summary: <Fragment set:html={K.original} /> of{" "}
-        <Fragment set:html={K.original_n} /> figures. Department by department,
-        the Report's Original column equals the Estimates as tabled:{" "}
-        <Fragment set:html={K.departments.ok} /> of{" "}
-        <Fragment set:html={K.departments.n} />.
+        summary: {K.original} of {K.original_n} figures. Department by
+        department, the Report's Original column equals the Estimates as tabled:{" "}
+        {K.departments.ok} of {K.departments.n}.
       </li>
       <li>
         In the Public Accounts, revenue less expense equals the printed surplus
         or deficit, liabilities less financial assets equals net debt, and net
-        debt is the same in two statements:{" "}
-        <Fragment set:html={K.accounts.ok} /> of{" "}
-        <Fragment set:html={K.accounts.n} />.
+        debt is the same in two statements: {K.accounts.ok} of {K.accounts.n}.
       </li>
       <li>
         From Budget 2024, when the budget's own statements are published as
         Statements and Schedules, the Original Budget column in the Public
-        Accounts equals them: <Fragment set:html={K.budget.ok} /> of{" "}
-        <Fragment set:html={K.budget.n} />.
+        Accounts equals them: {K.budget.ok} of {K.budget.n}.
       </li>
     </ul>
     {K.failed.length ? (
@@ -222,15 +208,10 @@ const {
               <li>
                 {f.what.split(":")[0]}, {f.year}: the Report's Original column
                 adds to{" "}
-                <Fragment
-                  set:html={
-                    f.a == null
-                      ? "nothing, because the Report prints no program detail for the department"
-                      : money(f.a)
-                  }
-                />
-                ; the Estimates as tabled say <Fragment set:html={money(f.b)} />
-                .
+                {f.a == null
+                  ? "nothing, because the Report prints no program detail for the department"
+                  : money(f.a)}
+                ; the Estimates as tabled say {money(f.b)}.
               </li>
             </>
           ))}
@@ -262,12 +243,10 @@ const {
       </li>
       <li>
         Results for{" "}
-        <Fragment
-          set:html={B.years
-            .filter((x) => !x.spent_published)
-            .map((x) => esc(x.year))
-            .join(" and ")}
-        />
+        {B.years
+          .filter((x) => !x.spent_published)
+          .map((x) => x.year)
+          .flatMap((node, index) => (index ? [" and ", node] : [node]))}
         : the Report and the Public Accounts for those years are not yet
         published.
       </li>

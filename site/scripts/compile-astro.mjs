@@ -29,6 +29,10 @@ await build({
     {
       name: "astro-components",
       setup(b) {
+        b.onResolve({ filter: /\.render\/components\.mjs$/ }, () => ({
+          path: "../.render/components.mjs",
+          external: true,
+        }));
         b.onLoad({ filter: /\.astro$/ }, async ({ path }) => {
           const compiled = await transform(readFileSync(path, "utf8"), {
             filename: relative(root, path),
@@ -39,6 +43,11 @@ await build({
             compact: "jsx",
             resolvePath: (specifier) => specifier,
           });
+          const errors = compiled.diagnostics.filter(
+            (d) => d.severity === "error",
+          );
+          if (errors.length)
+            throw new Error(`${path}: ${errors.map((d) => d.text).join("; ")}`);
           return {
             contents: compiled.code,
             loader: "js",

@@ -1,76 +1,81 @@
 ---
+import Schedule from "./Schedule.astro";
+import { ITEM_COLS, bodyHref } from "../common.mjs";
+import PageHead from "./PageHead.astro";
+import PrioritiesDepartments from "./PrioritiesDepartments.astro";
+import Bar from "./Bar.astro";
+import { moneyWords, money, num } from "../../lib/format.mjs";
+import ReceiptLink from "./ReceiptLink.astro";
+import ItemRow from "./ItemRow.astro";
 const {
-  pagehead,
   dep,
-  esc,
   estYear,
-  figs,
   trend,
-  schedule,
-  bar,
   tmax,
-  moneyWords,
-  progTable,
-  estTable,
   prof,
   latest,
-  money,
-  receipt,
   awards,
-  num,
   awardTotal,
   noComp,
-  ITEM_COLS,
   itemRow,
   D,
-  bodyHref,
+  sum,
+  cite,
+  S,
+  progs,
+  estProgs,
 } = Astro.props;
 ---
 
-<Fragment
-  set:html={await pagehead({
-    crumbs: [
-      ["/", "Home"],
-      ["/priorities/", "Priorities"],
-      [null, dep.name],
-    ],
-    title: esc(dep.name),
-    lede: dep.years.length
-      ? `Reported under this name in ${esc(dep.years.join(", "))}${dep.est ? ` and in the ${esc(estYear)} estimates` : ""}.`
-      : `Appears in the ${esc(estYear)} budget estimates.`,
-  })}
+<PageHead
+  crumbs={[
+    ["/", "Home"],
+    ["/priorities/", "Priorities"],
+    [null, dep.name],
+  ]}
+  title={dep.name}
+  lede={
+    dep.years.length
+      ? `Reported under this name in ${dep.years.join(", ")}${dep.est ? ` and in the ${estYear} estimates` : ""}.`
+      : `Appears in the ${estYear} budget estimates.`
+  }
 />
 <section class="section">
   <div class="wrap">
-    <Fragment set:html={figs} />
+    {sum ? (
+      <PrioritiesDepartments sum={sum} latest={latest} cite={cite} S={S} />
+    ) : (
+      ""
+    )}
     {trend.length > 1 ? (
       <>
         <h3 style="margin-block-end:.8rem">Spending by year</h3>
-        <Fragment
-          set:html={await schedule({
-            compact: true,
-            cols: [
-              {
-                label: "Fiscal year",
-              },
-              {
-                label: "",
-                w: "50%",
-              },
-              {
-                label: "Spent",
-                num: true,
-              },
-            ],
-            rows: trend.map((t) => ({
-              cells: [
-                esc(t.y),
-                bar(t.v || 0, tmax),
-                t.v ? moneyWords(t.v) : "",
-              ],
-            })),
-          })}
-        />
+        <>
+          <Schedule compact>
+            <thead>
+              <tr>
+                <th scope="col">Fiscal year</th>
+                <th scope="col" style={"inline-size:" + "50%"}>
+                  {""}
+                </th>
+                <th scope="col" class="n">
+                  Spent
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {trend.map((t) => (
+                <tr>
+                  <th scope="row">{t.y}</th>
+                  <td>
+                    <Bar value={t.v || 0} max={tmax} />
+                  </td>
+                  <td class="n">{t.v ? moneyWords(t.v) : ""}</td>
+                </tr>
+              ))}
+            </tbody>
+          </Schedule>
+        </>
       </>
     ) : (
       ""
@@ -79,14 +84,130 @@ const {
 </section>
 <section class="section">
   <div class="wrap">
-    <Fragment set:html={progTable} />
+    {progs.length ? (
+      <>
+        <Schedule id={"programs"}>
+          <caption>{`Programs, ${latest}`}</caption>
+          <thead>
+            <tr>
+              <th scope="col">Program</th>
+              <th scope="col" class="n">
+                Spent
+              </th>
+              <th scope="col" class="n">
+                Amended
+              </th>
+              <th scope="col" class="n">
+                Original estimate
+              </th>
+              <th scope="col" class="n">
+                Source
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {progs.map((p) => (
+              <tr>
+                <th scope="row">
+                  <>
+                    {p.program}
+                    <span class="meta">
+                      {p.program_code} ·{" "}
+                      {p.account === "CAPITAL" ? "capital" : "current"}
+                    </span>
+                  </>
+                </th>
+                <td class="n">{money(p.c1)}</td>
+                <td class="n">{money(p.c2)}</td>
+                <td class="n">{money(p.c3)}</td>
+                <td class="n">
+                  <ReceiptLink url={p.source_url} page={p.page} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr class="total">
+              <th scope="row">Gross spending</th>
+              <td class="n">{money(progs.reduce((s, p) => s + p.c1, 0))}</td>
+              <td class="n">{money(progs.reduce((s, p) => s + p.c2, 0))}</td>
+              <td class="n">{money(progs.reduce((s, p) => s + p.c3, 0))}</td>
+              <td class="n">{""}</td>
+            </tr>
+          </tfoot>
+        </Schedule>
+      </>
+    ) : (
+      <>
+        <p>
+          The {latest || ""} report prints no program detail for this
+          department.
+        </p>
+      </>
+    )}
   </div>
 </section>
-{estTable ? (
+{estProgs.length > 0 ? (
   <>
     <section class="section">
       <div class="wrap">
-        <Fragment set:html={estTable} />
+        {estProgs.length ? (
+          <>
+            <Schedule>
+              <caption>{`Budget estimates, ${estYear}`}</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Program</th>
+                  <th scope="col" class="n">{`Estimate ${estYear}`}</th>
+                  <th scope="col" class="n">
+                    Revised, year before
+                  </th>
+                  <th scope="col" class="n">
+                    Budget, year before
+                  </th>
+                  <th scope="col" class="n">
+                    Source
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {estProgs.map((p) => (
+                  <tr>
+                    <th scope="row">
+                      <>
+                        {p.program}
+                        <span class="meta">{p.program_code}</span>
+                      </>
+                    </th>
+                    <td class="n">{money(p.c1)}</td>
+                    <td class="n">{money(p.c2)}</td>
+                    <td class="n">{money(p.c3)}</td>
+                    <td class="n">
+                      <ReceiptLink url={p.source_url} page={p.page} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr class="total">
+                  <th scope="row">Gross</th>
+                  <td class="n">
+                    {money(estProgs.reduce((s, p) => s + p.c1, 0))}
+                  </td>
+                  <td class="n">
+                    {money(estProgs.reduce((s, p) => s + p.c2, 0))}
+                  </td>
+                  <td class="n">
+                    {money(estProgs.reduce((s, p) => s + p.c3, 0))}
+                  </td>
+                  <td class="n">{""}</td>
+                </tr>
+              </tfoot>
+            </Schedule>
+          </>
+        ) : (
+          ""
+        )}
       </div>
     </section>
   </>
@@ -104,30 +225,32 @@ const {
             department's programs in {latest}.
           </p>
         </div>
-        <Fragment
-          set:html={await schedule({
-            cols: [
-              {
-                label: "Program",
-              },
-              {
-                label: "Professional services",
-                num: true,
-              },
-              {
-                label: "Source",
-                num: true,
-              },
-            ],
-            rows: prof.map((p) => ({
-              cells: [
-                esc(p.program),
-                money(p.v),
-                receipt(p.source_url, p.page),
-              ],
-            })),
-          })}
-        />
+        <>
+          <Schedule>
+            <thead>
+              <tr>
+                <th scope="col">Program</th>
+                <th scope="col" class="n">
+                  Professional services
+                </th>
+                <th scope="col" class="n">
+                  Source
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {prof.map((p) => (
+                <tr>
+                  <th scope="row">{p.program}</th>
+                  <td class="n">{money(p.v)}</td>
+                  <td class="n">
+                    <ReceiptLink url={p.source_url} page={p.page} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Schedule>
+        </>
       </div>
     </section>
   </>
@@ -141,34 +264,46 @@ const {
         <div class="section-head">
           <h2>Contracts awarded</h2>
           <p>
-            <Fragment set:html={num(awards.length)} /> awards in the Public
-            Procurement Agency reports since 2021,{" "}
-            <Fragment set:html={moneyWords(awardTotal)} /> in all;{" "}
-            <Fragment set:html={num(noComp.length)} /> of them (
-            <Fragment
-              set:html={moneyWords(
-                noComp.reduce((s, a) => s + (a.amount || 0), 0),
-              )}
-            />
-            ) without an open competition. Open-call awards by departments are
+            {num(awards.length)} awards in the Public Procurement Agency reports
+            since 2021, {moneyWords(awardTotal)} in all; {num(noComp.length)} of
+            them ({moneyWords(noComp.reduce((s, a) => s + (a.amount || 0), 0))})
+            without an open competition. Open-call awards by departments are
             posted on MERX instead and are not in these reports.
           </p>
         </div>
-        <Fragment
-          set:html={await schedule({
-            cols: ITEM_COLS,
-            rows: awards.slice(0, 60).map((a) =>
-              itemRow(D, a, {
-                showBuyer: false,
-              }),
-            ),
-          })}
-        />
+        <>
+          <Schedule>
+            <thead>
+              <tr>
+                {ITEM_COLS.map((c) => (
+                  <th
+                    scope="col"
+                    class={c.num ? "n" : undefined}
+                    style={c.w ? `inline-size:${c.w}` : undefined}
+                  >
+                    {c.label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {awards.slice(0, 60).map((a) => (
+                <ItemRow
+                  D={D}
+                  it={a}
+                  {...{
+                    showBuyer: false,
+                  }}
+                />
+              ))}
+            </tbody>
+          </Schedule>
+        </>
         {awards.length > 60 ? (
           <>
             <p>
               <a href={bodyHref(D, awards[0].buyer)}>
-                All <Fragment set:html={num(awards.length)} /> awards
+                All {num(awards.length)} awards
               </a>
             </p>
           </>

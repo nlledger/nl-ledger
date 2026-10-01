@@ -45,7 +45,15 @@ All of them are under the [`good first issue`](https://github.com/nlledger/nl-le
 
 ## Editing a page
 
-Page markup lives in `site/src/components/*.astro` and the shared shell in `site/src/layouts/Layout.astro`. The matching `site/src/pages/*.mjs` files assemble data and calculations; Worker handlers in `site/routes/` use the same components. Keep imported text escaped and use raw HTML (`set:html`) only for the existing escaped helper fragments; `site/check.sh` caps the number of uses. `npm run format --prefix site` formats the Astro markup. See [the migration proof](docs/astro-proof.md) for the build comparison command.
+Page markup lives in `site/src/components/*.astro` and the shared shell in `site/src/layouts/Layout.astro`. The matching `site/src/pages/*.mjs` files prepare data, calculations and metadata; Worker handlers in `site/routes/` use the same components.
+
+- Import helpers in each component. Pass data as props; do not pass functions.
+- Import and nest child components directly, such as `<ReceiptLink url={record.source_url} />`. Only JavaScript entry points use `renderAstro(Component, data)` with an imported component reference.
+- Use `{record.description}` for source text. Astro escapes it. Keep HTML out of strings, arrays and JavaScript data; write rich content as Astro markup or slots.
+- `set:html` is reserved for the imported `icon()` output. The check rejects other raw HTML and caps the existing icon sinks at 54. New number formatting returns plain text and uses normal expressions.
+- Layout slots carry already-rendered page markup. The JSON-LD boundary escapes `<` and Unicode separators before placing serialized JSON in its script slot. Do not use these boundaries for imported source HTML.
+
+`site/check-components.mjs`, called by `site/check.sh`, enforces these rules. `npm run format --prefix site` formats the Astro markup. To compare two frozen builds and their local Worker requests, follow [Rendering comparisons](site/scripts/compare/README.md).
 
 ## What a good contribution includes
 

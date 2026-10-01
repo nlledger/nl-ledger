@@ -1,0 +1,19 @@
+---
+import { icon } from "../../lib/icons.mjs";
+const { base, page, more } = Astro.props;
+---
+
+{(page > 1 || more) && (
+  <nav class="pager" aria-label="Pages">
+    {page > 1 && (
+      <a rel="prev" href={`${base}&page=${page - 1}`}>
+        Previous
+      </a>
+    )}
+    {more && (
+      <a rel="next" href={`${base}&page=${page + 1}`}>
+        Next <Fragment set:html={icon("arrow")} />
+      </a>
+    )}
+  </nav>
+)}

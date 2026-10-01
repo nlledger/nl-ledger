@@ -1,20 +1,13 @@
 ---
-const {
-  B,
-  yearLink,
-  mobileSources,
-  bar,
-  maxYear,
-  cell,
-  share,
-  rcpt,
-  unit,
-  words,
-  money,
-  accord,
-  restated,
-  esc,
-} = Astro.props;
+import { share, words } from "../../lib/budget-format.mjs";
+import BudgetYearLink from "./BudgetYearLink.astro";
+import BudgetSources from "./BudgetSources.astro";
+import Bar from "./Bar.astro";
+import BudgetCell from "./BudgetCell.astro";
+import BudgetReceipt from "./BudgetReceipt.astro";
+import BudgetUnit from "./BudgetUnit.astro";
+import { money } from "../../lib/format.mjs";
+const { B, maxYear, accord, restated } = Astro.props;
 ---
 
 <section class="section" id="years">
@@ -68,49 +61,49 @@ const {
               <>
                 <tr>
                   <th scope="row">
-                    <Fragment set:html={yearLink(x)} />
-                    <Fragment
-                      set:html={mobileSources([
+                    <BudgetYearLink x={x} latestYear={B.latest.year} />
+                    <BudgetSources
+                      pairs={[
                         [x.cash.budget_source, "Budget source"],
                         [x.cash.actual_source, "Actual source"],
-                      ])}
+                      ]}
                     />
                   </th>
                   <td class="hide-sm">
                     <span class="pair">
-                      <Fragment
-                        set:html={
-                          x.cash.gross.actual != null
-                            ? bar(x.cash.gross.actual, maxYear)
-                            : '<span class="bar"></span>'
-                        }
-                      />
-                      <Fragment
-                        set:html={bar(x.cash.gross.budget, maxYear, "ghost")}
+                      {x.cash.gross.actual != null ? (
+                        <Bar value={x.cash.gross.actual} max={maxYear} />
+                      ) : (
+                        <>
+                          <span class="bar"></span>
+                        </>
+                      )}
+                      <Bar
+                        value={x.cash.gross.budget}
+                        max={maxYear}
+                        cls={"ghost"}
                       />
                     </span>
                   </td>
-                  <Fragment set:html={cell(x.cash.gross.budget)} />
-                  <Fragment set:html={cell(x.cash.gross.actual)} />
-                  <Fragment
-                    set:html={
-                      x.cash.difference == null
-                        ? '<td class="n"></td>'
-                        : cell(x.cash.difference)
-                    }
-                  />
+                  <BudgetCell value={x.cash.gross.budget} />
+                  <BudgetCell value={x.cash.gross.actual} />
+                  {x.cash.difference == null ? (
+                    <>
+                      <td class="n"></td>
+                    </>
+                  ) : (
+                    <BudgetCell value={x.cash.difference} />
+                  )}
                   <td class={"n hide-sm" + (x.cash.share < 0 ? " neg" : "")}>
-                    <Fragment set:html={share(x.cash.share)} />
+                    {share(x.cash.share)}
                   </td>
                   <td class="n hide-sm">
-                    <Fragment
-                      set:html={[
-                        rcpt(x.cash.budget_source),
-                        rcpt(x.cash.actual_source),
-                      ]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    />
+                    {[x.cash.budget_source, x.cash.actual_source]
+                      .filter(Boolean)
+                      .map((source) => <BudgetReceipt source={source} />)
+                      .flatMap((node, index) =>
+                        index ? [" · ", node] : [node],
+                      )}
                   </td>
                 </tr>
               </>
@@ -157,9 +150,9 @@ const {
               <>
                 <tr>
                   <th scope="row">
-                    <Fragment set:html={yearLink(x)} />
-                    <Fragment
-                      set:html={mobileSources([
+                    <BudgetYearLink x={x} latestYear={B.latest.year} />
+                    <BudgetSources
+                      pairs={[
                         [
                           b.source || b.budget_source,
                           b.source ? "Accounts source" : "Budget source",
@@ -170,46 +163,43 @@ const {
                             ? "Net debt source"
                             : "Net debt budget source",
                         ],
-                      ])}
+                      ]}
                     />
                   </th>
-                  <Fragment set:html={cell(b.budget)} />
-                  <Fragment set:html={cell(b.actual)} />
-                  <Fragment
-                    set:html={
-                      b.actual == null
-                        ? '<td class="n hide-sm"></td>'
-                        : cell(b.actual - b.budget, " hide-sm")
-                    }
-                  />
+                  <BudgetCell value={b.budget} />
+                  <BudgetCell value={b.actual} />
+                  {b.actual == null ? (
+                    <>
+                      <td class="n hide-sm"></td>
+                    </>
+                  ) : (
+                    <BudgetCell
+                      value={b.actual - b.budget}
+                      extra={" hide-sm"}
+                    />
+                  )}
                   {nd.actual == null ? (
                     <>
                       <td class="n muted">
-                        <Fragment set:html={unit(words(nd.budget))} />
+                        <BudgetUnit text={words(nd.budget)} />
                         <span class="meta">budgeted</span>
                       </td>
                     </>
                   ) : (
-                    <Fragment set:html={cell(nd.actual)} />
+                    <BudgetCell value={nd.actual} />
                   )}
                   <td class="n hide-sm">
-                    <Fragment
-                      set:html={
-                        x.accounts.net_debt_per_person
-                          ? money(x.accounts.net_debt_per_person.value)
-                          : ""
-                      }
-                    />
+                    {x.accounts.net_debt_per_person
+                      ? money(x.accounts.net_debt_per_person.value)
+                      : ""}
                   </td>
                   <td class="n hide-sm">
-                    <Fragment
-                      set:html={[
-                        rcpt(b.source || b.budget_source),
-                        rcpt(nd.source),
-                      ]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    />
+                    {[b.source || b.budget_source, nd.source]
+                      .filter(Boolean)
+                      .map((source) => <BudgetReceipt source={source} />)
+                      .flatMap((node, index) =>
+                        index ? [" · ", node] : [node],
+                      )}
                   </td>
                 </tr>
               </>
@@ -220,25 +210,52 @@ const {
     </div>
     <p class="small muted">
       A surplus is printed plain and a deficit in parentheses.
-      <Fragment
-        set:html={
-          accord
-            ? ` The 2019-20 Public Accounts put that year's surplus down "in large part" to the Atlantic Accord (2019) (${rcpt(
-                {
-                  ...accord,
-                  page: null,
-                },
-              )}).`
-            : ""
-        }
-      />
-      <Fragment
-        set:html={
-          restated.length
-            ? ` Later accounts restated some of these figures: ${restated.map((x) => `${esc(x.year)} ${[x.accounts.balance.restated != null ? `${x.accounts.balance.restated < 0 ? "deficit" : "surplus"} to ${words(x.accounts.balance.restated)} (${rcpt(x.accounts.balance.restated_source)})` : "", x.accounts.net_debt.restated != null ? `net debt to ${words(x.accounts.net_debt.restated)} (${rcpt(x.accounts.net_debt.restated_source)})` : ""].filter(Boolean).join(" and ")}`).join("; ")}. The table shows each year as first published.`
-            : ""
-        }
-      />
+      {accord && (
+        <>
+          {" "}
+          The 2019-20 Public Accounts put that year's surplus down "in large
+          part" to the Atlantic Accord (2019) (
+          <BudgetReceipt source={{ ...accord, page: null }} />
+          ).
+        </>
+      )}
+      {restated.length > 0 && (
+        <>
+          {" "}
+          Later accounts restated some of these figures:{" "}
+          {restated
+            .map((x) => (
+              <>
+                {x.year}{" "}
+                {[
+                  x.accounts.balance.restated != null ? (
+                    <>
+                      {x.accounts.balance.restated < 0 ? "deficit" : "surplus"}{" "}
+                      to {words(x.accounts.balance.restated)} (
+                      <BudgetReceipt
+                        source={x.accounts.balance.restated_source}
+                      />
+                      )
+                    </>
+                  ) : null,
+                  x.accounts.net_debt.restated != null ? (
+                    <>
+                      net debt to {words(x.accounts.net_debt.restated)} (
+                      <BudgetReceipt
+                        source={x.accounts.net_debt.restated_source}
+                      />
+                      )
+                    </>
+                  ) : null,
+                ]
+                  .filter(Boolean)
+                  .flatMap((node, index) => (index ? [" and ", node] : [node]))}
+              </>
+            ))
+            .flatMap((node, index) => (index ? ["; ", node] : [node]))}
+          . The table shows each year as first published.
+        </>
+      )}
     </p>
   </div>
 </section>

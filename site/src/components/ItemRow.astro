@@ -1,0 +1,69 @@
+---
+import { supplierHref } from "../common.mjs";
+import { money, date as fmtDate } from "../../lib/format.mjs";
+import {
+  isFederal,
+  nativeAmount,
+  amountBasis,
+  federalStatement,
+  moneyLimit,
+} from "../../lib/federal.mjs";
+import ReceiptLink from "./ReceiptLink.astro";
+import QueryMark from "./QueryMark.astro";
+const {
+  D,
+  it,
+  showBuyer = true,
+  showSupplier = true,
+  flags = true,
+} = Astro.props;
+const who = it.supplier || it.person || "";
+const href =
+  it.supplier_key && it.dataset !== "sunshine"
+    ? supplierHref(D, it.supplier_key)
+    : null;
+const meta = [showBuyer && it.buyer, it.method].filter(Boolean);
+const amount = isFederal(it)
+  ? nativeAmount(it.amount, it.currency)
+  : it.amount != null
+    ? money(it.amount)
+    : it.amount_original
+      ? `US${money(it.amount_original)}`
+      : "as printed";
+---
+
+<tr>
+  <th scope="row">
+    {showSupplier && who && (
+      <strong>{href ? <a href={href}>{who}</a> : who}</strong>
+    )}
+    {it.description && (
+      <>
+        {showSupplier && who && <br />}
+        {it.description}
+      </>
+    )}
+    {meta.length > 0 && <span class="meta">{meta.join(" · ")}</span>}
+  </th>
+  <td>
+    <span class="num">{fmtDate(it.date) || it.fiscal_year || ""}</span>
+  </td>
+  <td class="n">
+    {amount}
+    <QueryMark
+      flags={flags ? D.itemFlags.get(it.id) : null}
+      catalog={D.flagById}
+    />
+    {isFederal(it) && (
+      <span class="meta">
+        {amountBasis(it)}. {federalStatement(it)} {moneyLimit(it)}
+      </span>
+    )}
+  </td>
+  <td class="n">
+    <a class="rcpt" href={`/item/${it.id.split("-").pop()}/`}>
+      detail
+    </a>{" "}
+    <ReceiptLink url={it.source_url} page={it.page} locator={it.locator} />
+  </td>
+</tr>

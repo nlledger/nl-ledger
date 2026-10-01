@@ -1,18 +1,16 @@
-import { renderComponent } from "../lib/render.mjs";
+import {
+  components_FeedbackPage_astro as FeedbackPage,
+  components_FeedbackConfirmation_astro as FeedbackConfirmation,
+  components_FeedbackSent_astro as FeedbackSent,
+} from "../.render/components.mjs";
+import { renderAstro } from "../lib/render.mjs";
 import { feedbackContext } from "../lib/privacy.mjs";
 // The feedback box's endpoint (NOTES.md "Feedback box"). POST /feedback stores a visitor's note in the
 // D1 table `feedback` and emails it; GET /feedback/ is the form on a page of its own; /feedback/sent/ is the thank-you.
 // A note is only ever shown back to the person who typed it, in a response marked no-store.
-import {
-  esc,
-  icon,
-  feedbackForm,
-  FEEDBACK_KINDS,
-  FEEDBACK_MAX,
-} from "../lib/html.mjs";
+import { FEEDBACK_KINDS, FEEDBACK_MAX } from "../lib/html.mjs";
 import { SITE } from "../lib/format.mjs";
 import { assets, page } from "./_shared.js";
-
 const KINDS = Object.fromEntries(FEEDBACK_KINDS);
 const FROM = "feedback@nlledger.ca"; // any address on the domain: Email Routing is on for it
 const BODY_MAX = 40_000; // bytes of form data: 2,000 characters outside the Latin alphabet are up to 24,000 once encoded
@@ -104,7 +102,10 @@ async function sign(secret, f, ts) {
   const key = await crypto.subtle.importKey(
     "raw",
     bytes(secret),
-    { name: "HMAC", hash: "SHA-256" },
+    {
+      name: "HMAC",
+      hash: "SHA-256",
+    },
     false,
     ["sign"],
   );
@@ -127,11 +128,23 @@ function same(a, b) {
 // "ok", "early" (pressed within two seconds), or "bad" (forged, changed note, or older than half an hour).
 async function checkConfirm(secret, token, f, now) {
   const [ts, sig] = String(token).split(".");
-  if (!/^\d{13}$/.test(ts || "") || !sig) return { state: "bad" };
-  if (!same(sig, await sign(secret, f, Number(ts)))) return { state: "bad" };
+  if (!/^\d{13}$/.test(ts || "") || !sig)
+    return {
+      state: "bad",
+    };
+  if (!same(sig, await sign(secret, f, Number(ts))))
+    return {
+      state: "bad",
+    };
   const age = now - Number(ts);
-  if (age > CONFIRM_MAX || age < 0) return { state: "bad" };
-  return { state: age < CONFIRM_MIN ? "early" : "ok", nonce: sig };
+  if (age > CONFIRM_MAX || age < 0)
+    return {
+      state: "bad",
+    };
+  return {
+    state: age < CONFIRM_MIN ? "early" : "ok",
+    nonce: sig,
+  };
 }
 // One network address, for the limits: an IPv6 home or phone holds a whole /64, so its first four groups.
 export function addressOf(ip) {
@@ -153,7 +166,10 @@ async function addressCode(secret, ip, day) {
   const key = await crypto.subtle.importKey(
     "raw",
     bytes(secret),
-    { name: "HMAC", hash: "SHA-256" },
+    {
+      name: "HMAC",
+      hash: "SHA-256",
+    },
     false,
     ["sign"],
   );
@@ -174,7 +190,11 @@ async function turnstile(env, token, ip) {
         body: new URLSearchParams({
           secret: env.TURNSTILE_SECRET,
           response: token,
-          ...(ip ? { remoteip: ip } : {}),
+          ...(ip
+            ? {
+                remoteip: ip,
+              }
+            : {}),
         }),
         signal: AbortSignal.timeout(5000),
       },
@@ -190,7 +210,6 @@ const noStore = (res) => (
   res.headers.set("cache-control", "private, no-store"),
   res
 );
-
 async function render(ctx, { title, body, status = 200 }) {
   const a = await assets(ctx);
   return noStore(
@@ -210,11 +229,14 @@ const formPage = async (ctx, f, { title, lede, error, field, status }) =>
   await render(ctx, {
     title,
     status,
-    body: await renderComponent("components_FeedbackPage_astro", {
+    body: await renderAstro(FeedbackPage, {
       title,
       lede,
-      feedbackForm,
-      form: { ...f, error, field },
+      form: {
+        ...f,
+        error,
+        field,
+      },
     }),
   });
 
@@ -222,10 +244,9 @@ const formPage = async (ctx, f, { title, lede, error, field, status }) =>
 async function confirmPage(ctx, f, token, early) {
   return await render(ctx, {
     title: "Check your note, then send it",
-    body: await renderComponent("components_FeedbackConfirmation_astro", {
+    body: await renderAstro(FeedbackConfirmation, {
       early,
       f,
-      esc,
       KINDS,
       token,
     }),
@@ -238,9 +259,8 @@ export const sent = {
     const from = cleanPage(new URL(ctx.request.url).searchParams.get("from"));
     return await render(ctx, {
       title: "Thank you. Your note was sent.",
-      body: await renderComponent("components_FeedbackSent_astro", {
+      body: await renderAstro(FeedbackSent, {
         from,
-        icon,
       }),
     });
   },
@@ -256,7 +276,11 @@ async function email(env, row) {
     const r = await env.MAIL.send({
       from: FROM,
       to: env.FEEDBACK_TO,
-      ...(row.email ? { replyTo: row.email } : {}),
+      ...(row.email
+        ? {
+            replyTo: row.email,
+          }
+        : {}),
       subject: ascii(
         `[${SITE.name} feedback #${row.id}] ${KINDS[row.kind] || "Note"}: ${row.page || "no page"}`,
       ).slice(0, 140),
@@ -283,7 +307,6 @@ SELECT ?, ?, ?, ?, ?, ?, ?
 WHERE (SELECT count(*) FROM feedback WHERE created > ?) < ?
   AND (? != 'confirm' OR (SELECT count(*) FROM feedback WHERE created > ? AND checked = 'confirm') < ?)
 ON CONFLICT(nonce) DO NOTHING RETURNING id`;
-
 async function store(ctx, f, checked, nonce, ip) {
   const { env } = ctx;
   const now = new Date();
@@ -335,7 +358,11 @@ async function store(ctx, f, checked, nonce, ip) {
       : "full";
   ctx.waitUntil(
     (async () => {
-      const mail = await email(env, { ...f, id: row.id, created });
+      const mail = await email(env, {
+        ...f,
+        id: row.id,
+        created,
+      });
       await env.DB.prepare("UPDATE feedback SET mail = ? WHERE id = ?")
         .bind(mail, row.id)
         .run();
@@ -343,14 +370,15 @@ async function store(ctx, f, checked, nonce, ip) {
   );
   return "stored";
 }
-
 export async function onRequest(ctx) {
   const { request, env } = ctx;
   const url = new URL(request.url);
   if (request.method === "GET" || request.method === "HEAD") {
     return await formPage(
       ctx,
-      { page: cleanPage(url.searchParams.get("page")) },
+      {
+        page: cleanPage(url.searchParams.get("page")),
+      },
       {
         title: "Something missing, wrong or confusing?",
         lede: "Say so here. No account is needed, and no email program. Every note is read.",
@@ -360,16 +388,27 @@ export async function onRequest(ctx) {
   if (request.method !== "POST")
     return new Response("Method not allowed", {
       status: 405,
-      headers: { allow: "GET, HEAD, POST" },
+      headers: {
+        allow: "GET, HEAD, POST",
+      },
     });
-
   const json = (request.headers.get("accept") || "").includes(
     "application/json",
   );
   const fail = async (status, error, f = {}, field = "", extra = {}) =>
     json
       ? noStore(
-          Response.json({ ok: false, error, field, ...extra }, { status }),
+          Response.json(
+            {
+              ok: false,
+              error,
+              field,
+              ...extra,
+            },
+            {
+              status,
+            },
+          ),
         )
       : await formPage(ctx, f, {
           title: "Your note was not sent",
@@ -391,11 +430,13 @@ export async function onRequest(ctx) {
         ? !referer.startsWith(url.origin + "/")
         : false;
   if (foreign) return await fail(403, `This form only works on ${url.host}.`);
-
   const ip = request.headers.get("cf-connecting-ip") || "";
   const limited = env.FEEDBACK_LIMIT
-    ? !(await env.FEEDBACK_LIMIT.limit({ key: addressOf(ip) || "unknown" }))
-        .success
+    ? !(
+        await env.FEEDBACK_LIMIT.limit({
+          key: addressOf(ip) || "unknown",
+        })
+      ).success
     : false;
   const tooLong = `That is too long to send. Keep the note under ${FEEDBACK_MAX.toLocaleString("en-CA")} characters.`;
   if (Number(request.headers.get("content-length") || 0) > BODY_MAX)
@@ -431,10 +472,13 @@ export async function onRequest(ctx) {
     });
   const bad = problem(f);
   if (bad) return await fail(400, bad.error, f, bad.field);
-
   const done = () =>
     json
-      ? noStore(Response.json({ ok: true }))
+      ? noStore(
+          Response.json({
+            ok: true,
+          }),
+        )
       : noStore(
           new Response(null, {
             status: 303,
@@ -454,7 +498,9 @@ export async function onRequest(ctx) {
     );
   const viaCheckPage = async () =>
     json
-      ? await fail(403, "The check did not pass.", f, "", { fallback: true })
+      ? await fail(403, "The check did not pass.", f, "", {
+          fallback: true,
+        })
       : await checkPage();
   let checked = "";
   let nonce = "";
@@ -476,7 +522,6 @@ export async function onRequest(ctx) {
     // No check yet: the script falls back to a plain form post, and a plain form post gets the check page.
     return await viaCheckPage();
   }
-
   let result;
   try {
     result = await store(ctx, f, checked, nonce, ip);

@@ -13,7 +13,7 @@ import {
 import { buildSupplierShards } from "./src/shards.mjs";
 import { pay } from "./src/pages/pay.mjs";
 import { payIssues } from "./src/pay-coverage.mjs";
-import { isBrokenPublisherLink } from "./src/pages/info.mjs";
+import { isBrokenPublisherLink } from "./lib/page-format.mjs";
 import { slug } from "./lib/format.mjs";
 
 const db = new DatabaseSync(":memory:");

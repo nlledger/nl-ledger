@@ -1,160 +1,140 @@
 ---
+import Schedule from "./Schedule.astro";
 import Caveat from "./Caveat.astro";
-const {
-  pagehead,
-  FEDERAL_RULE,
-  moneyWords,
-  c,
-  num,
-  citeC,
-  g,
-  citeG,
-  federalSummary,
-  D,
-  schedule,
-  deps,
-  esc,
-  pct,
-  gdeps,
-  leaders,
-  mtp,
-} = Astro.props;
+import PageHead from "./PageHead.astro";
+import { FEDERAL_RULE } from "../../lib/federal.mjs";
+import { moneyWords, num, pct } from "../../lib/format.mjs";
+import Citation from "./Citation.astro";
+import FederalSummary from "./FederalSummary.astro";
+const { c, citeC, g, citeG, D, deps, gdeps, mtp } = Astro.props;
 ---
 
-<Fragment
-  set:html={await pagehead({
-    crumbs: [
-      ["/", "Home"],
-      [null, "Federal records"],
-    ],
-    title: "Federal records linked to NL suppliers and recipients",
-    lede: FEDERAL_RULE,
-  })}
+<PageHead
+  crumbs={[
+    ["/", "Home"],
+    [null, "Federal records"],
+  ]}
+  title={"Federal records linked to NL suppliers and recipients"}
+  lede={FEDERAL_RULE}
 />
 <section class="section">
   <div class="wrap">
     <div class="figs">
       <div>
-        <span class="big">
-          <Fragment set:html={moneyWords(c.dedup_value)} />
-        </span>
+        <span class="big">{moneyWords(c.dedup_value)}</span>
         <span class="what">
-          in <Fragment set:html={num(c.procurements)} /> federal contracts with
-          suppliers that have an NL postal code
-          <Fragment set:html={citeC} />
+          in {num(c.procurements)} federal contracts with suppliers that have an
+          NL postal code
+          <Citation citation={citeC} />
         </span>
       </div>
       <div>
-        <span class="big">
-          <Fragment set:html={moneyWords(c.non_competitive_value)} />
-        </span>
+        <span class="big">{moneyWords(c.non_competitive_value)}</span>
         <span class="what">
           of selected contract values coded non-competitive
         </span>
       </div>
       <div>
-        <span class="big">
-          <Fragment set:html={moneyWords(g.dedup_value)} />
-        </span>
+        <span class="big">{moneyWords(g.dedup_value)}</span>
         <span class="what">
-          in <Fragment set:html={num(g.agreements)} /> agreements whose
-          publisher reports recipient province NL, including labelled address
-          conflicts; whole commitments across all years
-          <Fragment set:html={citeG} />
+          in {num(g.agreements)} agreements whose publisher reports recipient
+          province NL, including labelled address conflicts; whole commitments
+          across all years
+          <Citation citation={citeG} />
         </span>
       </div>
     </div>
-    {
-      <Caveat
-        text={
-          "These are whole reported contract and agreement values, not payments or spending in NL. A national contract is included when its supplier lists an NL postal code; no provincial share is reported. The table below separates what the sources establish about location."
-        }
-      />
-    }
-    {
-      <Caveat
-        text={
-          <>
-            The federal files repeat a whole contract every time it is amended:
-            the raw selected amendment rows add up to{" "}
-            <Fragment set:html={moneyWords(c.raw_value)} />. Counted once each,
-            they come to <Fragment set:html={moneyWords(c.dedup_value)} />.
-            Grants likewise: <Fragment set:html={moneyWords(g.raw_value)} /> as
-            published, <Fragment set:html={moneyWords(g.dedup_value)} /> counted
-            once. <a href="/method/federal/">How amendments are handled</a>.
-          </>
-        }
-      />
-    }
+    <Caveat
+      text={
+        "These are whole reported contract and agreement values, not payments or spending in NL. A national contract is included when its supplier lists an NL postal code; no provincial share is reported. The table below separates what the sources establish about location."
+      }
+    />
+    <Caveat
+      text={
+        <>
+          The federal files repeat a whole contract every time it is amended:
+          the raw selected amendment rows add up to {moneyWords(c.raw_value)}.
+          Counted once each, they come to {moneyWords(c.dedup_value)}. Grants
+          likewise: {moneyWords(g.raw_value)} as published,{" "}
+          {moneyWords(g.dedup_value)} counted once.{" "}
+          <a href="/method/federal/">How amendments are handled</a>.
+        </>
+      }
+    />
   </div>
 </section>
 <section class="section">
   <div class="wrap">
-    <Fragment set:html={await federalSummary(D, "1=1")} />
+    <FederalSummary D={D} where={"1=1"} args={[]} />
   </div>
 </section>
 <section class="section">
   <div class="wrap grid-2">
     <div>
       <h2 style="margin-block-end:1rem">Contracts by department</h2>
-      <Fragment
-        set:html={await schedule({
-          compact: true,
-          cols: [
-            {
-              label: "Department",
-            },
-            {
-              label: "Contracts",
-              num: true,
-            },
-            {
-              label: "Value",
-              num: true,
-            },
-            {
-              label: "Non-competitive",
-              num: true,
-            },
-          ],
-          rows: deps.map((d) => ({
-            cells: [
-              `<a href="/body/${D.slug(d.buyer)}/">${esc(d.buyer)}</a>`,
-              num(d.n),
-              moneyWords(d.amount),
-              pct(d.nc / d.amount),
-            ],
-          })),
-        })}
-      />
+      <>
+        <Schedule compact>
+          <thead>
+            <tr>
+              <th scope="col">Department</th>
+              <th scope="col" class="n">
+                Contracts
+              </th>
+              <th scope="col" class="n">
+                Value
+              </th>
+              <th scope="col" class="n">
+                Non-competitive
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {deps.map((d) => (
+              <tr>
+                <th scope="row">
+                  <>
+                    <a href={"/body/" + D.slug(d.buyer) + "/"}>{d.buyer}</a>
+                  </>
+                </th>
+                <td class="n">{num(d.n)}</td>
+                <td class="n">{moneyWords(d.amount)}</td>
+                <td class="n">{pct(d.nc / d.amount)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </Schedule>
+      </>
     </div>
     <div>
       <h2 style="margin-block-end:1rem">Grants by department</h2>
-      <Fragment
-        set:html={await schedule({
-          compact: true,
-          cols: [
-            {
-              label: "Department",
-            },
-            {
-              label: "Agreements",
-              num: true,
-            },
-            {
-              label: "Value",
-              num: true,
-            },
-          ],
-          rows: gdeps.map((d) => ({
-            cells: [
-              `<a href="/body/${D.slug(d.buyer)}/">${esc(d.buyer)}</a>`,
-              num(d.n),
-              moneyWords(d.amount),
-            ],
-          })),
-        })}
-      />
+      <>
+        <Schedule compact>
+          <thead>
+            <tr>
+              <th scope="col">Department</th>
+              <th scope="col" class="n">
+                Agreements
+              </th>
+              <th scope="col" class="n">
+                Value
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {gdeps.map((d) => (
+              <tr>
+                <th scope="row">
+                  <>
+                    <a href={"/body/" + D.slug(d.buyer) + "/"}>{d.buyer}</a>
+                  </>
+                </th>
+                <td class="n">{num(d.n)}</td>
+                <td class="n">{moneyWords(d.amount)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </Schedule>
+      </>
     </div>
   </div>
 </section>
@@ -163,14 +143,21 @@ const {
     <h2 style="margin-block-end:1rem">
       Major transfers received by NL governments and people, 2024-25
     </h2>
-    <Fragment
-      set:html={leaders(
-        mtp.map(([k, v]) => ({
-          label: esc(k),
+    <dl class="leaders">
+      {mtp
+        .map(([k, v]) => ({
+          label: k,
           value: moneyWords(v),
-        })),
-      )}
-    />
+        }))
+        .map((x) => (
+          <div class={x.cls}>
+            <dt>
+              <span>{x.label}</span>
+            </dt>
+            <dd>{x.value}</dd>
+          </div>
+        ))}
+    </dl>
     <p class="small muted" style="margin-block-start:1rem">
       Public Accounts of Canada, Volume III. Figures are published in rounded
       millions of CAD. These province-specific transfers are receipts, not

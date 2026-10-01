@@ -1,27 +1,22 @@
 ---
-const {
-  pagehead,
-  esc,
-  FEDERAL_RULE,
-  num,
-  M,
-  schedule,
-  moneyWords,
-  GH,
-  methodCode,
-} = Astro.props;
+import Schedule from "./Schedule.astro";
+import PageHead from "./PageHead.astro";
+import { num, moneyWords } from "../../lib/format.mjs";
+import MethodCode from "./MethodCode.astro";
+import { FEDERAL_RULE } from "../../lib/federal.mjs";
+const { M, GH } = Astro.props;
 ---
 
-<Fragment
-  set:html={await pagehead({
-    crumbs: [
-      ["/", "Home"],
-      ["/method/", "Methods"],
-      [null, "Supplier names"],
-    ],
-    title: "Method: supplier names",
-    lede: "Each source prints a supplier's name its own way. A supplier page combines the names the records show are one supplier, and no others.",
-  })}
+<PageHead
+  crumbs={[
+    ["/", "Home"],
+    ["/method/", "Methods"],
+    [null, "Supplier names"],
+  ]}
+  title={"Method: supplier names"}
+  lede={
+    "Each source prints a supplier's name its own way. A supplier page combines the names the records show are one supplier, and no others."
+  }
 />
 <section class="section">
   <div class="wrap prose">
@@ -133,63 +128,60 @@ const {
     </p>
     <h2>The numbers</h2>
     <p>
-      <Fragment set:html={num(M.name_keys)} /> distinct names become{" "}
-      <Fragment set:html={num(M.suppliers)} /> suppliers:{" "}
-      <Fragment set:html={num(M.folded)} /> names are joined to another on the
-      evidence above. <Fragment set:html={num(M.near)} /> close names are kept
-      apart.
+      {num(M.name_keys)} distinct names become {num(M.suppliers)} suppliers:{" "}
+      {num(M.folded)} names are joined to another on the evidence above.{" "}
+      {num(M.near)} close names are kept apart.
     </p>
-    <Fragment
-      set:html={await schedule({
-        compact: true,
-        caption: "Largest suppliers that combine several names",
-        cols: [
-          {
-            label: "Supplier",
-          },
-          {
-            label: "Names",
-            num: true,
-          },
-          {
-            label: "Records",
-            num: true,
-          },
-          {
-            label: "Value",
-            num: true,
-          },
-        ],
-        rows: M.largest.map((g) => ({
-          cells: [
-            esc(g.name),
-            num(g.names),
-            num(g.records),
-            moneyWords(g.value),
-          ],
-        })),
-      })}
-    />
-    <Fragment
-      set:html={await schedule({
-        compact: true,
-        caption: "Largest close names kept apart",
-        cols: [
-          {
-            label: "Name",
-          },
-          {
-            label: "Other name",
-          },
-          {
-            label: "Why not joined",
-          },
-        ],
-        rows: M.near_sample.map((r) => ({
-          cells: [esc(r.a), esc(r.b), esc(r.why)],
-        })),
-      })}
-    />
+    <>
+      <Schedule compact>
+        <caption>Largest suppliers that combine several names</caption>
+        <thead>
+          <tr>
+            <th scope="col">Supplier</th>
+            <th scope="col" class="n">
+              Names
+            </th>
+            <th scope="col" class="n">
+              Records
+            </th>
+            <th scope="col" class="n">
+              Value
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {M.largest.map((g) => (
+            <tr>
+              <th scope="row">{g.name}</th>
+              <td class="n">{num(g.names)}</td>
+              <td class="n">{num(g.records)}</td>
+              <td class="n">{moneyWords(g.value)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </Schedule>
+    </>
+    <>
+      <Schedule compact>
+        <caption>Largest close names kept apart</caption>
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Other name</th>
+            <th scope="col">Why not joined</th>
+          </tr>
+        </thead>
+        <tbody>
+          {M.near_sample.map((r) => (
+            <tr>
+              <th scope="row">{r.a}</th>
+              <td>{r.b}</td>
+              <td>{r.why}</td>
+            </tr>
+          ))}
+        </tbody>
+      </Schedule>
+    </>
     <h2>Every match, and how to question one</h2>
     <p>
       Every joined name, with the evidence that joined it, is in{" "}
@@ -211,27 +203,23 @@ const {
       </a>
       .
     </p>
-    <Fragment
-      set:html={await methodCode(
+    <MethodCode
+      files={[
         [
-          [
-            "pipeline/suppliers.py",
-            "groups the names printed in each source into suppliers",
-          ],
-          [
-            "pipeline/supplier_rules.csv",
-            "the reviewed decisions, each with its reason",
-          ],
-          [
-            "pipeline/check_matching.py",
-            "the cases that must join and the false joins that once happened",
-          ],
+          "pipeline/suppliers.py",
+          "groups the names printed in each source into suppliers",
         ],
-        {
-          title: "matching supplier names",
-          path: "/method/suppliers/",
-        },
-      )}
+        [
+          "pipeline/supplier_rules.csv",
+          "the reviewed decisions, each with its reason",
+        ],
+        [
+          "pipeline/check_matching.py",
+          "the cases that must join and the false joins that once happened",
+        ],
+      ]}
+      title={"matching supplier names"}
+      path={"/method/suppliers/"}
     />
   </div>
 </section>

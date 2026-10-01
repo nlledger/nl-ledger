@@ -1,104 +1,111 @@
 ---
+import Schedule from "./Schedule.astro";
 import Caveat from "./Caveat.astro";
-const {
-  pagehead,
-  esc,
-  latest,
-  moneyWords,
-  cite,
-  schedule,
-  byYear,
-  bar,
-  vmax,
-  byDept,
-  D,
-  receipt,
-  byProg,
-  money,
-  fed,
-  num,
-} = Astro.props;
+import PageHead from "./PageHead.astro";
+import { moneyWords, money, num } from "../../lib/format.mjs";
+import Citation from "./Citation.astro";
+import Bar from "./Bar.astro";
+import ReceiptLink from "./ReceiptLink.astro";
+const { latest, cite, byYear, vmax, byDept, D, byProg, fed } = Astro.props;
 ---
 
-<Fragment
-  set:html={await pagehead({
-    crumbs: [
-      ["/", "Home"],
-      [null, "Consultants and professional services"],
-    ],
-    title: "Government consultants and professional services spending",
-    lede: `The province's own accounts put spending on outside expertise, such as consultants, in one line called Professional Services. In ${esc(latest.y)} it came to ${moneyWords(latest.v)}${cite}.`,
-  })}
+<PageHead
+  crumbs={[
+    ["/", "Home"],
+    [null, "Consultants and professional services"],
+  ]}
+  title={"Government consultants and professional services spending"}
+  lede={
+    <>
+      The province's own accounts put spending on outside expertise, such as
+      consultants, in one line called Professional Services. In {latest.y} it
+      came to {moneyWords(latest.v)}
+      <Citation citation={cite} />.
+    </>
+  }
 />
 <section class="section">
   <div class="wrap">
-    {
-      <Caveat
-        text={
-          <>
-            "Professional Services" is broader than consulting. In health it is
-            mostly doctors paid fee-for-service under the Medical Care Plan, and
-            it includes legal, engineering and other outside services, so read
-            the program name before reading the figure. This account gives
-            totals by program, not individual contracts; contract awards that
-            mention consulting are in the{" "}
-            <a href="/search/?q=consulting">search</a>.
-          </>
-        }
-      />
-    }
+    <Caveat
+      text={
+        <>
+          "Professional Services" is broader than consulting. In health it is
+          mostly doctors paid fee-for-service under the Medical Care Plan, and
+          it includes legal, engineering and other outside services, so read the
+          program name before reading the figure. This account gives totals by
+          program, not individual contracts; contract awards that mention
+          consulting are in the <a href="/search/?q=consulting">search</a>.
+        </>
+      }
+    />
     <div class="grid-2">
       <div>
         <h2 style="margin-block-end:1rem">By year</h2>
-        <Fragment
-          set:html={await schedule({
-            compact: true,
-            cols: [
-              {
-                label: "Fiscal year",
-              },
-              {
-                label: "",
-                w: "50%",
-              },
-              {
-                label: "Professional services",
-                num: true,
-              },
-            ],
-            rows: byYear.map((r) => ({
-              cells: [esc(r.y), bar(r.v, vmax), moneyWords(r.v)],
-            })),
-          })}
-        />
+        <>
+          <Schedule compact>
+            <thead>
+              <tr>
+                <th scope="col">Fiscal year</th>
+                <th scope="col" style={"inline-size:" + "50%"}>
+                  {""}
+                </th>
+                <th scope="col" class="n">
+                  Professional services
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {byYear.map((r) => (
+                <tr>
+                  <th scope="row">{r.y}</th>
+                  <td>
+                    <Bar value={r.v} max={vmax} />
+                  </td>
+                  <td class="n">{moneyWords(r.v)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </Schedule>
+        </>
       </div>
       <div>
         <h2 style="margin-block-end:1rem">By department, {latest.y}</h2>
-        <Fragment
-          set:html={await schedule({
-            compact: true,
-            cols: [
-              {
-                label: "Department",
-              },
-              {
-                label: "Professional services",
-                num: true,
-              },
-              {
-                label: "Source",
-                num: true,
-              },
-            ],
-            rows: byDept.map((d) => ({
-              cells: [
-                `<a href="/department/${D.slug(D.pretty(d.department))}/">${esc(D.pretty(d.department))}</a>`,
-                moneyWords(d.v),
-                receipt(d.source_url, d.page),
-              ],
-            })),
-          })}
-        />
+        <>
+          <Schedule compact>
+            <thead>
+              <tr>
+                <th scope="col">Department</th>
+                <th scope="col" class="n">
+                  Professional services
+                </th>
+                <th scope="col" class="n">
+                  Source
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {byDept.map((d) => (
+                <tr>
+                  <th scope="row">
+                    <>
+                      <a
+                        href={
+                          "/department/" + D.slug(D.pretty(d.department)) + "/"
+                        }
+                      >
+                        {D.pretty(d.department)}
+                      </a>
+                    </>
+                  </th>
+                  <td class="n">{moneyWords(d.v)}</td>
+                  <td class="n">
+                    <ReceiptLink url={d.source_url} page={d.page} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Schedule>
+        </>
       </div>
     </div>
   </div>
@@ -106,34 +113,34 @@ const {
 <section class="section">
   <div class="wrap">
     <h2 style="margin-block-end:1rem">Largest programs, {latest.y}</h2>
-    <Fragment
-      set:html={await schedule({
-        cols: [
-          {
-            label: "Program",
-          },
-          {
-            label: "Department",
-          },
-          {
-            label: "Professional services",
-            num: true,
-          },
-          {
-            label: "Source",
-            num: true,
-          },
-        ],
-        rows: byProg.map((p) => ({
-          cells: [
-            esc(p.program),
-            esc(D.pretty(p.department)),
-            money(p.v),
-            receipt(p.source_url, p.page),
-          ],
-        })),
-      })}
-    />
+    <>
+      <Schedule>
+        <thead>
+          <tr>
+            <th scope="col">Program</th>
+            <th scope="col">Department</th>
+            <th scope="col" class="n">
+              Professional services
+            </th>
+            <th scope="col" class="n">
+              Source
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {byProg.map((p) => (
+            <tr>
+              <th scope="row">{p.program}</th>
+              <td>{D.pretty(p.department)}</td>
+              <td class="n">{money(p.v)}</td>
+              <td class="n">
+                <ReceiptLink url={p.source_url} page={p.page} />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </Schedule>
+    </>
   </div>
 </section>
 {fed.length ? (
@@ -150,27 +157,30 @@ const {
             may overlap federal commitments.
           </p>
         </div>
-        <Fragment
-          set:html={await schedule({
-            compact: true,
-            cols: [
-              {
-                label: "Fiscal year",
-              },
-              {
-                label: "Payments",
-                num: true,
-              },
-              {
-                label: "Paid",
-                num: true,
-              },
-            ],
-            rows: fed.map((r) => ({
-              cells: [esc(r.y), num(r.n), moneyWords(r.v)],
-            })),
-          })}
-        />
+        <>
+          <Schedule compact>
+            <thead>
+              <tr>
+                <th scope="col">Fiscal year</th>
+                <th scope="col" class="n">
+                  Payments
+                </th>
+                <th scope="col" class="n">
+                  Paid
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {fed.map((r) => (
+                <tr>
+                  <th scope="row">{r.y}</th>
+                  <td class="n">{num(r.n)}</td>
+                  <td class="n">{moneyWords(r.v)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </Schedule>
+        </>
         <p>
           <a href="/search/?ds=pa_pss">Search these federal payments</a> ·{" "}
           <a href="/search/?q=consulting">Search every record for consulting</a>

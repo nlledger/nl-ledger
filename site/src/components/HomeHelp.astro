@@ -1,5 +1,7 @@
 ---
-const { SITE, REPO, icon } = Astro.props;
+import { SITE } from "../../lib/format.mjs";
+import { icon } from "../../lib/icons.mjs";
+import { REPO } from "../../lib/html.mjs";
 ---
 
 <section class="section help-home" id="help-build" aria-labelledby="hb-h">
@@ -7,9 +9,9 @@ const { SITE, REPO, icon } = Astro.props;
     <div class="section-head">
       <h2 id="hb-h">Help build this</h2>
       <p class="lede">
-        <Fragment set:html={SITE.name} /> is open source. The code, the data
-        pipeline and every method are public, and a correction from a reader is
-        as useful as a fix from a programmer.
+        {SITE.name} is open source. The code, the data pipeline and every method
+        are public, and a correction from a reader is as useful as a fix from a
+        programmer.
       </p>
     </div>
     <div class="doors">

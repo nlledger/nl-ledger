@@ -1,29 +1,30 @@
 ---
-const { pagehead, SITE, num, R, fmtDate, D, icon } = Astro.props;
+import PageHead from "./PageHead.astro";
+import { SITE, num, date as fmtDate } from "../../lib/format.mjs";
+import { icon } from "../../lib/icons.mjs";
+const { R, D } = Astro.props;
 ---
 
-<Fragment
-  set:html={await pagehead({
-    crumbs: [
-      ["/", "Home"],
-      [null, "What is this?"],
-    ],
-    title: "What is this?",
-    lede: `${SITE.name} is a thought experiment: what could an ordinary citizen learn about Newfoundland and Labrador public spending from the records governments already publish?`,
-  })}
+<PageHead
+  crumbs={[
+    ["/", "Home"],
+    [null, "What is this?"],
+  ]}
+  title={"What is this?"}
+  lede={`${SITE.name} is a thought experiment: what could an ordinary citizen learn about Newfoundland and Labrador public spending from the records governments already publish?`}
 />
 <section class="section">
   <div class="wrap prose">
     <p>
       Governments publish a great deal of spending data, but it is scattered
       across hundreds of PDFs, spreadsheets and web pages that few people have
-      time to read. It gathers <Fragment set:html={num(R.itemCount)} /> of those
-      records in one place and tries to make the amounts easier to picture. It
-      gathers provincial contract awards, minister and MHA expenses, public
-      sector pay over $100,000, department and program spending, federal records
-      selected by reported supplier or recipient location, with address
-      conflicts labelled. An address does not establish where work, benefits or
-      spending occurred. Whole reported values are not an NL allocation.
+      time to read. It gathers {num(R.itemCount)} of those records in one place
+      and tries to make the amounts easier to picture. It gathers provincial
+      contract awards, minister and MHA expenses, public sector pay over
+      $100,000, department and program spending, federal records selected by
+      reported supplier or recipient location, with address conflicts labelled.
+      An address does not establish where work, benefits or spending occurred.
+      Whole reported values are not an NL allocation.
     </p>
     <h2>How far to trust the figures</h2>
     <ul>
@@ -46,10 +47,10 @@ const { pagehead, SITE, num, R, fmtDate, D, icon } = Astro.props;
     </ul>
     <h2 id="built">How it was built</h2>
     <p>
-      <Fragment set:html={SITE.name} /> was built with AI coding tools, which
-      wrote most of its code and page text under human direction. No figure is
-      produced by an AI: every number is read by code from a government record
-      and links to that record, so any of them can be checked. The code is{" "}
+      {SITE.name} was built with AI coding tools, which wrote most of its code
+      and page text under human direction. No figure is produced by an AI: every
+      number is read by code from a government record and links to that record,
+      so any of them can be checked. The code is{" "}
       <a href="https://github.com/nlledger/nl-ledger">open source</a>.
     </p>
     <h2>What it is not</h2>
@@ -116,10 +117,7 @@ const { pagehead, SITE, num, R, fmtDate, D, icon } = Astro.props;
       <li>
         <strong>How long.</strong> Notes are kept as a record of what was asked.
         To have a note or an email address removed, write to{" "}
-        <a href={"mailto:" + SITE.contact}>
-          <Fragment set:html={SITE.contact} />
-        </a>
-        .
+        <a href={"mailto:" + SITE.contact}>{SITE.contact}</a>.
       </li>
     </ul>
     <h2>Status</h2>
@@ -134,7 +132,7 @@ const { pagehead, SITE, num, R, fmtDate, D, icon } = Astro.props;
       To ask for a correction, use the{" "}
       <a href="#feedback">box at the foot of any page</a> or email{" "}
       <a href={"mailto:" + SITE.corrections + "?subject=Correction%20request"}>
-        <Fragment set:html={SITE.corrections} />
+        {SITE.corrections}
       </a>
       . If you are a person or a company named in a record, say which page and
       what is wrong. Send the page address, what it shows and what you believe

@@ -3,16 +3,18 @@ import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
 import { parse } from "parse5";
 import { spawnSync } from "node:child_process";
-import { renderComponent } from "./lib/render.mjs";
-import { icon, layout } from "./lib/html.mjs";
+import { renderAstro } from "./lib/render.mjs";
+import { components_HomeAi_astro as HomeAi } from "./.render/components.mjs";
+import { layout } from "./lib/html.mjs";
 import { connectPage } from "./src/pages/connect.mjs";
 import { SECURITY_HEADERS, STATIC_HEADERS } from "./lib/headers.mjs";
 const root = import.meta.dirname;
 const read = (p) => readFileSync(`${root}/${p}`, "utf8");
 const pkg = JSON.parse(read("package.json"));
 assert.ok(
-  !pkg.devDependencies.typescript && !pkg.dependencies.typescript,
-  "unused direct TypeScript dependency",
+  pkg.devDependencies.typescript &&
+    read("check-components.mjs").includes('from "typescript"'),
+  "TypeScript is used by the readability enforcement check",
 );
 const { protectEntry } = await import("./lib/entry-guard.mjs");
 const calls = [];
@@ -157,10 +159,8 @@ const markup = await layout({
   body: "<p>Check</p>",
 });
 const connect = await connectPage({}, { itemCount: 1 });
-const home = await renderComponent("components_HomeAi_astro", {
-  num: String,
+const home = await renderAstro(HomeAi, {
   R: { itemCount: 1 },
-  icon,
   EXAMPLE: {
     q: "Question",
     a: "Answer",
@@ -168,7 +168,6 @@ const home = await renderComponent("components_HomeAi_astro", {
     record: "/item/example/",
     on: "2026-01-01",
   },
-  fmtDate: String,
 });
 const text = (n) =>
   n.nodeName === "#text" ? n.value : (n.childNodes || []).map(text).join("");

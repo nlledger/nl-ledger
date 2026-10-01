@@ -1,52 +1,52 @@
 ---
-import Caveat from "./Caveat.astro";
-const {
-  pagehead,
-  num,
-  R,
-  html,
-  copyBlock,
+import Schedule from "./Schedule.astro";
+import {
   MCP_URL,
-  groups,
   CLIENTS,
-  esc,
-  clientPanel,
-  SITE,
   MORE,
-  schedule,
   QUESTIONS,
   asked,
-  icon,
   askClaude,
   askChatGPT,
-  TOOLS,
-} = Astro.props;
+} from "../connect.mjs";
+import { TOOLS } from "../../lib/mcp.mjs";
+import Caveat from "./Caveat.astro";
+import PageHead from "./PageHead.astro";
+import { num, SITE } from "../../lib/format.mjs";
+import ConnectCopyBlock from "./ConnectCopyBlock.astro";
+import { icon } from "../../lib/icons.mjs";
+import ConnectClientPanel from "./ConnectClientPanel.astro";
+const { R, groups } = Astro.props;
 ---
 
-<Fragment
-  set:html={await pagehead({
-    crumbs: [
-      ["/", "Home"],
-      [null, "Ask your AI"],
-    ],
-    title: "Ask your own AI about every record",
-    lede: `This site shows a small part of what is in the records. Connect Claude, ChatGPT or another AI assistant to all ${num(R.itemCount)} of them and ask it anything in plain words. It answers from the records and links each figure to its source.`,
-    extra: html`<div class="addr">
-      ${await copyBlock("The address your assistant needs", MCP_URL, {
-        inline: true,
-      })}
-      <p class="small">
-        Free, read-only, and no sign-in. Your conversation stays with your
-        assistant: this site only sees the words it looks up, and keeps no
-        accounts.
-      </p>
-      <nav class="jump" aria-label="On this page">
-        <a href="#connect">1. Connect it</a
-        ><a href="#ask">2. Ask it something</a
-        ><a href="#try">Try it here first</a>
-      </nav>
-    </div>`,
-  })}
+<PageHead
+  crumbs={[
+    ["/", "Home"],
+    [null, "Ask your AI"],
+  ]}
+  title={"Ask your own AI about every record"}
+  lede={`This site shows a small part of what is in the records. Connect Claude, ChatGPT or another AI assistant to all ${num(R.itemCount)} of them and ask it anything in plain words. It answers from the records and links each figure to its source.`}
+  extra={
+    <>
+      <div class="addr">
+        <ConnectCopyBlock
+          label={"The address your assistant needs"}
+          text={MCP_URL}
+          inline={true}
+        />
+        <p class="small">
+          Free, read-only, and no sign-in. Your conversation stays with your
+          assistant: this site only sees the words it looks up, and keeps no
+          accounts.
+        </p>
+        <nav class="jump" aria-label="On this page">
+          <a href="#connect">1. Connect it</a>
+          <a href="#ask">2. Ask it something</a>
+          <a href="#try">Try it here first</a>
+        </nav>
+      </div>
+    </>
+  }
 />
 
 <section class="section" id="connect" aria-labelledby="connect-h">
@@ -61,9 +61,7 @@ const {
       {groups.map(([g, label]) => (
         <>
           <div class="picker-row">
-            <span class="picker-label">
-              <Fragment set:html={label} />
-            </span>
+            <span class="picker-label">{label}</span>
             <ul role="list">
               {CLIENTS.filter((c) => c.group === g).map((c) => (
                 <>
@@ -80,7 +78,9 @@ const {
       ))}
     </div>
     <div class="clients">
-      <Fragment set:html={await Promise.all(CLIENTS.map(clientPanel))} />
+      {CLIENTS.map((c) => (
+        <ConnectClientPanel c={c} />
+      ))}
     </div>
     <p class="works">
       <strong>How to tell it is working:</strong> ask "Using {SITE.name}, what
@@ -93,33 +93,39 @@ const {
       <summary>
         <span>Other assistants</span>
         <span class="small muted">
-          <Fragment set:html={MORE.length} /> more with a documented way to add
-          a remote server
+          {MORE.length} more with a documented way to add a remote server
         </span>
       </summary>
-      <Fragment
-        set:html={await schedule({
-          compact: true,
-          cols: [
-            {
-              label: "Assistant",
-            },
-            {
-              label: "Where to add it",
-            },
-            {
-              label: "What to enter",
-            },
-          ],
-          rows: MORE.map(([n, w, c, d]) => ({
-            cells: [
-              `<a href="${esc(d)}" rel="noopener">${esc(n)}</a>`,
-              esc(w),
-              `<code>${esc(c)}</code>`,
-            ],
-          })),
-        })}
-      />
+      <>
+        <Schedule compact>
+          <thead>
+            <tr>
+              <th scope="col">Assistant</th>
+              <th scope="col">Where to add it</th>
+              <th scope="col">What to enter</th>
+            </tr>
+          </thead>
+          <tbody>
+            {MORE.map(([n, w, c, d]) => (
+              <tr>
+                <th scope="row">
+                  <>
+                    <a href={d} rel="noopener">
+                      {n}
+                    </a>
+                  </>
+                </th>
+                <td>{w}</td>
+                <td>
+                  <>
+                    <code>{c}</code>
+                  </>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </Schedule>
+      </>
       <p class="small">
         Anything else that can use a remote MCP server (Model Context Protocol,
         the standard these assistants share) works the same way: give it the
@@ -173,11 +179,9 @@ const {
         </>
       ))}
     </ol>
-    {
-      <Caveat
-        text={`The figures come from public records, gathered and combined by automated scripts, and have not been independently vetted. The server tells your assistant to cite a source for every figure. Open it before relying on an answer.`}
-      />
-    }
+    <Caveat
+      text={`The figures come from public records, gathered and combined by automated scripts, and have not been independently vetted. The server tells your assistant to cite a source for every figure. Open it before relying on an answer.`}
+    />
   </div>
 </section>
 
@@ -278,29 +282,34 @@ const {
       <summary>
         <span>What your assistant can look up</span>
         <span class="small muted">
-          <Fragment set:html={TOOLS.length} /> lookups, described the way your
-          assistant sees them
+          {TOOLS.length} lookups, described the way your assistant sees them
         </span>
       </summary>
-      <Fragment
-        set:html={await schedule({
-          compact: true,
-          cols: [
-            {
-              label: "Lookup",
-            },
-            {
-              label: "What it does",
-            },
-          ],
-          rows: TOOLS.map((t) => ({
-            cells: [
-              `${esc(t.title)}<span class="meta"><code>${esc(t.name)}</code></span>`,
-              esc(t.description.replace(/ Sources: .*$/, "")),
-            ],
-          })),
-        })}
-      />
+      <>
+        <Schedule compact>
+          <thead>
+            <tr>
+              <th scope="col">Lookup</th>
+              <th scope="col">What it does</th>
+            </tr>
+          </thead>
+          <tbody>
+            {TOOLS.map((t) => (
+              <tr>
+                <th scope="row">
+                  <>
+                    {t.title}
+                    <span class="meta">
+                      <code>{t.name}</code>
+                    </span>
+                  </>
+                </th>
+                <td>{t.description.replace(/ Sources: .*$/, "")}</td>
+              </tr>
+            ))}
+          </tbody>
+        </Schedule>
+      </>
     </details>
     <details class="more" id="developers">
       <summary>
@@ -309,13 +318,9 @@ const {
       </summary>
       <ul class="prose">
         <li>
-          Address:{" "}
-          <code>
-            <Fragment set:html={MCP_URL} />
-          </code>
-          . Streamable HTTP, JSON responses, no session, no authentication.
-          Protocol versions 2024-11-05 to 2025-11-25. CORS is open, so browser
-          clients can call it directly.
+          Address: <code>{MCP_URL}</code>. Streamable HTTP, JSON responses, no
+          session, no authentication. Protocol versions 2024-11-05 to
+          2025-11-25. CORS is open, so browser clients can call it directly.
         </li>
         <li>
           Discovery: <a href="/server.json">server.json</a> (MCP registry

@@ -1,20 +1,10 @@
 ---
-const {
-  moneyWords,
-  total,
-  cite,
-  fy,
-  money,
-  perPerson,
-  S,
-  citePop,
-  num,
-  people,
-  citeWage,
-  ledger,
-  R,
-  icon,
-} = Astro.props;
+import { moneyWords, money, perPerson, num } from "../../lib/format.mjs";
+import Citation from "./Citation.astro";
+import { icon } from "../../lib/icons.mjs";
+import BudgetCoverLedger from "./BudgetCoverLedger.astro";
+const { total, cite, fy, S, citePop, people, citeWage, ledger, R } =
+  Astro.props;
 ---
 
 <section class="cover" aria-labelledby="cover-h">
@@ -23,25 +13,19 @@ const {
       The Newfoundland and Labrador government spent
     </h1>
     <p class="cover-fig">
-      <Fragment set:html={moneyWords(total)} />
-      <Fragment set:html={cite} />
+      {moneyWords(total)}
+      <Citation citation={cite} />
     </p>
     <p class="cover-sub">
-      in {fy}. That is{" "}
-      <em>
-        <Fragment set:html={money(perPerson(total, S))} />
-      </em>{" "}
-      for every person in the province
-      <Fragment set:html={citePop} />, or what{" "}
-      <em>
-        <Fragment set:html={num(people)} />
-      </em>{" "}
-      people earning the median full-time wage make in a year
-      <Fragment set:html={citeWage} />.
+      in {fy}. That is <em>{money(perPerson(total, S))}</em> for every person in
+      the province
+      <Citation citation={citePop} />, or what <em>{num(people)}</em> people
+      earning the median full-time wage make in a year
+      <Citation citation={citeWage} />.
     </p>
     <details class="cover-budget">
       <summary>Budget, deficit and debt</summary>
-      <Fragment set:html={ledger} />
+      <BudgetCoverLedger {...ledger} />
     </details>
     <form
       class="field cover-search"
@@ -49,9 +33,7 @@ const {
       method="get"
       role="search"
     >
-      <label for="cq">
-        Search <Fragment set:html={num(R.itemCount)} /> records
-      </label>
+      <label for="cq">Search {num(R.itemCount)} records</label>
       <div class="field-row">
         <span class="pre">
           <Fragment set:html={icon("search")} />

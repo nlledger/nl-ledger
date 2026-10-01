@@ -1,0 +1,16 @@
+---
+const { url, page, locator, label } = Astro.props;
+const pdf = /\.pdf($|\?)/i.test(url || "");
+const href = pdf && page ? `${url}#page=${page}` : url;
+---
+
+{url && (
+  <a
+    class="rcpt"
+    href={href}
+    rel="noopener"
+    title={locator || "Open the source record"}
+  >
+    {label || (pdf && page ? <>p.&nbsp;{page}</> : "source")}
+  </a>
+)}

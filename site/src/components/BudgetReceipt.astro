@@ -1,0 +1,14 @@
+---
+import { DOCS } from "../budgetdata.mjs";
+import ReceiptLink from "./ReceiptLink.astro";
+const { source, label } = Astro.props;
+---
+
+{source && (
+  <ReceiptLink
+    url={source.url}
+    page={source.page}
+    locator={DOCS[source.doc]}
+    label={label}
+  />
+)}

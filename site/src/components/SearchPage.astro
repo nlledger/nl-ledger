@@ -1,7 +1,11 @@
 ---
 import SelectOptions from "./SelectOptions.astro";
+import { icon } from "../../lib/icons.mjs";
+import Standing from "./Standing.astro";
+import { num } from "../../lib/format.mjs";
+import SearchResult from "./SearchResult.astro";
+import Pager from "./Pager.astro";
 const {
-  icon,
   p,
   empty,
   filterCount,
@@ -9,17 +13,13 @@ const {
   years,
   flagOpts,
   active,
-  standing,
   examples,
   corrected,
   items,
-  num,
   result,
   sorted,
-  resultItem,
   flags,
   links,
-  pager,
   base,
   page,
   near,
@@ -57,9 +57,7 @@ const {
         <details class="search-filters" open={filterCount > 0}>
           <summary>
             Filters
-            <Fragment
-              set:html={filterCount ? ` (${filterCount} active)` : ""}
-            />
+            {filterCount ? ` (${filterCount} active)` : ""}
           </summary>
           <div class="filters">
             <div class="field">
@@ -107,17 +105,13 @@ const {
         <>
           <p class="small">
             Filtered to one{" "}
-            <Fragment
-              set:html={
-                active.includes("n")
-                  ? "printed name of a supplier"
-                  : active.includes("s")
-                    ? "supplier"
-                    : active.includes("b")
-                      ? "public body"
-                      : "person"
-              }
-            />
+            {active.includes("n")
+              ? "printed name of a supplier"
+              : active.includes("s")
+                ? "supplier"
+                : active.includes("b")
+                  ? "public body"
+                  : "person"}
             .{" "}
             <a
               href={
@@ -137,7 +131,7 @@ const {
         ""
       )}
     </form>
-    <Fragment set:html={p.q ? standing() : ""} />
+    {p.q ? <Standing /> : ""}
   </div>
 </header>
 <section class="section" style="padding-block-start:2rem">
@@ -177,21 +171,17 @@ const {
         {items.length ? (
           <>
             <p class="small muted" aria-live="polite">
-              <Fragment set:html={num(items.length)} /> record
-              <Fragment set:html={items.length === 1 ? "" : "s"} /> on this page
-              <Fragment
-                set:html={result.more ? " (more on the next page)" : ""}
-              />
-              ; largest values on this page first. Each links to its source.
+              {num(items.length)} record
+              {items.length === 1 ? "" : "s"} on this page
+              {result.more ? " (more on the next page)" : ""}; largest values on
+              this page first. Each links to its source.
             </p>
             <ol class="results">
-              <Fragment
-                set:html={await Promise.all(
-                  sorted.map(async (it) => await resultItem(it, flags, links)),
-                )}
-              />
+              {sorted.map((it) => (
+                <SearchResult it={it} flags={flags} links={links} />
+              ))}
             </ol>
-            <Fragment set:html={pager(base, page, result.more)} />
+            <Pager base={base} page={page} more={result.more} />
           </>
         ) : (
           <>
@@ -203,13 +193,9 @@ const {
               ) : (
                 "Nothing matched."
               )}
-              <Fragment
-                set:html={
-                  near.length
-                    ? ""
-                    : " Try fewer or shorter words, or remove a filter."
-                }
-              />
+              {near.length
+                ? ""
+                : " Try fewer or shorter words, or remove a filter."}
             </p>
           </>
         )}
@@ -247,22 +233,16 @@ const {
           <>
             <section aria-labelledby="near-h" class="near">
               <h2 id="near-h">
-                <Fragment
-                  set:html={
-                    items.length ? "Close in meaning" : "Closest in meaning"
-                  }
-                />
+                {items.length ? "Close in meaning" : "Closest in meaning"}
               </h2>
               <p class="small muted">
                 Records about the same thing that do not contain every word,
                 closest first. Check each one against its source.
               </p>
               <ol class="results">
-                <Fragment
-                  set:html={await Promise.all(
-                    near.map(async (it) => await resultItem(it, flags, links)),
-                  )}
-                />
+                {near.map((it) => (
+                  <SearchResult it={it} flags={flags} links={links} />
+                ))}
               </ol>
             </section>
           </>

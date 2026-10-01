@@ -1,10 +1,11 @@
 // node site/check-astro-edge-rendering.mjs /path/to/main/dist /path/to/fixed/dist
-// Keep the existing pixel/metadata parity check, then compare HTML byte-for-byte
-// except for explicit separators between controls and proven share-image renames.
+// Keep the existing pixel/metadata parity check, then compare parsed HTML serialization,
+// protected text and explicit separators alongside proven share-image names.
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
+import { parse, serialize } from "parse5";
 const [before, after] = process.argv.slice(2);
 execFileSync(
   process.execPath,
@@ -24,16 +25,50 @@ const names = new Map(
     old.get(c.path),
   ]),
 );
-const normalize = (html) =>
-  html
-    .replace(
+// Compare parsed serialization: direct components replace HTML strings, changing
+// indentation and equivalent entity spelling. Keep protected text byte-exact and
+// check whole control-group text separately so lost separators cannot hide.
+const controlClasses = new Set([
+  "nav",
+  "phone-nav",
+  "foot-nav",
+  "cta",
+  "ask-do",
+]);
+const text = (node) =>
+  node.nodeName === "#text"
+    ? node.value
+    : (node.childNodes || []).map(text).join("");
+const normalize = (html) => {
+  const document = parse(
+    html.replace(
       /\/share\/static\/[a-f0-9]+\.png/g,
       (name) => names.get(name) || name,
+    ),
+  );
+  const controls = [];
+  function walk(node) {
+    if (["pre", "script", "style", "textarea"].includes(node.tagName)) return;
+    if (
+      node.attrs?.some(
+        (a) =>
+          a.name === "class" &&
+          a.value.split(/\s+/).some((c) => controlClasses.has(c)),
+      )
     )
-    .replace(
-      /<(nav|div) class="(nav|phone-nav|foot-nav|cta|ask-do)"[^>]*>[\s\S]*?<\/\1>/g,
-      (group) => group.replace(/(<\/(?:a|button)>) (?=<)/g, "$1"),
-    );
+      controls.push(text(node).replace(/\s+/g, " ").trim());
+    if (node.nodeName === "#text")
+      node.value = node.value.replace(/\s+/g, " ").trim();
+    for (const child of node.childNodes || []) walk(child);
+    for (const child of node.content?.childNodes || []) walk(child);
+    if (node.childNodes)
+      node.childNodes = node.childNodes.filter(
+        (n) => n.nodeName !== "#text" || n.value,
+      );
+  }
+  walk(document);
+  return { html: serialize(document), controls };
+};
 let count = 0,
   beforeBytes = 0,
   afterBytes = 0;
@@ -42,15 +77,15 @@ for (const file of readdirSync(before, { recursive: true }).filter((f) =>
 )) {
   const a = read(before, file),
     b = read(after, file);
-  assert.equal(
+  assert.deepEqual(
     normalize(b),
     normalize(a),
-    `${file}: only intended inter-control spaces may change`,
+    `${file}: structure, protected text and inter-control separators must match`,
   );
   beforeBytes += Buffer.byteLength(a);
   afterBytes += Buffer.byteLength(b);
   count++;
 }
 console.log(
-  `PASS: ${count} pages differ only in explicit inter-control separators and proven image-name mappings; HTML ${beforeBytes} -> ${afterBytes} bytes (+${afterBytes - beforeBytes}).`,
+  `PASS: ${count} pages match in structure, protected text and inter-control separators after serialization normalization; HTML ${beforeBytes} -> ${afterBytes} bytes (${afterBytes - beforeBytes >= 0 ? "+" : ""}${afterBytes - beforeBytes}).`,
 );

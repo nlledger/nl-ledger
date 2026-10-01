@@ -1,94 +1,107 @@
 ---
+import Schedule from "./Schedule.astro";
 import Caveat from "./Caveat.astro";
-const {
-  pagehead,
-  m,
-  esc,
-  fmtDate,
-  num,
-  money,
-  depts,
-  leaders,
-  cats,
-  payroll,
-  schedule,
-  claims,
-  receipt,
-  spotError,
-} = Astro.props;
+import PageHead from "./PageHead.astro";
+import { date as fmtDate, num, money } from "../../lib/format.mjs";
+import ReceiptLink from "./ReceiptLink.astro";
+import SpotError from "./SpotError.astro";
+const { m, depts, cats, payroll, claims } = Astro.props;
 ---
 
-<Fragment
-  set:html={await pagehead({
-    flagged: true,
-    crumbs: [
-      ["/", "Home"],
-      ["/members/", "Members"],
-      [null, m.person],
-    ],
-    title: esc(m.person),
-    lede: `Minister's expense claims paid from ${esc(fmtDate(m.d0))} to ${esc(fmtDate(m.d1))}: ${num(m.n)} lines, ${money(
-      m.amount,
-      {
-        cents: true,
-      },
-    )}. Departments: ${depts.map(esc).join("; ")}.`,
-  })}
+<PageHead
+  flagged={true}
+  crumbs={[
+    ["/", "Home"],
+    ["/members/", "Members"],
+    [null, m.person],
+  ]}
+  title={m.person}
+  lede={`Minister's expense claims paid from ${fmtDate(m.d0)} to ${fmtDate(m.d1)}: ${num(m.n)} lines, ${money(
+    m.amount,
+    {
+      cents: true,
+    },
+  )}. Departments: ${depts.join("; ")}.`}
 />
 <section class="section">
   <div class="wrap grid-2">
     <div>
       <h2 style="margin-block-end:1rem">What the travel claims were for</h2>
-      <Fragment
-        set:html={leaders([
-          {
-            label: "Airfare, taxis, mileage and other travel",
-            value: money(cats.travel, {
+      <dl class="leaders">
+        <div>
+          <dt>
+            <span>Airfare, taxis, mileage and other travel</span>
+          </dt>
+          <dd>
+            {money(cats.travel, {
               cents: true,
-            }),
-          },
-          {
-            label: "Accommodations",
-            value: money(cats.accommodations, {
+            })}
+          </dd>
+        </div>
+        <div>
+          <dt>
+            <span>Accommodations</span>
+          </dt>
+          <dd>
+            {money(cats.accommodations, {
               cents: true,
-            }),
-          },
-          {
-            label: "Meals and incidentals",
-            value: money(cats.meals, {
+            })}
+          </dd>
+        </div>
+        <div>
+          <dt>
+            <span>Meals and incidentals</span>
+          </dt>
+          <dd>
+            {money(cats.meals, {
               cents: true,
-            }),
-          },
-          {
-            label: "Hospitality",
-            value: money(cats.hospitality, {
+            })}
+          </dd>
+        </div>
+        <div>
+          <dt>
+            <span>Hospitality</span>
+          </dt>
+          <dd>
+            {money(cats.hospitality, {
               cents: true,
-            }),
-          },
-          {
-            label: "Other (registrations, fees)",
-            value: money(cats.other, {
+            })}
+          </dd>
+        </div>
+        <div>
+          <dt>
+            <span>Other (registrations, fees)</span>
+          </dt>
+          <dd>
+            {money(cats.other, {
               cents: true,
-            }),
-          },
-          {
-            label: "Car allowance through payroll",
-            value: money(
+            })}
+          </dd>
+        </div>
+        <div>
+          <dt>
+            <span>Car allowance through payroll</span>
+          </dt>
+          <dd>
+            {money(
               payroll.reduce((s, c) => s + (c.amount || 0), 0),
               {
                 cents: true,
               },
-            ),
-          },
-          {
-            label: "Total",
-            value: money(m.amount, {
+            )}
+          </dd>
+        </div>
+        <div class={"total"}>
+          <dt>
+            <span>Total</span>
+          </dt>
+          <dd>
+            {money(m.amount, {
               cents: true,
-            }),
-            cls: "total",
-          },
-        ])}
-      />
+            })}
+          </dd>
+        </div>
+      </dl>
       <p class="small muted" style="margin-block-start:1rem">
         Category totals come from each claim's detail page in the PDF. Claims
         paid directly by the department (some airfare and hotels) appear as
@@ -96,54 +109,73 @@ const {
       </p>
     </div>
     <div>
-      {
-        <Caveat
-          text={
-            "Ministers are reimbursed under the Ministerial Expense Reimbursement Policy. These records show what was paid; they do not say whether a claim followed the policy."
-          }
-        />
-      }
+      <Caveat
+        text={
+          "Ministers are reimbursed under the Ministerial Expense Reimbursement Policy. These records show what was paid; they do not say whether a claim followed the policy."
+        }
+      />
     </div>
   </div>
 </section>
 <section class="section">
   <div class="wrap">
-    <Fragment
-      set:html={await schedule({
-        cols: [
-          {
-            label: "Purpose",
-          },
-          {
-            label: "Date",
-            w: "7.5rem",
-          },
-          {
-            label: "Amount",
-            num: true,
-          },
-          {
-            label: "Source",
-            num: true,
-          },
-        ],
-        rows: claims.map((c) => {
-          const x = JSON.parse(c.extra || "{}");
-          return {
-            cells: [
-              `${esc(c.description)}${x.routes ? `<span class="meta">${esc(x.routes)}</span>` : ""}<span class="meta">${esc(c.method)} · ${esc(c.buyer)}</span>`,
-              esc(fmtDate(c.date)),
-              money(c.amount, {
-                cents: true,
-              }),
-              receipt(c.source_url, c.page, c.locator),
-            ],
-          };
-        }),
-      })}
-    />
+    <>
+      <Schedule>
+        <thead>
+          <tr>
+            <th scope="col">Purpose</th>
+            <th scope="col" style={"inline-size:" + "7.5rem"}>
+              Date
+            </th>
+            <th scope="col" class="n">
+              Amount
+            </th>
+            <th scope="col" class="n">
+              Source
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {claims.map((c) => {
+            const x = JSON.parse(c.extra || "{}");
+            return (
+              <tr>
+                <th scope="row">
+                  <>
+                    {c.description}
+                    {x.routes ? (
+                      <>
+                        <span class="meta">{x.routes}</span>
+                      </>
+                    ) : (
+                      ""
+                    )}
+                    <span class="meta">
+                      {c.method} · {c.buyer}
+                    </span>
+                  </>
+                </th>
+                <td>{fmtDate(c.date)}</td>
+                <td class="n">
+                  {money(c.amount, {
+                    cents: true,
+                  })}
+                </td>
+                <td class="n">
+                  <ReceiptLink
+                    url={c.source_url}
+                    page={c.page}
+                    locator={c.locator}
+                  />
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </Schedule>
+    </>
   </div>
 </section>
 <div class="wrap">
-  <Fragment set:html={spotError()} />
+  <SpotError />
 </div>

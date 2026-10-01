@@ -1,16 +1,17 @@
 ---
-const { pagehead, num, D, fmtDate, money, methodCode } = Astro.props;
+import PageHead from "./PageHead.astro";
+import { num, money, date as fmtDate } from "../../lib/format.mjs";
+import MethodCode from "./MethodCode.astro";
+const { D } = Astro.props;
 ---
 
-<Fragment
-  set:html={await pagehead({
-    crumbs: [
-      ["/", "Home"],
-      [null, "Methods"],
-    ],
-    title: "Methods",
-    lede: "How each figure on this site is worked out.",
-  })}
+<PageHead
+  crumbs={[
+    ["/", "Home"],
+    [null, "Methods"],
+  ]}
+  title={"Methods"}
+  lede={"How each figure on this site is worked out."}
 />
 <section class="section">
   <div class="wrap prose">
@@ -24,27 +25,25 @@ const { pagehead, num, D, fmtDate, money, methodCode } = Astro.props;
     <ul>
       <li>
         <strong>Per person:</strong> the amount divided by the province's
-        population, <Fragment set:html={num(D.stats.population.value)} /> on{" "}
+        population, {num(D.stats.population.value)} on{" "}
         {fmtDate(D.stats.population.date)} (Statistics Canada table{" "}
         {D.stats.population.table}).
       </li>
       <li>
         <strong>Per household:</strong> divided by{" "}
-        <Fragment set:html={num(D.stats.households.value)} /> private households
-        (2021 Census, table {D.stats.households.table}).
+        {num(D.stats.households.value)} private households (2021 Census, table{" "}
+        {D.stats.households.table}).
       </li>
       <li>
         <strong>Time to earn:</strong> divided by the median full-time wage,{" "}
-        <Fragment
-          set:html={money(D.stats.median_weekly_wage.value, {
-            cents: true,
-          })}
-        />{" "}
+        {money(D.stats.median_weekly_wage.value, {
+          cents: true,
+        })}{" "}
         a week in {D.stats.median_weekly_wage.year} (table{" "}
         {D.stats.median_weekly_wage.table}, vector{" "}
         {D.stats.median_weekly_wage.vector}) times 52, which is{" "}
-        <Fragment set:html={money(D.stats.median_annual_wage.value)} /> a year.
-        Weeks, days and hours assume 52 working weeks of five 7.5-hour days.
+        {money(D.stats.median_annual_wage.value)} a year. Weeks, days and hours
+        assume 52 working weeks of five 7.5-hour days.
       </li>
     </ul>
     <h2>The personal receipt</h2>
@@ -99,17 +98,13 @@ const { pagehead, num, D, fmtDate, money, methodCode } = Astro.props;
         </>
       ))}
     </ul>
-    <Fragment
-      set:html={await methodCode(
-        [
-          ["pipeline/flags.py", "defines and counts every pattern"],
-          ["pipeline/build.py", "builds the database the site is made from"],
-        ],
-        {
-          title: "how each figure is worked out",
-          path: "/method/",
-        },
-      )}
+    <MethodCode
+      files={[
+        ["pipeline/flags.py", "defines and counts every pattern"],
+        ["pipeline/build.py", "builds the database the site is made from"],
+      ]}
+      title={"how each figure is worked out"}
+      path={"/method/"}
     />
   </div>
 </section>

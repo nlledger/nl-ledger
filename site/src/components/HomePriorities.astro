@@ -1,18 +1,8 @@
 ---
-const {
-  fy,
-  top,
-  bar,
-  max,
-  moneyWords,
-  money,
-  perPerson,
-  S,
-  depts,
-  total,
-  D,
-  icon,
-} = Astro.props;
+import Bar from "./Bar.astro";
+import { moneyWords, money, perPerson } from "../../lib/format.mjs";
+import { icon } from "../../lib/icons.mjs";
+const { fy, top, max, S, depts, total, D } = Astro.props;
 ---
 
 <section class="section" aria-labelledby="pr-h">
@@ -61,85 +51,60 @@ const {
                 </th>
                 <td class="hide-sm">
                   <span class="pair">
-                    <Fragment set:html={bar(d.gross, max)} />
-                    <Fragment
-                      set:html={
-                        d.original != null ? bar(d.original, max, "ghost") : ""
-                      }
-                    />
+                    <Bar value={d.gross} max={max} />
+                    {d.original != null ? (
+                      <Bar value={d.original} max={max} cls={"ghost"} />
+                    ) : (
+                      ""
+                    )}
                   </span>
                 </td>
+                <td class="n">{moneyWords(d.gross)}</td>
                 <td class="n">
-                  <Fragment set:html={moneyWords(d.gross)} />
+                  {d.original ? moneyWords(d.original) : "not printed"}
                 </td>
-                <td class="n">
-                  <Fragment
-                    set:html={
-                      d.original ? moneyWords(d.original) : "not printed"
-                    }
-                  />
-                </td>
-                <td class="n hide-sm">
-                  <Fragment set:html={money(perPerson(d.gross, S))} />
-                </td>
+                <td class="n hide-sm">{money(perPerson(d.gross, S))}</td>
               </tr>
             </>
           ))}
           <tr class="sub">
             <th scope="row">
               <a href="/priorities/">
-                <Fragment set:html={depts.length - top.length} /> more
-                departments
+                {depts.length - top.length} more departments
               </a>
             </th>
             <td class="hide-sm"></td>
             <td class="n">
-              <Fragment
-                set:html={moneyWords(
-                  depts.slice(top.length).reduce((s, d) => s + d.gross, 0),
-                )}
-              />
+              {moneyWords(
+                depts.slice(top.length).reduce((s, d) => s + d.gross, 0),
+              )}
             </td>
             <td class="n">
-              <Fragment
-                set:html={moneyWords(
-                  depts
-                    .slice(top.length)
-                    .reduce((s, d) => s + (d.original || 0), 0),
-                )}
-              />
+              {moneyWords(
+                depts
+                  .slice(top.length)
+                  .reduce((s, d) => s + (d.original || 0), 0),
+              )}
             </td>
             <td class="n hide-sm">
-              <Fragment
-                set:html={money(
-                  perPerson(
-                    depts.slice(top.length).reduce((s, d) => s + d.gross, 0),
-                    S,
-                  ),
-                )}
-              />
+              {money(
+                perPerson(
+                  depts.slice(top.length).reduce((s, d) => s + d.gross, 0),
+                  S,
+                ),
+              )}
             </td>
           </tr>
         </tbody>
         <tfoot>
           <tr class="total">
-            <th scope="row">
-              All <Fragment set:html={depts.length} /> departments
-            </th>
+            <th scope="row">All {depts.length} departments</th>
             <td class="hide-sm"></td>
+            <td class="n">{moneyWords(total)}</td>
             <td class="n">
-              <Fragment set:html={moneyWords(total)} />
+              {moneyWords(depts.reduce((s, d) => s + (d.original || 0), 0))}
             </td>
-            <td class="n">
-              <Fragment
-                set:html={moneyWords(
-                  depts.reduce((s, d) => s + (d.original || 0), 0),
-                )}
-              />
-            </td>
-            <td class="n hide-sm">
-              <Fragment set:html={money(perPerson(total, S))} />
-            </td>
+            <td class="n hide-sm">{money(perPerson(total, S))}</td>
           </tr>
         </tfoot>
       </table>

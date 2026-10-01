@@ -1,19 +1,20 @@
 ---
 import Caveat from "./Caveat.astro";
-const { pagehead, f, esc, seo, icon, cat, results, federalSummary, D } =
-  Astro.props;
+import PageHead from "./PageHead.astro";
+import { icon } from "../../lib/icons.mjs";
+import FederalSummary from "./FederalSummary.astro";
+import PatternResults from "./PatternResults.astro";
+const { f, seo, cat, D } = Astro.props;
 ---
 
-<Fragment
-  set:html={await pagehead({
-    crumbs: [
-      ["/", "Home"],
-      ["/flags/", "Patterns"],
-      [null, f.title],
-    ],
-    title: esc(f.title),
-    lede: esc(f.short),
-  })}
+<PageHead
+  crumbs={[
+    ["/", "Home"],
+    ["/flags/", "Patterns"],
+    [null, f.title],
+  ]}
+  title={f.title}
+  lede={f.short}
 />
 <section class="section">
   <div class="wrap">
@@ -34,27 +35,23 @@ const { pagehead, f, esc, seo, icon, cat, results, federalSummary, D } =
           </a>
         </p>
       </div>
-      <div>{<Caveat text={esc(cat.caveat)} />}</div>
+      <div>
+        <Caveat text={cat.caveat} />
+      </div>
     </div>
-    <Fragment set:html={results} />
-    <Fragment
-      set:html={
-        f.data.some((d) =>
-          [
-            "fed_contract",
-            "fed_grant",
-            "canadabuys",
-            "pa_pss",
-            "pa_tp",
-          ].includes(d),
-        )
-          ? await federalSummary(
-              D,
-              "id IN (SELECT item_id FROM flags WHERE flag=?)",
-              f.id,
-            )
-          : ""
-      }
-    />
+    <PatternResults f={f} D={D} />
+    {f.data.some((d) =>
+      ["fed_contract", "fed_grant", "canadabuys", "pa_pss", "pa_tp"].includes(
+        d,
+      ),
+    ) ? (
+      <FederalSummary
+        D={D}
+        where={"id IN (SELECT item_id FROM flags WHERE flag=?)"}
+        args={[f.id]}
+      />
+    ) : (
+      ""
+    )}
   </div>
 </section>

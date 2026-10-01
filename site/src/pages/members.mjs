@@ -1,32 +1,14 @@
-import { renderComponent } from "../../lib/render.mjs";
+import { nameOrder } from "../../lib/page-format.mjs";
+import {
+  components_MembersIndex_astro as MembersIndex,
+  components_MemberPage_astro as MemberPage,
+  components_MinisterPage_astro as MinisterPage,
+} from "../../.render/components.mjs";
+import { renderAstro } from "../../lib/render.mjs";
 // MHAs and ministers: expense records as published, per member.
-import {
-  esc,
-  html,
-  icon,
-  Notes,
-  schedule,
-  receipt,
-  bar,
-  leaders,
-  spotError,
-} from "../../lib/html.mjs";
-import {
-  money,
-  moneyWords,
-  num,
-  pct,
-  date as fmtDate,
-} from "../../lib/format.mjs";
+import { Notes } from "../../lib/html.mjs";
+import { money, num, date as fmtDate } from "../../lib/format.mjs";
 import { desc, personLd, datasetLd, LICENSE } from "../seo.mjs";
-import { pagehead, caveat } from "../common.mjs";
-
-function nameOrder(n) {
-  // "Dinn, Paul" -> "Paul Dinn"
-  const m = /^([^,]+),\s*(.+)$/.exec(n || "");
-  return m ? `${m[2]} ${m[1]}` : n;
-}
-
 export async function members(D, R) {
   const out = [];
   const mhas =
@@ -56,23 +38,14 @@ export async function members(D, R) {
         perYear.get(b.person)[latestFull] - perYear.get(a.person)[latestFull],
     );
   const rmax = ranked[0] ? perYear.get(ranked[0].person)[latestFull] : 1;
-
-  const idxBody = await renderComponent("components_MembersIndex_astro", {
-    pagehead,
-    esc,
+  const idxBody = await renderAstro(MembersIndex, {
     latestFull,
-    schedule,
     ranked,
     D,
-    nameOrder,
-    bar,
     perYear,
     rmax,
-    money,
     mins,
-    num,
     mhas,
-    moneyWords,
   });
   out.push([
     "/members/",
@@ -139,24 +112,14 @@ export async function members(D, R) {
       .sort((a, b) => (b.amount || 0) - (a.amount || 0))
       .slice(0, 25);
     const phash = D.keyHash(m.person.toLowerCase());
-    const body = await renderComponent("components_MemberPage_astro", {
-      pagehead,
-      nameOrder,
+    const body = await renderAstro(MemberPage, {
       m,
-      esc,
-      num,
-      money,
       yrs,
       byYearCat,
-      schedule,
-      receipt,
       vendors,
       D,
       big,
-      fmtDate,
       phash,
-      icon,
-      spotError,
     });
     const nm = nameOrder(m.person);
     const latestYr = yrs.includes(latestFull) ? latestFull : yrs[0];
@@ -204,21 +167,12 @@ export async function members(D, R) {
       const x = JSON.parse(c.extra || "{}");
       for (const k of Object.keys(cats)) cats[k] += x[k] || 0;
     }
-    const body = await renderComponent("components_MinisterPage_astro", {
-      pagehead,
+    const body = await renderAstro(MinisterPage, {
       m,
-      esc,
-      fmtDate,
-      num,
-      money,
       depts,
-      leaders,
       cats,
       payroll,
-      schedule,
       claims,
-      receipt,
-      spotError,
     });
     out.push([
       `/ministers/${D.slug(m.person)}/`,

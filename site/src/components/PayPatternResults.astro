@@ -1,36 +1,41 @@
 ---
-const { schedule, f, rows, D, esc, num, money } = Astro.props;
+import Schedule from "./Schedule.astro";
+import { num, money } from "../../lib/format.mjs";
+const { f, rows, D } = Astro.props;
 ---
 
 <p>
   Counted by employer, job title and year. The government's lists name each
   person; this page does not repeat the names.
 </p>
-<Fragment
-  set:html={await schedule({
-    cols: [
-      {
-        label: "Employer and job title",
-      },
-      {
-        label: "Year",
-      },
-      {
-        label: "People",
-        num: true,
-      },
-      {
-        label: f.id === "severance" ? "Severance" : "Overtime",
-        num: true,
-      },
-    ],
-    rows: rows.slice(0, 120).map((s) => ({
-      cells: [
-        `<a href="/pay/${D.slug(s.x.employer)}/">${esc(s.x.employer)}</a><span class="meta">${esc(s.x.title)}</span>`,
-        esc(s.x.year),
-        num(s.x.people),
-        money(s.value),
-      ],
-    })),
-  })}
-/>
+<>
+  <Schedule>
+    <thead>
+      <tr>
+        <th scope="col">Employer and job title</th>
+        <th scope="col">Year</th>
+        <th scope="col" class="n">
+          People
+        </th>
+        <th scope="col" class="n">
+          {f.id === "severance" ? "Severance" : "Overtime"}
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      {rows.slice(0, 120).map((s) => (
+        <tr>
+          <th scope="row">
+            <>
+              <a href={"/pay/" + D.slug(s.x.employer) + "/"}>{s.x.employer}</a>
+              <span class="meta">{s.x.title}</span>
+            </>
+          </th>
+          <td>{s.x.year}</td>
+          <td class="n">{num(s.x.people)}</td>
+          <td class="n">{money(s.value)}</td>
+        </tr>
+      ))}
+    </tbody>
+  </Schedule>
+</>

@@ -1,0 +1,21 @@
+---
+import { words } from "../../lib/budget-format.mjs";
+import BudgetUnit from "./BudgetUnit.astro";
+const { value, extra = "" } = Astro.props;
+---
+
+{value == null ? (
+  <td class={`n muted${extra}`}>
+    not yet
+    <span class="unit" data-s="">
+      {" "}
+      published
+    </span>
+  </td>
+) : (
+  <td class={`n${value < 0 ? " neg" : ""}${extra}`}>
+    {value < 0 && "("}
+    <BudgetUnit text={words(value)} />
+    {value < 0 && ")"}
+  </td>
+)}

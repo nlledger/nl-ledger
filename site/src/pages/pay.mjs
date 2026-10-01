@@ -1,22 +1,15 @@
-import { renderComponent } from "../../lib/render.mjs";
+import {
+  components_PayIndex_astro as PayIndex,
+  components_EmployerPayPage_astro as EmployerPayPage,
+} from "../../.render/components.mjs";
+import { renderAstro } from "../../lib/render.mjs";
 // Public sector pay over $100,000 (the compensation disclosure lists), by employer and year.
 // No page per person: the lists are shown the way the government publishes them.
 import { card, cardAmount, organisationCard } from "../../lib/share-card.mjs";
-import {
-  esc,
-  html,
-  icon,
-  Notes,
-  schedule,
-  receipt,
-  bar,
-  leaders,
-} from "../../lib/html.mjs";
-import { money, moneyWords, num, pct } from "../../lib/format.mjs";
+import { Notes } from "../../lib/html.mjs";
+import { moneyWords, num } from "../../lib/format.mjs";
 import { desc, clip, datasetLd, LICENSE } from "../seo.mjs";
-import { pagehead, caveat } from "../common.mjs";
 import { payData } from "../paydata.mjs";
-
 export async function pay(D, R) {
   const out = [];
   const { emp, years, latest, grid, employers } = payData(D);
@@ -29,19 +22,14 @@ export async function pay(D, R) {
   const sevPeople = grp("severance").reduce((s, x) => s + x.people, 0);
   const sevAmt = grp("severance").reduce((s, x) => s + x.severance, 0);
   const broken = D.issues.filter((i) => i.source === "Compensation disclosure");
-  const idx = await renderComponent("components_PayIndex_astro", {
-    pagehead,
-    num,
+  const idx = await renderAstro(PayIndex, {
     grid,
     latest,
-    esc,
     otPeople,
-    moneyWords,
     otAmt,
     sevAmt,
     sevPeople,
     broken,
-    schedule,
     years,
     emp,
     D,
@@ -81,28 +69,20 @@ export async function pay(D, R) {
       ],
     },
   ]);
-
   for (const e of emp) {
     const notes = new Notes();
     const { perYear, missing, failures, coverage, top, titles, src, bh } =
       employers.find((x) => x.buyer === e.buyer);
-    const body = await renderComponent("components_EmployerPayPage_astro", {
-      pagehead,
+    const body = await renderAstro(EmployerPayPage, {
       e,
-      esc,
       perYear,
       src,
       coverage,
-      schedule,
       years,
       grid,
-      num,
-      moneyWords,
       titles,
-      money,
       top,
       bh,
-      icon,
     });
     const ly = perYear[perYear.length - 1];
     const g = grid.get(e.buyer)[ly];

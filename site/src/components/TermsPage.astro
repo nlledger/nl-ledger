@@ -1,16 +1,15 @@
 ---
-const { pagehead, SITE } = Astro.props;
+import PageHead from "./PageHead.astro";
+import { SITE } from "../../lib/format.mjs";
 ---
 
-<Fragment
-  set:html={await pagehead({
-    crumbs: [
-      ["/", "Home"],
-      [null, "Terms of use"],
-    ],
-    title: "Terms of use",
-    lede: `${SITE.name} is an independent, non-commercial project, in beta. It gathers records that governments have already made public and shows them in one place, each figure linked to the government file it came from. Using the site means accepting these terms.`,
-  })}
+<PageHead
+  crumbs={[
+    ["/", "Home"],
+    [null, "Terms of use"],
+  ]}
+  title={"Terms of use"}
+  lede={`${SITE.name} is an independent, non-commercial project, in beta. It gathers records that governments have already made public and shows them in one place, each figure linked to the government file it came from. Using the site means accepting these terms.`}
 />
 <section class="section">
   <div class="wrap prose">
@@ -60,28 +59,25 @@ const { pagehead, SITE } = Astro.props;
     <p>
       The site is provided as is. Government records contain errors and change
       after publication, and reading them automatically adds its own mistakes.{" "}
-      <Fragment set:html={SITE.name} /> makes no promise that any figure is
-      complete, accurate or current. Before relying on a figure, check it
-      against the government record it links to; the government's own record is
-      the authority.
+      {SITE.name} makes no promise that any figure is complete, accurate or
+      current. Before relying on a figure, check it against the government
+      record it links to; the government's own record is the authority.
     </p>
     <h2>Limits of responsibility</h2>
     <p>
-      To the extent the law allows, the people who make{" "}
-      <Fragment set:html={SITE.name} /> are not responsible for any loss or harm
-      from using the site, from relying on its figures, or from what anyone else
-      does with them. This includes the government files and other websites the
-      site links to, which their owners control.
+      To the extent the law allows, the people who make {SITE.name} are not
+      responsible for any loss or harm from using the site, from relying on its
+      figures, or from what anyone else does with them. This includes the
+      government files and other websites the site links to, which their owners
+      control.
     </p>
     <h2>Corrections</h2>
     <p>
       Errors are corrected when they are reported. Send them through the note
       box at the foot of any page or to{" "}
-      <a href={"mailto:" + SITE.corrections}>
-        <Fragment set:html={SITE.corrections} />
-      </a>
-      , with the page and what is wrong. The{" "}
-      <a href="/corrections/">Corrections page</a> lists what has been changed.
+      <a href={"mailto:" + SITE.corrections}>{SITE.corrections}</a>, with the
+      page and what is wrong. The <a href="/corrections/">Corrections page</a>{" "}
+      lists what has been changed.
     </p>
     <h2>Using what is here</h2>
     <ul>

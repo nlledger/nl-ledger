@@ -1,5 +1,6 @@
 ---
-const { id, RECEIPT_ASSUMPTIONS, value, error, button } = Astro.props;
+import { RECEIPT_ASSUMPTIONS } from "../../lib/receipt.mjs";
+const { id, value = "", error = "", button = "Update" } = Astro.props;
 ---
 
 <form
@@ -10,7 +11,7 @@ const { id, RECEIPT_ASSUMPTIONS, value, error, button } = Astro.props;
 >
   <label for={id}>Yearly employment income</label>
   <p class="small receipt-help" id={id + "-help"}>
-    <Fragment set:html={RECEIPT_ASSUMPTIONS} />
+    {RECEIPT_ASSUMPTIONS}
   </p>
   <div class="field-row">
     <span class="pre" aria-hidden="true">

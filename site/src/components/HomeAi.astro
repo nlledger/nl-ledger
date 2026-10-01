@@ -1,5 +1,7 @@
 ---
-const { num, R, icon, EXAMPLE, fmtDate } = Astro.props;
+import { num, date as fmtDate } from "../../lib/format.mjs";
+import { icon } from "../../lib/icons.mjs";
+const { R, EXAMPLE } = Astro.props;
 ---
 
 <section class="section ai-home" id="ask-ai" aria-labelledby="ai-h">
@@ -9,10 +11,9 @@ const { num, R, icon, EXAMPLE, fmtDate } = Astro.props;
         <h2 id="ai-h">Ask your own AI anything</h2>
         <p class="lede">
           These pages show a small part of the records. Connect Claude, ChatGPT
-          or another AI assistant to all{" "}
-          <Fragment set:html={num(R.itemCount)} /> of them and ask whatever you
-          want to know, in your own words. It answers from the records and links
-          each figure to its source.
+          or another AI assistant to all {num(R.itemCount)} of them and ask
+          whatever you want to know, in your own words. It answers from the
+          records and links each figure to its source.
         </p>
       </div>
       <div class="cta">

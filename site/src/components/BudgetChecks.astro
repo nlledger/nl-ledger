@@ -1,5 +1,6 @@
 ---
-const { K, money, leaders } = Astro.props;
+import { money } from "../../lib/format.mjs";
+const { K } = Astro.props;
 ---
 
 <section class="section" id="checks">
@@ -25,15 +26,11 @@ const { K, money, leaders } = Astro.props;
                 <li>
                   {f.what.split(":")[0]}, {f.year}: the Report's Original column
                   adds to{" "}
-                  <Fragment
-                    set:html={
-                      f.a == null
-                        ? "nothing, because it prints no detail for the department"
-                        : money(f.a)
-                    }
-                  />
-                  ; the Estimates say <Fragment set:html={money(f.b)} />. The
-                  Estimates' figure is used.
+                  {f.a == null
+                    ? "nothing, because it prints no detail for the department"
+                    : money(f.a)}
+                  ; the Estimates say {money(f.b)}. The Estimates' figure is
+                  used.
                 </li>
               </>
             ))}
@@ -44,35 +41,46 @@ const { K, money, leaders } = Astro.props;
       )}
     </div>
     <div>
-      <Fragment
-        set:html={leaders([
-          {
-            label: "Subtotals of the Report's cash statement that recompute",
-            value: `${K.statement} of ${K.statement_n}`,
-          },
-          {
-            label: "Years the departments add to the Report's total",
-            value: `${K.report.ok} of ${K.report.n}`,
-          },
-          {
-            label: "Years the departments add to the Estimates' total",
-            value: `${K.estimates.ok} of ${K.estimates.n}`,
-          },
-          {
-            label: "Budget figures the same in the Report and the budget",
-            value: `${K.original} of ${K.original_n}`,
-          },
-          {
-            label:
-              "Department budgets the same in the Report and the Estimates",
-            value: `${K.departments.ok} of ${K.departments.n}`,
-          },
-          {
-            label: "Public Accounts totals that recompute",
-            value: `${K.accounts.ok} of ${K.accounts.n}`,
-          },
-        ])}
-      />
+      <dl class="leaders">
+        <div>
+          <dt>
+            <span>Subtotals of the Report's cash statement that recompute</span>
+          </dt>
+          <dd>{`${K.statement} of ${K.statement_n}`}</dd>
+        </div>
+        <div>
+          <dt>
+            <span>Years the departments add to the Report's total</span>
+          </dt>
+          <dd>{`${K.report.ok} of ${K.report.n}`}</dd>
+        </div>
+        <div>
+          <dt>
+            <span>Years the departments add to the Estimates' total</span>
+          </dt>
+          <dd>{`${K.estimates.ok} of ${K.estimates.n}`}</dd>
+        </div>
+        <div>
+          <dt>
+            <span>Budget figures the same in the Report and the budget</span>
+          </dt>
+          <dd>{`${K.original} of ${K.original_n}`}</dd>
+        </div>
+        <div>
+          <dt>
+            <span>
+              Department budgets the same in the Report and the Estimates
+            </span>
+          </dt>
+          <dd>{`${K.departments.ok} of ${K.departments.n}`}</dd>
+        </div>
+        <div>
+          <dt>
+            <span>Public Accounts totals that recompute</span>
+          </dt>
+          <dd>{`${K.accounts.ok} of ${K.accounts.n}`}</dd>
+        </div>
+      </dl>
     </div>
   </div>
 </section>

@@ -1,0 +1,12 @@
+---
+import BudgetReceipt from "./BudgetReceipt.astro";
+const { pairs } = Astro.props;
+---
+
+<span class="mobile-sources show-sm">
+  {pairs
+    .filter(([source]) => source)
+    .map(([source, label]) => (
+      <BudgetReceipt source={source} label={label} />
+    ))}
+</span>

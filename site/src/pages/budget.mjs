@@ -1,20 +1,15 @@
-import { renderComponent } from "../../lib/render.mjs";
+import {
+  components_BudgetPage_astro as BudgetPage,
+  components_BudgetMethod_astro as BudgetMethod,
+} from "../../.render/components.mjs";
+import { renderAstro } from "../../lib/render.mjs";
 // Budget against actual: what the House was given with the budget, what departments spent, and how
 // the year ended (surplus or deficit, net debt). Two bases of accounting, shown side by side and never
 // added together. Figures come from site/src/budgetdata.mjs.
 import { card, cardAmount } from "../../lib/share-card.mjs";
-import {
-  esc,
-  html,
-  icon,
-  Notes,
-  leaders,
-  bar,
-  receipt,
-} from "../../lib/html.mjs";
-import { money, moneyWords, num, SITE } from "../../lib/format.mjs";
+import { Notes } from "../../lib/html.mjs";
+import { money, moneyWords } from "../../lib/format.mjs";
 import { desc, datasetLd, LICENSE } from "../seo.mjs";
-import { pagehead } from "../common.mjs";
 import { DOCS } from "../budgetdata.mjs";
 import { LICENCES, DOCUMENT_LICENCE } from "../licences.mjs";
 
@@ -27,28 +22,8 @@ export const words = (v) =>
       : moneyWords(Math.abs(v));
 // A figure in a schedule: a negative one in parentheses (red ink, by the `neg` class).
 // In a `tight` schedule on a phone the unit is set as one letter ("$11.01B"), so three figures fit beside a label.
-const unit = (t) =>
-  t.replace(
-    / (billion|million)$/,
-    (m, u) => `<span class="unit" data-s="${u[0].toUpperCase()}">${m}</span>`,
-  );
-const cell = (v, extra = "") =>
-  v == null
-    ? `<td class="n muted${extra}">not yet<span class="unit" data-s=""> published</span></td>`
-    : `<td class="n${v < 0 ? " neg" : ""}${extra}">${v < 0 ? `(${unit(words(v))})` : unit(words(v))}</td>`;
-const share = (v) =>
-  v == null
-    ? ""
-    : `${v < 0 ? "(" : ""}${(Math.abs(v) * 100).toFixed(1)}%${v < 0 ? ")" : ""}`;
+
 const march = (fy) => `31 March ${Number(fy.slice(0, 4)) + 1}`;
-const rcpt = (s) => (s ? receipt(s.url, s.page, DOCS[s.doc]) : "");
-const sourceAction = (source, label) =>
-  source ? receipt(source.url, source.page, DOCS[source.doc], label) : "";
-const mobileSources = (pairs) =>
-  `<span class="mobile-sources show-sm">${pairs
-    .map(([s, label]) => sourceAction(s, label))
-    .filter(Boolean)
-    .join("")}</span>`;
 const docName = (s, fy) =>
   `${DOCS[s.doc]}${s.doc === "public_accounts" ? ` for the year ended ${march(fy)}` : ` ${fy}`}`;
 
@@ -88,12 +63,8 @@ export async function coverLedger(y, notes) {
       })
     : "";
   const deficit = a.balance.actual < 0;
-  const item = (label, fig, note) =>
-    `<div><dt>${label}</dt><dd><span class="fig">${fig}</span><span class="note">${note}</span></dd></div>`;
-  return await renderComponent("components_BudgetCoverLedger_astro", {
+  return {
     y,
-    item,
-    moneyWords,
     c,
     citeBudget,
     citeSpent,
@@ -102,11 +73,9 @@ export async function coverLedger(y, notes) {
     citeBal,
     citeDebt,
     pp,
-    money,
     citePP,
     march,
-    icon,
-  });
+  };
 }
 
 // ---- one year's page
@@ -151,53 +120,14 @@ async function yearPage(D, B, y, isLatest) {
         label: `${docName(pp.source, fy)}, financial statement discussion and analysis: net debt per capita ${money(pp.value)}`,
       })
     : "";
-
-  const lede = `The budget for ${esc(fy)} planned ${words(c.gross.budget)} of spending by government departments${citeBudget}. They spent ${words(c.gross.actual)}${citeSpent}, ${words(c.difference)} ${overUnder(c.difference)} the plan. Across the whole government the year ended with a ${deficit ? "deficit" : "surplus"} of ${words(a.balance.actual)}${citeOps} and net debt of ${words(a.net_debt.actual)}${citeDebt}.`;
-
   const published = B.years.filter(
     (x) => x.spent_published && x.accounts.published,
   );
-  const yearNav = html`<nav aria-label="Fiscal year">
-    <ul class="chips">
-      ${published.map((x) => `<li><a href="${x === B.latest ? "/budget/" : `/budget/${esc(x.year)}/`}"${x === y ? ' aria-current="page"' : ""}>${esc(x.year)}</a></li>`)}
-    </ul>
-  </nav>`;
-
   // The province's own cash statement: budgeted, spent, the difference.
   const need = {
     budget: -c.cash_balance.budget,
     actual: -c.cash_balance.actual,
   }; // a requirement is printed as a negative contribution
-  const cashRow = async (label, x, cls = "") =>
-    await renderComponent("components_StatementRow_astro", {
-      label,
-      x,
-      cls,
-      cell,
-    });
-  const cashTable = await renderComponent("components_CashStatement_astro", {
-    c,
-    cell,
-    need,
-    DOCS,
-    fy,
-    rcpt,
-  });
-
-  const acctRow = (label, x, cls = "") =>
-    html`<tr${cls ? ` class="${cls}"` : ""}><th scope="row">${label}</th>${cell(x.budget)}${cell(x.actual)}${cell(x.actual - x.budget)}</tr>`;
-  const acctTable = await renderComponent("components_AccrualStatement_astro", {
-    a,
-    cell,
-    march,
-    fy,
-    citeDebtBudget,
-    DOCS,
-    rcpt,
-    pp,
-    money,
-    citePP,
-  });
 
   // Departments, largest difference first. A department links to its page when it has one under this name.
   const pages = new Set(
@@ -205,39 +135,13 @@ async function yearPage(D, B, y, isLatest) {
   );
   const depts = y.departments.filter((d) => d.spent != null);
   const maxDiff = Math.max(...depts.map((d) => Math.abs(d.difference ?? 0)), 1);
-  const dv = (d) => {
-    if (d.difference == null) return "";
-    const w = Math.max(0.6, (Math.abs(d.difference) / maxDiff) * 50);
-    return `<span class="dv" aria-hidden="true"><span class="${d.difference < 0 ? "under" : "over"}" style="inline-size:${w.toFixed(2)}%"></span></span>`;
-  };
   const fromReport = depts.filter((d) => d.budget_doc === "report");
-  const deptTable = await renderComponent(
-    "components_DepartmentStatement_astro",
-    {
-      depts,
-      pages,
-      esc,
-      words,
-      mobileSources,
-      dv,
-      cell,
-      share,
-      sourceAction,
-      c,
-      fromReport,
-    },
-  );
-
   // Year by year (on the main page only).
   const maxYear = Math.max(
     ...B.years.map((x) =>
       Math.max(x.cash.gross.budget || 0, x.cash.gross.actual || 0),
     ),
   );
-  const yearLink = (x) =>
-    x.spent_published && x.accounts.published
-      ? `<a href="${x === B.latest ? "/budget/" : `/budget/${esc(x.year)}/`}">${esc(x.year)}</a>`
-      : esc(x.year);
   const restated = B.years.filter(
     (x) =>
       x.accounts.balance.restated != null ||
@@ -245,49 +149,33 @@ async function yearPage(D, B, y, isLatest) {
   );
   const accord = B.years.find((x) => x.year === "2019-20")?.accounts.balance
     .source;
-  const trend = !isLatest
-    ? ""
-    : await renderComponent("components_BudgetTrends_astro", {
-        B,
-        yearLink,
-        mobileSources,
-        bar,
-        maxYear,
-        cell,
-        share,
-        rcpt,
-        unit,
-        words,
-        money,
-        accord,
-        restated,
-        esc,
-      });
-
   const K = B.checks;
-  const checks = !isLatest
-    ? ""
-    : await renderComponent("components_BudgetChecks_astro", {
-        K,
-        money,
-        leaders,
-      });
-
-  const body = await renderComponent("components_BudgetPage_astro", {
-    pagehead,
+  const body = await renderAstro(BudgetPage, {
     isLatest,
     fy,
-    esc,
-    lede,
-    yearNav,
-    cashTable,
-    acctTable,
-    march,
-    deptTable,
-    trend,
-    checks,
+    deficit,
+    citeBudget,
+    citeSpent,
+    citeOps,
+    citeDebt,
+    published,
+    maxDiff,
+    B,
+    y,
+    c,
+    need,
+    a,
+    citeDebtBudget,
+    pp,
+    citePP,
+    depts,
+    pages,
+    fromReport,
+    maxYear,
+    accord,
+    restated,
+    K,
   });
-
   const d = c.difference;
   return {
     card: card(
@@ -342,16 +230,12 @@ async function methodPage(D, B) {
   });
   const pp = a.net_debt_per_person;
   const ownPP = a.net_debt.actual / D.stats.population.value;
-  const body = await renderComponent("components_BudgetMethod_astro", {
-    pagehead,
+  const body = await renderAstro(BudgetMethod, {
     report,
-    esc,
     fy,
-    money,
     c,
     a,
     pp,
-    num,
     D,
     ownPP,
     K,
@@ -359,7 +243,6 @@ async function methodPage(D, B) {
     DOCS,
     LICENCES,
     DOCUMENT_LICENCE,
-    icon,
   });
   return [
     "/method/budget/",
@@ -378,7 +261,6 @@ async function methodPage(D, B) {
     },
   ];
 }
-
 export async function budget(D, R, B) {
   const out = [];
   for (const y of B.years.filter(

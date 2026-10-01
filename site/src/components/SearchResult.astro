@@ -1,38 +1,46 @@
 ---
-const {
-  party,
-  who,
-  it,
-  esc,
-  amountText,
-  query,
-  flags,
+import { amountText } from "../../lib/page-format.mjs";
+import RecordParty from "./RecordParty.astro";
+import QueryMark from "./QueryMark.astro";
+import {
+  DATASET_LABEL,
+  BUYER_LABEL,
+  date as fmtDate,
+  AMOUNT_LABEL,
+} from "../../lib/format.mjs";
+import BodyLink from "./BodyLink.astro";
+import ReceiptLink from "./ReceiptLink.astro";
+import {
   isFederal,
   amountBasis,
-  AMOUNT_LABEL,
   federalStatement,
   moneyLimit,
-  meta,
-  receipt,
-} = Astro.props;
+} from "../../lib/federal.mjs";
+const { it, flags, links } = Astro.props;
+const party =
+  it.s && it.ds !== "sunshine"
+    ? ["fed_grant", "pa_tp"].includes(it.ds)
+      ? "Recipient"
+      : it.ds === "mha"
+        ? "Paid to"
+        : "Supplier"
+    : "";
 ---
 
 <li class="result">
   <span class="who">
     {party ? (
       <>
-        <span class="party-label">
-          <Fragment set:html={party} />:{" "}
-        </span>
+        <span class="party-label">{party}: </span>
       </>
     ) : (
       ""
     )}
-    <Fragment set:html={who(it) || esc(it.d)} />
+    <RecordParty it={it} />
   </span>
   <span class="amt">
     {amountText(it)}
-    <Fragment set:html={query(it.f, flags)} />
+    <QueryMark flags={it.f} catalog={flags} />
     <span class="amount-type">
       {isFederal(it)
         ? amountBasis(it)
@@ -56,10 +64,55 @@ const {
     ""
   )}
   <div class="meta">
-    <Fragment set:html={meta.join("")} />
+    {[
+      <>
+        <a
+          class="tag"
+          href={"/sources/#" + it.ds}
+          title="Where these records come from"
+        >
+          {DATASET_LABEL[it.ds] || it.ds}
+        </a>
+      </>,
+      it.b ? (
+        <>
+          <span>
+            {BUYER_LABEL[it.ds] || "Public body"}:{" "}
+            <BodyLink
+              name={it.b}
+              links={links}
+              sunshine={it.ds === "sunshine"}
+            />
+          </span>
+        </>
+      ) : (
+        ""
+      ),
+      it.p && it.s ? (
+        <>
+          <span>{it.p}</span>
+        </>
+      ) : (
+        ""
+      ),
+      it.t || it.fy ? (
+        <>
+          <span>{fmtDate(it.t) || it.fy}</span>
+        </>
+      ) : (
+        ""
+      ),
+      it.m ? (
+        <>
+          <span>{it.m}</span>
+        </>
+      ) : (
+        ""
+      ),
+    ].filter(Boolean)}
   </div>
   <div class="result-actions">
     <a href={"/item/" + it.i + "/"}>Record</a>
-    <Fragment set:html={receipt(it.u, it.g, it.l)} />
+    <ReceiptLink url={it.u} page={it.g} locator={it.l} />
   </div>
 </li>

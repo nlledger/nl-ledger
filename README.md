@@ -139,3 +139,5 @@ The data is not covered by that licence. Each record stays under the licence of 
 The site's Sources page lists the licence for each source.
 
 Reuse of any figure follows the licence of the source it links to.
+
+Compare two frozen builds and local Worker requests with the [rendering comparison scripts](site/scripts/compare/README.md).

@@ -1,0 +1,71 @@
+---
+import Schedule from "./Schedule.astro";
+import {
+  FEDERAL_RULE,
+  SCOPE_LABEL,
+  REVIEW_LABEL,
+  periodText,
+  nativeAmount,
+  reportedBreakdown,
+} from "../../lib/federal.mjs";
+import { datasetLabel } from "../common.mjs";
+const { D, where, args = [] } = Astro.props;
+const groups = reportedBreakdown(
+  D.q(`SELECT * FROM items WHERE level='federal' AND (${where})`, ...args),
+);
+---
+
+{groups.length > 0 && (
+  <>
+    <>
+      <p class="small">{FEDERAL_RULE}</p>
+    </>
+    <>
+      <Schedule>
+        <caption>
+          Federal reported values by source and location evidence
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Source and evidence</th>
+            <th scope="col" class="n">
+              Records
+            </th>
+            <th scope="col" class="n">
+              Native value
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {groups.map((g) => (
+            <tr>
+              <th scope="row">
+                <>
+                  {datasetLabel(g.source)}
+                  <>
+                    <span class="meta">
+                      {g.amount_kind}; {SCOPE_LABEL[g.scope_status]};{" "}
+                      {g.scope_review_state
+                        ? REVIEW_LABEL[g.scope_review_state] + "; "
+                        : ""}
+                      {g.counting_basis}. Periods as reported:{" "}
+                      {periodText(g.periods)}. {g.missing_amounts} amounts not
+                      stated; {g.zero_amounts} published zeros.
+                    </span>
+                  </>
+                </>
+              </th>
+              <td class="n">{String(g.records)}</td>
+              <td class="n">
+                {nativeAmount(
+                  g.records === g.missing_amounts ? null : g.value,
+                  g.currency,
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </Schedule>
+    </>
+  </>
+)}

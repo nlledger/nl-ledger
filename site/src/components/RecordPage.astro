@@ -1,33 +1,29 @@
 ---
-const {
-  esc,
-  title,
-  it,
-  standing,
-  amountText,
-  isFederal,
-  amountBasis,
-  AMOUNT_LABEL,
-  federalStatement,
-  moneyLimit,
+import { amountText } from "../../lib/page-format.mjs";
+import Standing from "./Standing.astro";
+import {
   money,
   perPerson,
-  stats,
   workTime,
-  leaders,
-  facts,
-  href,
-  pdf,
-  icon,
-  x,
+  date as fmtDate,
+  DATASET_LABEL,
+  AMOUNT_LABEL,
+} from "../../lib/format.mjs";
+import RecordParty from "./RecordParty.astro";
+import BodyLink from "./BodyLink.astro";
+import { icon } from "../../lib/icons.mjs";
+import ReceiptLink from "./ReceiptLink.astro";
+import FlagItem from "./FlagItem.astro";
+import SpotError from "./SpotError.astro";
+import {
+  isFederal,
+  amountBasis,
+  federalStatement,
+  moneyLimit,
   REVIEW_LABEL,
-  receipt,
   nativeAmount,
-  fmtDate,
-  fl,
-  flagItem,
-  spotError,
-} = Astro.props;
+} from "../../lib/federal.mjs";
+const { title, it, stats, href, pdf, x, fl, links } = Astro.props;
 ---
 
 <header class="pagehead">
@@ -43,7 +39,7 @@ const {
     ) : (
       ""
     )}
-    <Fragment set:html={standing()} />
+    <Standing />
   </div>
 </header>
 <section class="section">
@@ -55,17 +51,13 @@ const {
           ? amountBasis(it)
           : AMOUNT_LABEL[it.ds] || "Published value"}
         .
-        <Fragment
-          set:html={
-            ["ppa", "fed_contract", "canadabuys"].includes(it.ds)
-              ? " This is a contract or award value, not the amount paid out."
-              : it.ds === "fed_grant"
-                ? " An agreement can cover several years; this is not the amount paid out."
-                : it.ds === "sunshine"
-                  ? " From the over-$100,000 list, rounded to $100 by the publisher."
-                  : ""
-          }
-        />
+        {["ppa", "fed_contract", "canadabuys"].includes(it.ds)
+          ? " This is a contract or award value, not the amount paid out."
+          : it.ds === "fed_grant"
+            ? " An agreement can cover several years; this is not the amount paid out."
+            : it.ds === "sunshine"
+              ? " From the over-$100,000 list, rounded to $100 by the publisher."
+              : ""}
       </p>
       {isFederal(it) ? (
         <>
@@ -75,25 +67,133 @@ const {
       ) : it.a ? (
         <>
           <p class="lede">
-            <Fragment
-              set:html={money(perPerson(it.a, stats), {
-                cents: true,
-              })}
-            />{" "}
-            per person in the province.{" "}
-            <Fragment set:html={workTime(it.a, stats)} /> of work at the median
-            full-time wage.
+            {money(perPerson(it.a, stats), {
+              cents: true,
+            })}{" "}
+            per person in the province. {workTime(it.a, stats)} of work at the
+            median full-time wage.
           </p>
         </>
       ) : (
         ""
       )}
-      <Fragment
-        set:html={leaders(facts).replace(
-          'class="leaders"',
-          'class="leaders facts"',
-        )}
-      />
+      <dl class="leaders facts">
+        {[
+          it.s
+            ? {
+                label:
+                  it.ds === "mha"
+                    ? "Paid to"
+                    : it.ds === "fed_grant" || it.ds === "pa_tp"
+                      ? "Recipient"
+                      : "Supplier",
+                value: <RecordParty it={it} />,
+              }
+            : null,
+          x.supplier_as_printed
+            ? { label: "Name as printed", value: x.supplier_as_printed }
+            : null,
+          it.p
+            ? {
+                label:
+                  it.ds === "sunshine"
+                    ? "Name as published"
+                    : it.ds === "mha"
+                      ? "Member"
+                      : "Minister",
+                value: it.p,
+              }
+            : null,
+          it.b
+            ? {
+                label: it.ds === "sunshine" ? "Employer" : "Public body",
+                value: (
+                  <BodyLink
+                    name={it.b}
+                    links={links}
+                    sunshine={it.ds === "sunshine"}
+                  />
+                ),
+              }
+            : null,
+          {
+            label:
+              it.ds === "fed_grant"
+                ? "Agreement start"
+                : it.ds === "canadabuys"
+                  ? "Award date"
+                  : it.ds === "sunshine"
+                    ? "Year"
+                    : "Date",
+            value:
+              it.ds === "sunshine"
+                ? String(it.t || "").slice(0, 4)
+                : fmtDate(it.t) || it.fy || "not printed",
+          },
+          it.m
+            ? {
+                label:
+                  it.ds === "mha"
+                    ? "Allowance"
+                    : it.ds === "fed_grant"
+                      ? "Program"
+                      : "Method",
+                value: it.m,
+              }
+            : null,
+          x.clause ? { label: "Clause cited", value: x.clause } : null,
+          x.reason ? { label: "Reason given", value: x.reason } : null,
+          x.limited_reason
+            ? { label: "Limited tendering reason", value: x.limited_reason }
+            : null,
+          x.original_value
+            ? { label: "Original value", value: money(x.original_value) }
+            : null,
+          x.contract_no
+            ? { label: "Contract number", value: x.contract_no }
+            : null,
+          x.term ? { label: "Term", value: x.term } : null,
+          x.district ? { label: "District", value: x.district } : null,
+          x.routes ? { label: "Flights", value: x.routes } : null,
+          x.unit ? { label: "Unit", value: x.unit } : null,
+          x.base != null
+            ? { label: "Base salary", value: money(x.base) }
+            : null,
+          x.overtime ? { label: "Overtime", value: money(x.overtime) } : null,
+          x.bonus ? { label: "Bonuses", value: money(x.bonus) } : null,
+          x.shift ? { label: "Shift premium", value: money(x.shift) } : null,
+          x.retro
+            ? { label: "Retroactive salary", value: money(x.retro) }
+            : null,
+          x.severance
+            ? { label: "Severance", value: money(x.severance) }
+            : null,
+          x.other && it.ds === "sunshine"
+            ? { label: "Other compensation", value: money(x.other) }
+            : null,
+          x.invoice ? { label: "Invoice", value: x.invoice } : null,
+          x.report_period
+            ? {
+                label: "Reported in",
+                value: `the report for ${x.report_period.replace(" to ", " to ")}`,
+              }
+            : null,
+          x.weeks ? { label: "Voucher weeks", value: x.weeks } : null,
+          x.amount_text
+            ? { label: "Price as printed", value: x.amount_text }
+            : null,
+          { label: "Record type", value: DATASET_LABEL[it.ds] || it.ds },
+        ]
+          .filter(Boolean)
+          .map((x) => (
+            <div class={x.cls}>
+              <dt>
+                <span>{x.label}</span>
+              </dt>
+              <dd>{x.value}</dd>
+            </div>
+          ))}
+      </dl>
     </div>
     <div>
       <div class="receipt">
@@ -101,10 +201,7 @@ const {
         <p>{it.l || ""}</p>
         <p>
           <a class="btn solo" href={href} rel="noopener">
-            <span>
-              Open the source{" "}
-              <Fragment set:html={pdf && it.g ? `at page ${esc(it.g)}` : ""} />
-            </span>{" "}
+            <span>Open the source {pdf && it.g ? `at page ${it.g}` : ""}</span>{" "}
             <Fragment set:html={icon("out")} />
           </a>
         </p>
@@ -138,23 +235,15 @@ const {
                 .map(([k, v]) => `${k.replaceAll("_", " ")}: ${v}`)
                 .join("; ") || "not stated"}
               .{" "}
-              <Fragment
-                set:html={
-                  x.location_conflict
-                    ? `Conflicting fields: ${esc(x.location_conflict)}.`
-                    : ""
-                }
-              />
+              {x.location_conflict
+                ? `Conflicting fields: ${x.location_conflict}.`
+                : ""}
             </p>
             <p class="small">
               How counted: {x.how_counted || "as published"}.{" "}
-              <Fragment
-                set:html={
-                  typeof x.amount_period === "string"
-                    ? `Financial period: ${esc(x.amount_period)}.`
-                    : `Start: ${esc(x.amount_period?.start || "not stated")}; end: ${esc(x.amount_period?.end || "not stated")}; reported: ${esc(x.amount_period?.reported || "not stated")}.`
-                }
-              />{" "}
+              {typeof x.amount_period === "string"
+                ? `Financial period: ${x.amount_period}.`
+                : `Start: ${x.amount_period?.start || "not stated"}; end: ${x.amount_period?.end || "not stated"}; reported: ${x.amount_period?.reported || "not stated"}.`}{" "}
               Amount: {x.amount_coverage || "not stated"}.
             </p>
             <ul class="prose small">
@@ -162,8 +251,10 @@ const {
                 <>
                   <li>
                     {e.field || "Evidence"}: {e.value}{" "}
-                    <Fragment
-                      set:html={receipt(e.source_url, null, e.locator)}
+                    <ReceiptLink
+                      url={e.source_url}
+                      page={null}
+                      locator={e.locator}
                     />
                   </li>
                 </>
@@ -204,12 +295,10 @@ const {
                           {r.supplier}: {nativeAmount(r.amount, "CAD")};
                           original {nativeAmount(r.original_value, "CAD")};
                           start {r.start}; procurement {r.procurement_id}.{" "}
-                          <Fragment
-                            set:html={receipt(
-                              r.source_url,
-                              null,
-                              `CSV line ${r.csv_line}`,
-                            )}
+                          <ReceiptLink
+                            url={r.source_url}
+                            page={null}
+                            locator={`CSV line ${r.csv_line}`}
                           />
                         </li>
                       </>
@@ -237,11 +326,9 @@ const {
                     :{r.supplier}; {r.buyer || "buyer not printed"};{" "}
                     {r.description}; contract {r.contract_no};{" "}
                     {fmtDate(r.award_date) || "date not printed"};
-                    <Fragment
-                      set:html={money(r.amount, {
-                        cents: true,
-                      })}
-                    />
+                    {money(r.amount, {
+                      cents: true,
+                    })}
                     ; {r.term || "term not printed"}; renewal:{" "}
                     {r.renewal || "not printed"}.{r.note}
                   </li>
@@ -257,13 +344,9 @@ const {
         <>
           <h3 style="margin-block:2rem .6rem">Patterns</h3>
           <ul class="flaglist">
-            <Fragment
-              set:html={fl.map((f) =>
-                flagItem(f, {
-                  method: true,
-                }),
-              )}
-            />
+            {fl.map((f) => (
+              <FlagItem f={f} method={true} />
+            ))}
           </ul>
         </>
       ) : (
@@ -273,5 +356,5 @@ const {
   </div>
 </section>
 <div class="wrap">
-  <Fragment set:html={spotError()} />
+  <SpotError />
 </div>

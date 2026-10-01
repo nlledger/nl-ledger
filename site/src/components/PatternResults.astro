@@ -1,0 +1,33 @@
+---
+import CompetitionPattern from "./CompetitionPattern.astro";
+import RepeatSoleSourcePattern from "./RepeatSoleSourcePattern.astro";
+import ConcentrationPattern from "./ConcentrationPattern.astro";
+import PayPattern from "./PayPattern.astro";
+import InvoicePattern from "./InvoicePattern.astro";
+import AllowancePattern from "./AllowancePattern.astro";
+import FlaggedItemsPattern from "./FlaggedItemsPattern.astro";
+const { f, D } = Astro.props;
+---
+
+{f.id === "no-competition" && <CompetitionPattern f={f} D={D} />}
+{f.id === "repeat-sole-source" && <RepeatSoleSourcePattern f={f} D={D} />}
+{["year-end", "dominant-supplier"].includes(f.id) && (
+  <ConcentrationPattern f={f} D={D} />
+)}
+{(f.id === "overtime-over-base" || f.id === "severance") && (
+  <PayPattern f={f} D={D} />
+)}
+{(f.id === "split-invoices" || f.id === "possible-duplicate") && (
+  <InvoicePattern f={f} D={D} />
+)}
+{f.id === "over-allowance" && <AllowancePattern f={f} D={D} />}
+{!(
+  f.id === "no-competition" ||
+  f.id === "repeat-sole-source" ||
+  ["year-end", "dominant-supplier"].includes(f.id) ||
+  f.id === "overtime-over-base" ||
+  f.id === "severance" ||
+  f.id === "split-invoices" ||
+  f.id === "possible-duplicate" ||
+  f.id === "over-allowance"
+) && <FlaggedItemsPattern f={f} D={D} />}
