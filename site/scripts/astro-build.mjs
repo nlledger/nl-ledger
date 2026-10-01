@@ -1,6 +1,7 @@
 // cf detects Astro and invokes `astro build`. Keep data, guardrails and Worker packaging in that build.
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { cpSync, mkdirSync, writeFileSync } from "node:fs";
 const cwd = fileURLToPath(new URL("../", import.meta.url));
 export function ledgerBuild() {
   return {
@@ -15,12 +16,33 @@ export function ledgerBuild() {
         execFileSync("./check.sh", [], { cwd, stdio: "inherit" });
       },
       "astro:build:done": () => {
+        // Vite discovers public files before config:setup builds dist. Copy the
+        // completed data build explicitly, including our _headers. The adapter
+        // sees the explicit /_astro policy and leaves it intact.
+        cpSync(`${cwd}dist`, `${cwd}.astro-build/client`, { recursive: true });
+        execFileSync(
+          process.execPath,
+          ["check-astro-edges.mjs", "--built-assets"],
+          {
+            cwd,
+            stdio: "inherit",
+          },
+        );
         // The adapter has built the Worker and assets. cf-wrangler writes the Build Output Specification.
         execFileSync("./node_modules/.bin/cf-wrangler", ["build"], {
           cwd,
           stdio: "inherit",
           env: { ...process.env, NL_LEDGER_ASTRO_BUILT: "1" },
         });
+        // Plain Wrangler must never select last build's deployment settings.
+        // cf packages via wrangler.config.ts and does not use this redirect.
+        mkdirSync(`${cwd}.wrangler/deploy`, { recursive: true });
+        writeFileSync(
+          `${cwd}.wrangler/deploy/config.json`,
+          JSON.stringify({
+            configPath: "../../wrangler.jsonc",
+          }),
+        );
       },
     },
   };

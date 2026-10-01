@@ -35,8 +35,8 @@ await build({
             sourcemap: "external",
             internalURL: "astro/compiler-runtime",
             resultScopedSlot: true,
-            // Ignore formatting indentation; intentional inline spaces are explicit in the templates.
-            compact: "jsx",
+            // Preserve inline separators for copied text and reading order.
+            compact: false,
             resolvePath: (specifier) => specifier,
           });
           return {
