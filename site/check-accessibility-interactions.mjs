@@ -40,7 +40,8 @@ export async function checkInteractions(page, base) {
     );
     await page.keyboard.press("Enter");
     // All menu links can be traversed, then the panel closes as focus continues into the page.
-    for (let i = 0; i < 10; i++) await page.keyboard.press("Tab");
+    const menuLinks = await page.locator("#phone-nav a").count();
+    for (let i = 0; i <= menuLinks; i++) await page.keyboard.press("Tab");
     assert.equal(await page.locator("[data-menu]").getAttribute("open"), null);
     const input = page.getByLabel("Yearly employment income");
     await input.focus();

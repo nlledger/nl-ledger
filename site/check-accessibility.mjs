@@ -88,6 +88,7 @@ try {
     .locator('main a[href^="/body/"]')
     .first()
     .getAttribute("href");
+  assert.ok(body, "No public body link on /bodies/ to audit");
   routes.push(body);
   await page.goto(base + "/search/?q=snow+clearing");
   const item = await page
@@ -167,7 +168,12 @@ try {
         if (geometry.overflow > 1 || geometry.clipped.length)
           failures.push({ route, width, theme, reflow: geometry });
       }
-  report.push({ interactions: await checkInteractions(page, base) });
+  // An interaction failure is recorded with the scan results instead of discarding them.
+  try {
+    report.push({ interactions: await checkInteractions(page, base) });
+  } catch (e) {
+    failures.push({ interactions: e.message });
+  }
   // Prove the real audit detects a reintroduced unlabeled control, not a mock of axe.
   if (process.argv.includes("--prove-regression")) {
     await page.goto(base + "/");
