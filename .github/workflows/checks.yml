@@ -37,6 +37,8 @@ jobs:
         run: node site/check-claims.mjs
       - name: MCP tools and page parity
         run: node site/check-mcp.mjs
+      - name: Every MCP tool over HTTP on the sample
+        run: node site/check-mcp-live.mjs --sample
       - name: Federal evidence across HTML, shares, shards and MCP
         run: node site/check-federal.mjs
       - name: Imported source text is escaped

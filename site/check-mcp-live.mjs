@@ -1,10 +1,15 @@
-// Real Worker HTTP readback over the full locally built ledger: node site/check-mcp-live.mjs [origin].
+// Sample HTTP smoke (starts dev.mjs): node site/check-mcp-live.mjs --sample
+// Full locally built ledger, with a running Worker: node site/check-mcp-live.mjs [origin].
 import assert from 'node:assert/strict';
 import { load } from './src/data.mjs';
 import { money, moneyWords, num } from './lib/format.mjs';
 import { computeReceipt, renderReceipt } from './lib/receipt.mjs';
 import { payJSON } from './src/paydata.mjs';
 import { bodiesJSON } from './src/bodydata.mjs';
+if (process.argv[2] === '--sample') {
+  await import('./check-mcp-sample.mjs');
+  process.exit(0);
+}
 const origin=process.argv[2] || 'http://localhost:8793';
 const D=load();
 const json=async path=>{const r=await fetch(origin+path);assert.equal(r.status,200,path);return r.json();};
