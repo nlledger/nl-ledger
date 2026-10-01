@@ -11,3 +11,7 @@ site/.env
 *.log
 .playwright-mcp
 .impeccable
+site/.render
+site/.astro
+site/.astro-build
+site/wrangler.astro.json

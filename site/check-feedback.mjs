@@ -231,7 +231,7 @@ const check = (ok, what) => {
   );
   check(
     nodeText(quote) === "A <b>figure</b> looks off" &&
-      !findNode(quote, (node) => node.tagName === "b"),
+      !findNode(parse(h), (node) => node.tagName === "b"),
     "the note is escaped when shown back",
   );
   check(

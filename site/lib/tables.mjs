@@ -1,7 +1,25 @@
 // One server-rendered treatment for schedules and the custom financial statements.
 // Only our generated table markup is handled here; cell HTML and links stay intact.
+// Astro writes attribute values with only `&` and `"` escaped, so a `<` or `>` inside a quoted
+// value would fool the tag regexes below (`</td><td>` in a value reads as real cells). Escape
+// them in every tag's quoted values first; browsers decode them back to the same text.
+const TAG = /<[a-zA-Z][^\s>\/]*(?:\s+[^\s=>\/"']+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>"']+))?)*\s*\/?>/g;
+const QUOTED = /"[^"]*"|'[^']*'/g;
+export function escapeAttributeBrackets(html) {
+  return String(html)
+    .split(/(<script\b[\s\S]*?<\/script>|<style\b[\s\S]*?<\/style>)/)
+    .map((part, i) =>
+      i % 2
+        ? part
+        : part.replace(TAG, tag =>
+            tag.replace(QUOTED, v => v.replace(/</g, "&lt;").replace(/>/g, "&gt;")),
+          ),
+    )
+    .join("");
+}
+
 export function mobileTables(body) {
-  return String(body).replace(/<table\b([^>]*)>([\s\S]*?)<\/table>/g, (table, attrs, content) => {
+  return escapeAttributeBrackets(body).replace(/<table\b([^>]*)>([\s\S]*?)<\/table>/g, (table, attrs, content) => {
     if (!/class="[^"]*\bsched\b/.test(attrs) || attrs.includes("data-mobile-table")) return table;
     const head = content.match(/<thead\b[^>]*>([\s\S]*?)<\/thead>/)?.[1] || "";
     const labels = [...head.matchAll(/<th\b[^>]*>([\s\S]*?)<\/th>/g)]

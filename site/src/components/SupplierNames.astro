@@ -11,7 +11,7 @@ const { num, s, hash } = Astro.props;
     {s.combined.map((c) => (
       <>
         <li>
-          <a href={"/search/?s=" + hash + "&amp;n=" + c.h}>{c.t}</a>{" "}
+          <a href={"/search/?s=" + hash + "&n=" + c.h}>{c.t}</a>{" "}
           <span>
             <Fragment set:html={num(c.n)} />{" "}
             <Fragment set:html={c.n === 1 ? "record" : "records"} />

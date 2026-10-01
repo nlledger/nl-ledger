@@ -4,6 +4,7 @@ import { parse } from "parse5";
 import { itemPage, itemMeta, resultItem, supplierPage } from "./lib/views.mjs";
 import { departments } from "./src/pages/priorities.mjs";
 import { slug } from "./lib/format.mjs";
+import { mobileTables } from "./lib/tables.mjs";
 import { itemRow, federalSummary } from "./src/common.mjs";
 import { esc, layout, ldScript, receipt, receiptForm } from "./lib/html.mjs";
 import { nativeAmount, reportedBreakdown } from "./lib/federal.mjs";
@@ -325,6 +326,52 @@ assert.equal(
   literal,
 );
 checks += 3;
+
+// Combined supplier names link to their own filter: one `&` between the parameters, no entity.
+{
+  const body = (
+    await supplierPage(
+      {
+        name: "Supplier",
+        n: 2,
+        total: 2,
+        byDs: {},
+        byYear: {},
+        top: [],
+        combined: [
+          { t: "Supplier One", h: "aaaa11112222", n: 1 },
+          { t: "Supplier Two", h: "bbbb33334444", n: 1 },
+        ],
+      },
+      { flags: {}, stats, links, hash: "abcdef1234" },
+    )
+  ).body;
+  assert.ok(body.includes('href="/search/?s=abcdef1234&amp;n=aaaa11112222"'), "combined name link keeps its filter");
+  assert.ok(!body.includes("&amp;amp;"), "combined name link is not double-escaped");
+  checks += 2;
+}
+
+// Angle brackets inside an attribute must not let table code read data as markup.
+{
+  const hostile = '/x</td><td><img src=x onerror=alert(1)>';
+  const table =
+    '<table class="sched"><thead><tr><th scope="col">Name</th><th scope="col">Value</th></tr></thead>' +
+    `<tbody><tr><td><a href="${hostile.replace(/"/g, "&quot;")}">Row</a></td><td>$1</td></tr></tbody></table>`;
+  for (const [label, html] of [
+    ["mobileTables", mobileTables(table)],
+    ["layout", await layout({ title: "t", body: table })],
+  ]) {
+    const hits = [];
+    (function walk(node) {
+      if (node.tagName === "img") hits.push(node);
+      for (const child of node.childNodes || []) walk(child);
+    })(parse(html));
+    assert.equal(hits.length, 0, `${label}: attribute text became an element`);
+    assert.ok(!html.includes("<img"), `${label}: raw <img in output`);
+    assert.ok(html.includes("onerror=alert(1)&gt;"), `${label}: value lost`);
+  }
+  checks += 4;
+}
 
 console.log(
   `source escaping: ${checks} static/Worker checks; missing/zero/CAD/USD/unstated/marker; source fields, attributes and JSON-LD; plain-text MCP formatter retained`,
