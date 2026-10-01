@@ -5,7 +5,10 @@ import { gunzipSync } from "node:zlib";
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { slug, money, moneyWords, num } from "./lib/format.mjs";
-import { handleMcp, TOOLS } from "./lib/mcp.mjs";
+import { handleMcp, TOOLS, serverJson } from "./lib/mcp.mjs";
+
+// The MCP Registry rejects a server.json description over 100 characters.
+assert.ok(serverJson().description.length <= 100, "server.json description must be 100 characters or fewer for the MCP Registry");
 import { payJSON } from "./src/paydata.mjs";
 import { pay } from "./src/pages/pay.mjs";
 import { bodiesJSON, bodyList, bodyData } from "./src/bodydata.mjs";
