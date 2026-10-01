@@ -70,12 +70,12 @@ const {
     <div>
       <h2 style="margin-block-end:1rem">Paradise, month by month</h2>
       <>
-        <Schedule compact>
+        <Schedule label="Paradise payments by month" compact>
           <thead>
             <tr>
               <th scope="col">Month</th>
-              <th scope="col" style={"inline-size:" + "55%"}>
-                {""}
+              <th data-graphic-header scope="col" style={"inline-size:" + "55%"}>
+                <span class="vh">Relative amount</span>
               </th>
               <th scope="col" class="n">
                 Paid
@@ -99,7 +99,7 @@ const {
     <div>
       <h2 style="margin-block-end:1rem">Paradise's biggest vendors</h2>
       <>
-        <Schedule compact>
+        <Schedule label="Small purchases by supplier" compact>
           <thead>
             <tr>
               <th scope="col">Vendor</th>
@@ -130,7 +130,7 @@ const {
       </>
       <h3 style="margin-block:2rem .8rem">What gets bought most often</h3>
       <>
-        <Schedule compact>
+        <Schedule label="Most frequent purchases" compact>
           <thead>
             <tr>
               <th scope="col">Description as printed</th>
@@ -180,7 +180,7 @@ const {
       </p>
     </div>
     <>
-      <Schedule>
+      <Schedule label="Small purchase records">
         <thead>
           <tr>
             {ITEM_COLS.map((c) => (

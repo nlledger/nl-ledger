@@ -64,7 +64,7 @@ const {
     </ul>
     <p class="sched-hint">Scroll sideways for more columns.</p>
     <div class="sched-wrap">
-      <table class="sched pin-rows">
+      <table aria-label="Spending by department" class="sched pin-rows">
         <thead>
           <tr>
             <th scope="col">Department</th>
@@ -267,7 +267,7 @@ const {
       </p>
     </div>
     <>
-      <Schedule>
+      <Schedule label="Professional services by program">
         <thead>
           <tr>
             <th scope="col">Program</th>
@@ -309,7 +309,10 @@ const {
     </div>
     <p class="sched-hint">Scroll sideways for more columns.</p>
     <div class="sched-wrap">
-      <table class="sched pin-rows compact">
+      <table
+        aria-label="All provincial departments"
+        class="sched pin-rows compact"
+      >
         <thead>
           <tr>
             <th scope="col">Department</th>

@@ -33,12 +33,12 @@ const { latestFull, ranked, D, perYear, rmax, mins, mhas } = Astro.props;
         </p>
       </div>
       <>
-        <Schedule compact>
+        <Schedule label="Member expenses" compact>
           <thead>
             <tr>
               <th scope="col">Member</th>
-              <th scope="col" style={"inline-size:" + "36%"}>
-                {""}
+              <th data-graphic-header scope="col" style={"inline-size:" + "36%"}>
+                <span class="vh">Relative amount</span>
               </th>
               <th scope="col" class="n">
                 Spent
@@ -75,7 +75,7 @@ const { latestFull, ranked, D, perYear, rmax, mins, mhas } = Astro.props;
         </p>
       </div>
       <>
-        <Schedule compact>
+        <Schedule label="Minister expenses" compact>
           <thead>
             <tr>
               <th scope="col">Minister</th>

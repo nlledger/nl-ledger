@@ -3,7 +3,7 @@ import { money } from "../../lib/format.mjs";
 const { amount, href, title, body, against } = Astro.props;
 ---
 
-<aside class="one">
+<div class="one">
   <p class="one-tag" aria-hidden="true">
     1:1
   </p>
@@ -49,4 +49,4 @@ const { amount, href, title, body, against } = Astro.props;
         );
       })()
     : ""}
-</aside>
+</div>

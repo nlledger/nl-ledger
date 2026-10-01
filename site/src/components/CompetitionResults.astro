@@ -8,12 +8,12 @@ const { prov, D, fed } = Astro.props;
 
 <h2 style="margin-block-end:1rem">Provincial public bodies</h2>
 <>
-  <Schedule>
+  <Schedule label="Provincial awards without competition">
     <thead>
       <tr>
         <th scope="col">Public body</th>
-        <th scope="col" style={"inline-size:" + "28%"}>
-          {""}
+        <th data-graphic-header scope="col" style={"inline-size:" + "28%"}>
+          <span class="vh">Relative amount</span>
         </th>
         <th scope="col" class="n">
           Without competition
@@ -57,7 +57,7 @@ const { prov, D, fed } = Astro.props;
   work or benefit.
 </p>
 <>
-  <Schedule>
+  <Schedule label="Federal contracts without competition">
     <thead>
       <tr>
         <th scope="col">Department</th>

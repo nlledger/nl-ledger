@@ -199,7 +199,7 @@ h1 {
 h2 {
   font-size: clamp(1.5rem, 3.2vw, 2.1rem);
 }
-h3 {
+h3, .minor-heading {
   font-size: 1.125rem;
   letter-spacing: 0.02em;
 }
@@ -1063,7 +1063,7 @@ sup.fn a {
   border: 1.5px solid var(--ink);
   padding: clamp(1.1rem, 3vw, 1.75rem);
 }
-.receipt h3 {
+.receipt :is(h3, .minor-heading) {
   margin-block-end: 0.3rem;
 }
 .receipt .small {
@@ -1235,32 +1235,32 @@ sup.fn a {
   vertical-align: 0;
   pointer-events: none;
 }
-.flaglist h3 {
+.flaglist :is(h3, .minor-heading) {
   font-size: 1.15rem;
 }
-.flaglist h3 a {
+.flaglist :is(h3, .minor-heading) a {
   color: var(--link);
   text-decoration: underline;
   text-decoration-thickness: 1.5px;
   text-underline-offset: 0.2em;
 }
-.flaglist h3 a::after {
+.flaglist :is(h3, .minor-heading) a::after {
   content: "";
   position: absolute;
   inset: 0;
 }
-.flaglist h3 a:hover {
+.flaglist :is(h3, .minor-heading) a:hover {
   text-decoration-thickness: 3px;
 }
-.flaglist h3 a:focus-visible {
+.flaglist :is(h3, .minor-heading) a:focus-visible {
   outline: none;
 }
-.flaglist h3 a:focus-visible::after {
+.flaglist :is(h3, .minor-heading) a:focus-visible::after {
   outline: 3px solid var(--focus);
   outline-offset: -3px;
   border-radius: var(--radius);
 }
-.flaglist h3 .ic {
+.flaglist :is(h3, .minor-heading) .ic {
   float: none;
   display: inline-block;
   vertical-align: -0.12em;
@@ -1269,7 +1269,7 @@ sup.fn a {
   block-size: 0.85em;
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.flaglist li:hover h3 .ic {
+.flaglist li:hover :is(h3, .minor-heading) .ic {
   transform: translateX(0.2em);
 }
 .flaglist p {
@@ -1310,7 +1310,7 @@ sup.fn a {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .flaglist h3 .ic {
+  .flaglist :is(h3, .minor-heading) .ic {
     transition: none;
   }
 }
@@ -1453,7 +1453,7 @@ a.tag:hover {
 .prose h2 {
   margin-block: 2.25rem 0.8rem;
 }
-.prose h3 {
+.prose :is(h3, .minor-heading) {
   margin-block: 1.75rem 0.5rem;
 }
 .prose ul,
@@ -2677,7 +2677,7 @@ article a,
   border-radius: 999px;
   font-weight: 500;
   line-height: 1.2;
-  transition: background-color 0.16s cubic-bezier(0.16, 1, 0.3, 1), color 0.16s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.16s;
+  /* Instant colours keep chip text readable when the theme changes. */
 }
 .fb-chips label:hover span { border-color: var(--ink); }
 .fb-chips input:checked + span {
@@ -2761,7 +2761,7 @@ article a,
 /* what people asked for */
 .asked { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; max-inline-size: 52rem; border-block-start: 2px solid var(--ink); }
 .asked li { display: grid; gap: 0.35rem 1.5rem; padding-block: 1.1rem; border-block-end: 1px solid var(--hair); }
-.asked h3 { text-transform: none; font-stretch: 100%; letter-spacing: 0; line-height: 1.3; font-weight: 700; }
+.asked :is(h3, .minor-heading) { text-transform: none; font-stretch: 100%; letter-spacing: 0; line-height: 1.3; font-weight: 700; }
 .asked p { margin: 0; color: var(--ink-2); }
 .asked .state {
   font-stretch: 78%;

@@ -22,6 +22,7 @@ export function mobileTables(body) {
   return escapeAttributeBrackets(body).replace(/<table\b([^>]*)>([\s\S]*?)<\/table>/g, (table, attrs, content) => {
     if (!/class="[^"]*\bsched\b/.test(attrs) || attrs.includes("data-mobile-table")) return table;
     const head = content.match(/<thead\b[^>]*>([\s\S]*?)<\/thead>/)?.[1] || "";
+    const graphicHeaders = [...head.matchAll(/<th\b([^>]*)>/g)].map(m => m[1].includes("data-graphic-header"));
     const labels = [...head.matchAll(/<th\b[^>]*>([\s\S]*?)<\/th>/g)]
       .map(m => m[1].replace(/<[^>]*>/g, "").trim());
     let primary = labels.findIndex((label, i) => i > 0 && /^(total|value|reported value|included value)$/i.test(label));
@@ -39,10 +40,11 @@ export function mobileTables(body) {
           if (i === 0) return `<${tag}${cellAttrs} role="rowheader">${value}</${tag}>`;
           const label = labels[i];
           const figure = i === primary ? ' data-main-figure' : '';
-          const graphic = !label ? ' data-graphic' : '';
-          const visibleLabel = label ? `<span class="cell-label" aria-hidden="true">${label}: </span>` : "";
+          const isGraphic = !label || graphicHeaders[i];
+          const graphic = isGraphic ? ' data-graphic' : '';
+          const visibleLabel = label && !isGraphic ? `<span class="cell-label" aria-hidden="true">${label}: </span>` : "";
           // Blank source values stay blank in the data; the phone gives their absence a name.
-          const missing = label && !value.trim() ? '<span class="cell-missing" aria-hidden="true">Not stated</span>' : '';
+          const missing = label && !isGraphic && !value.trim() ? '<span class="cell-missing" aria-hidden="true">Not stated</span>' : '';
           return `<${tag}${cellAttrs} role="cell"${figure}${graphic}>${visibleLabel}<span class="cell-value">${value}${missing}</span></${tag}>`;
         });
         return `<tr${rowAttrs} role="row">${row}</tr>`;

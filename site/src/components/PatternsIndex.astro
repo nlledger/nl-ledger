@@ -21,7 +21,7 @@ const { cat, D } = Astro.props;
     <Caveat text={cat.caveat} />
     <ul class="flaglist" style="margin-block-start:1.5rem">
       {cat.flags.map((f) => (
-        <FlagItem f={f} count={countLine(D, f)} method={true} />
+        <FlagItem f={f} count={countLine(D, f)} method={true} level={2} />
       ))}
     </ul>
     <p class="small muted" style="margin-block-start:1.5rem">

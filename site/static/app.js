@@ -5,11 +5,19 @@
   // Theme toggle: follows the system until the reader picks one.
   const btn = document.querySelector("[data-theme-toggle]");
   if (btn) {
+    const systemTheme = matchMedia("(prefers-color-scheme: dark)");
+    const syncTheme = () => {
+      const dark = root.dataset.theme ? root.dataset.theme === "dark" : systemTheme.matches;
+      btn.setAttribute("aria-label", dark ? "Switch to light theme" : "Switch to dark theme");
+    };
     btn.hidden = false;
+    syncTheme();
+    systemTheme.addEventListener("change", syncTheme);
     btn.addEventListener("click", () => {
       const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
       const next = dark ? "light" : "dark";
       root.dataset.theme = next;
+      syncTheme();
       try {
         localStorage.setItem("theme", next);
       } catch (e) {}

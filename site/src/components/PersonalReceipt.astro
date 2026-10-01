@@ -10,7 +10,7 @@ const restTotal = rest.reduce((s, d) => s + d.yours, 0);
 ---
 
 <article class="receipt" aria-live="polite">
-  <h3>Receipt, {R.year}</h3>
+  <h2 class="minor-heading">Receipt, {R.year}</h2>
   <p class="small">
     Employment income {money(c.income)} · estimated provincial income tax{" "}
     {money(c.tax, { cents: true })} · {pct(c.tax / Math.max(1, c.income), 1)} of
