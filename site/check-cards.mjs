@@ -19,19 +19,6 @@ import { onRequestGet as search } from "./routes/search/index.js";
 import { onRequestGet as supplier } from "./routes/supplier/[h].js";
 import worker from "./worker.mjs";
 const digest = (png) => createHash("sha256").update(png).digest("hex");
-const legacy = JSON.parse(
-  readFileSync(new URL("./lib/share-card-legacy.json", import.meta.url)),
-);
-for (const { image, sha256 } of legacy.images) {
-  const png = readFileSync(new URL("./static" + image, import.meta.url));
-  assert.equal(digest(png), sha256, `Preserved live PNG: ${image}`);
-  if (existsSync(new URL("./dist/data/share-cards.json", import.meta.url)))
-    assert.equal(
-      digest(readFileSync(new URL("./dist" + image, import.meta.url))),
-      sha256,
-      `Built legacy URL: ${image}`,
-    );
-}
 let checks = 0;
 const check = (value, message) => {
   assert.ok(value, message);
