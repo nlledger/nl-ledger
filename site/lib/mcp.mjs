@@ -176,7 +176,7 @@ export const PROMPTS = [
 // ---- discovery: MCP registry server.json and the (draft) MCP server card
 export const REGISTRY_NAME = "ca.nlledger/nl-ledger";
 // The MCP Registry rejects a description over 100 characters.
-const DESCRIPTION = "Newfoundland and Labrador public spending records, each linked to its government source.";
+const DESCRIPTION = "NL provincial and federal spending records, each with its source. Addresses do not locate work.";
 export const SERVER_VERSION = "0.4.0";
 // The logo, for clients that show one beside the server's name (icons in server info, server.json and the server card).
 export const ICONS = () => [
