@@ -1,0 +1,237 @@
+---
+const {
+  pagehead,
+  esc,
+  FEDERAL_RULE,
+  num,
+  M,
+  schedule,
+  moneyWords,
+  GH,
+  methodCode,
+} = Astro.props;
+---
+
+<Fragment
+  set:html={await pagehead({
+    crumbs: [
+      ["/", "Home"],
+      ["/method/", "Methods"],
+      [null, "Supplier names"],
+    ],
+    title: "Method: supplier names",
+    lede: "Each source prints a supplier's name its own way. A supplier page combines the names the records show are one supplier, and no others.",
+  })}
+/>
+<section class="section">
+  <div class="wrap prose">
+    <p>
+      A supplier page represents the organisation the publisher named, not a
+      verified tax registrant. Conflicting business numbers alone do not split a
+      page. A split also needs disjoint postal-code or locality evidence, or a
+      named source identifying different organisations. Overlapping location
+      sets and missing addresses do not establish disagreement. Every later join
+      checks the same evidence across both whole groups.
+    </p>
+    <p>
+      Joined records retain every published business number; conflicts are
+      listed on the supplier page. Where a printed name still has several
+      pieces, each page links the others with their own included and excluded
+      totals and says when identity is unresolved. One piece is not the
+      organisation's whole record.
+    </p>
+    <h2>When names are joined</h2>
+    <ul>
+      <li>
+        <strong>Split evidence.</strong> Conflicting numbers split a printed
+        name when its location evidence also disagrees or a named source
+        identifies different organisations. An unnumbered record joins a piece
+        only when its location identifies that piece uniquely; otherwise it
+        remains unresolved.
+      </li>
+      <li>
+        <strong>Same name.</strong> Case, accents, apostrophes, punctuation,
+        spacing and legal suffixes (Inc., Ltd., Limited, Corp., Ltée) are set
+        aside, and NL and Nfld are read as the province's name. Anything after
+        "o/a", "c/o" or "formerly" is dropped: the record belongs to the legal
+        name before it.
+      </li>
+      <li>
+        <strong>Bilingual.</strong> Federal grant records print a recipient as
+        "English name|French name". Both halves are the same recipient.
+      </li>
+      <li>
+        <strong>Business number.</strong> Federal grant records with the same
+        valid business number are joined when the names are a spelling slip
+        apart, or one name is inside the other and adds only words such as Inc.,
+        Association or Council. Department placeholders (000000000, 1000xxxxx)
+        fail the number's check digit and are ignored. Full charity accounts are
+        kept as evidence: a church or club can hold one for each branch, but an
+        account conflict still needs location or named-source evidence to split
+        a page.
+      </li>
+      <li>
+        <strong>Postal code.</strong> Federal records with the same postal code
+        are joined when the names are a spelling slip apart with the same
+        initials, subject to the location and named-source conflict guard.
+      </li>
+      <li>
+        <strong>Same award.</strong> A federal contract and a CanadaBuys notice
+        with the same award date and the same value to the cent are one award,
+        so their close names are one supplier.
+      </li>
+      <li>
+        <strong>Department or campus.</strong> A department, faculty or campus
+        printed after its body's name ("Government of Newfoundland and Labrador,
+        Department of Education") is part of that body.
+      </li>
+      <li>
+        <strong>Reviewed.</strong> A short list of decisions, each with its
+        reason, for matches the rules above cannot make: a renamed body, a
+        misprint in a provincial report, a trading name.
+      </li>
+    </ul>
+    <h2>When names are kept apart</h2>
+    <ul>
+      <li>
+        Close names with no evidence. Two different companies shown as one is
+        worse than one company shown twice.
+      </li>
+      <li>
+        Operating names. "Cavendish Hotel LP o/a Sheraton" is not joined to
+        other Sheraton records: franchise names are shared by different owners.
+      </li>
+      <li>
+        A company and its limited partnership, and a parent and its subsidiary,
+        unless a reviewed decision gives the reason.
+      </li>
+      <li>
+        A French name printed with more than one English name, or a placeholder
+        such as N/A.
+      </li>
+      <li>
+        Names that share a business number but not a name: a parent body's
+        number can cover separate branches.
+      </li>
+    </ul>
+    <h2>Totals</h2>
+    <p>
+      {FEDERAL_RULE} Only supported CAD amounts enter CAD totals. Native
+      currency, missing-value coverage, source, amount kind, periods and
+      separately evidenced location remain in the breakdown. No mixed supplier
+      total gets provincial scaling.
+    </p>
+    <p>
+      A supplier's total is the sum of included record values across all years,
+      whichever name they were printed under. Award and contract values are
+      commitments, grant agreement values can span several years, and payments
+      are amounts reported as paid. Sources can overlap, so this is not a
+      deduplicated spending total. Public Accounts payment lines and CanadaBuys
+      notices are listed separately and excluded because these sources can
+      overlap contracts and grants; that policy does not establish that an
+      individual record is a duplicate.
+    </p>
+    <h2>The numbers</h2>
+    <p>
+      <Fragment set:html={num(M.name_keys)} /> distinct names become{" "}
+      <Fragment set:html={num(M.suppliers)} /> suppliers:{" "}
+      <Fragment set:html={num(M.folded)} /> names are joined to another on the
+      evidence above. <Fragment set:html={num(M.near)} /> close names are kept
+      apart.
+    </p>
+    <Fragment
+      set:html={await schedule({
+        compact: true,
+        caption: "Largest suppliers that combine several names",
+        cols: [
+          {
+            label: "Supplier",
+          },
+          {
+            label: "Names",
+            num: true,
+          },
+          {
+            label: "Records",
+            num: true,
+          },
+          {
+            label: "Value",
+            num: true,
+          },
+        ],
+        rows: M.largest.map((g) => ({
+          cells: [
+            esc(g.name),
+            num(g.names),
+            num(g.records),
+            moneyWords(g.value),
+          ],
+        })),
+      })}
+    />
+    <Fragment
+      set:html={await schedule({
+        compact: true,
+        caption: "Largest close names kept apart",
+        cols: [
+          {
+            label: "Name",
+          },
+          {
+            label: "Other name",
+          },
+          {
+            label: "Why not joined",
+          },
+        ],
+        rows: M.near_sample.map((r) => ({
+          cells: [esc(r.a), esc(r.b), esc(r.why)],
+        })),
+      })}
+    />
+    <h2>Every match, and how to question one</h2>
+    <p>
+      Every joined name, with the evidence that joined it, is in{" "}
+      <a href={GH + "/blob/main/docs/supplier-merges.csv"}>
+        supplier-merges.csv
+      </a>
+      ; close names kept apart are in{" "}
+      <a href={GH + "/blob/main/docs/supplier-near-matches.csv"}>
+        supplier-near-matches.csv
+      </a>
+      , and the reviewed decisions in{" "}
+      <a href={GH + "/blob/main/pipeline/supplier_rules.csv"}>
+        supplier_rules.csv
+      </a>
+      . Each supplier page lists the names it combines, each linking to its own
+      records. To question a match, or to show that two names are one supplier,{" "}
+      <a href={GH + "/issues/new?template=challenge-method.yml"}>
+        challenge the method
+      </a>
+      .
+    </p>
+    <Fragment
+      set:html={await methodCode(
+        [
+          [
+            "pipeline/suppliers.py",
+            "groups the names printed in each source into suppliers",
+          ],
+          [
+            "pipeline/supplier_rules.csv",
+            "the reviewed decisions, each with its reason",
+          ],
+          [
+            "pipeline/check_matching.py",
+            "the cases that must join and the false joins that once happened",
+          ],
+        ],
+        {
+          title: "matching supplier names",
+          path: "/method/suppliers/",
+        },
+      )}
+    />
+  </div>
+</section>

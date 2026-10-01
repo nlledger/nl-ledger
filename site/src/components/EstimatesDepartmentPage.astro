@@ -1,0 +1,75 @@
+---
+const {
+  pagehead,
+  estYear,
+  esc,
+  moneyWords,
+  estTotal,
+  cite,
+  schedule,
+  estRows,
+  D,
+  receipt,
+} = Astro.props;
+---
+
+<Fragment
+  set:html={await pagehead({
+    crumbs: [
+      ["/", "Home"],
+      ["/priorities/", "Priorities"],
+      [null, `Estimates ${estYear}`],
+    ],
+    title: `Budget estimates, ${esc(estYear)}`,
+    lede: `What the province plans to spend this year: ${moneyWords(estTotal)} gross${cite}, set against last year's revised figures. The government reorganised departments in late 2025, so many names are new.`,
+  })}
+/>
+<section class="section">
+  <div class="wrap">
+    <Fragment
+      set:html={await schedule({
+        cols: [
+          {
+            label: "Department",
+          },
+          {
+            label: `Estimate ${esc(estYear)}`,
+            num: true,
+          },
+          {
+            label: "Revised, year before",
+            num: true,
+          },
+          {
+            label: "Budget, year before",
+            num: true,
+          },
+          {
+            label: "Source",
+            num: true,
+          },
+        ],
+        rows: estRows.map((r) => ({
+          cells: [
+            `<a href="/department/${D.slug(r.department)}/">${esc(r.department)}</a>`,
+            moneyWords(r.c1),
+            moneyWords(r.c2),
+            moneyWords(r.c3),
+            receipt(r.source_url, r.page),
+          ],
+        })),
+        foot: [
+          {
+            cells: [
+              "Total",
+              moneyWords(estTotal),
+              moneyWords(estRows.reduce((s, r) => s + r.c2, 0)),
+              moneyWords(estRows.reduce((s, r) => s + r.c3, 0)),
+              "",
+            ],
+          },
+        ],
+      })}
+    />
+  </div>
+</section>

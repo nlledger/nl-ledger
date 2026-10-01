@@ -1,0 +1,38 @@
+---
+const { leaders, R, esc } = Astro.props;
+---
+
+<section class="section" aria-labelledby="rp-h">
+  <div class="wrap grid-2">
+    <div>
+      <div class="section-head">
+        <h2 id="rp-h">Every figure has a receipt</h2>
+        <p class="lede">
+          Each number on this site links to the public file it came from, and to
+          the page or row inside it.
+        </p>
+      </div>
+      <p>
+        Where a total is added up here, the sum is checked against the total the
+        source prints. Where the source is wrong, broken or missing, that goes
+        on the <a href="/sources/">publisher report card</a> rather than being
+        quietly fixed.
+      </p>
+      <p>
+        <a href="/sources/">Sources and report card</a> ·{" "}
+        <a href="/corrections/">Corrections</a> ·{" "}
+        <a href="/data/">Ask your own AI about the records</a>
+      </p>
+    </div>
+    <div>
+      <Fragment
+        set:html={leaders(
+          R.reportCard.map((x) => ({
+            label: esc(x.label),
+            value: esc(x.value),
+          })),
+        )}
+      />
+    </div>
+  </div>
+</section>

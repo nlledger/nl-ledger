@@ -1,0 +1,381 @@
+---
+const {
+  esc,
+  s,
+  num,
+  moneyWords,
+  money,
+  combinedNames,
+  hash,
+  standing,
+  FEDERAL_RULE,
+  OVERLAP_RULE,
+  schedule,
+  DATASET_LABEL,
+  SCOPE_LABEL,
+  REVIEW_LABEL,
+  periodText,
+  nativeAmount,
+  dsRows,
+  bodyLink,
+  links,
+  years,
+  bar,
+  ymax,
+  flagRows,
+  flagItem,
+  resultItem,
+  flags,
+  icon,
+  spotError,
+} = Astro.props;
+---
+
+<header class="pagehead">
+  <div class="wrap">
+    <p class="crumbs">
+      <a href="/">Home</a> / <a href="/search/">Search</a> / Supplier
+    </p>
+    <h1>{s.name}</h1>
+    <p class="lede">
+      <Fragment set:html={num(s.n)} />{" "}
+      <Fragment set:html={s.n === 1 ? "record" : "records"} /> across provincial
+      and federal sources: <Fragment set:html={moneyWords(s.total)} /> in
+      included CAD record values across all years
+      <Fragment
+        set:html={
+          s.overlap
+            ? `; ${moneyWords(s.overlap)} in federal payment and award notice values excluded from this total because these sources can overlap contracts and grants`
+            : ""
+        }
+      />
+      <Fragment set:html={s.city ? `. Listed in ${esc(s.city)}` : ""} />.
+      <Fragment
+        set:html={
+          s.names
+            ? ` Also printed as: ${s.names
+                .filter((n) => n !== s.name)
+                .map(esc)
+                .join("; ")}.`
+            : ""
+        }
+      />
+    </p>
+    {s.businessNumbers?.length > 1 ? (
+      <>
+        <div class="combined small">
+          <p>
+            The records carry more than one business number, listed as
+            published:{" "}
+            <Fragment set:html={s.businessNumbers.map(esc).join("; ")} />. This
+            page groups the organisation the publisher named; it does not verify
+            who holds each number.
+          </p>
+        </div>
+      </>
+    ) : (
+      ""
+    )}
+    {s.related?.length ? (
+      <>
+        <div class="combined small">
+          <p>
+            <strong>
+              <Fragment
+                set:html={
+                  s.identityUnresolved
+                    ? "Identity unresolved."
+                    : "Different organisations identified by named source records."
+                }
+              />
+            </strong>{" "}
+            Other pieces have the same or a closely matched published name. This
+            page's total covers only its own records; read the other pieces
+            before treating it as the organisation's whole record.
+          </p>
+          <ul>
+            {s.related.map((r) => (
+              <>
+                <li>
+                  <a href={"/supplier/" + r.h + "/"}>{r.name}</a>:{" "}
+                  <Fragment set:html={num(r.n)} />{" "}
+                  <Fragment set:html={r.n === 1 ? "record" : "records"} />;{" "}
+                  <Fragment
+                    set:html={money(r.total, {
+                      cents: true,
+                    })}
+                  />{" "}
+                  in included record values
+                  <Fragment
+                    set:html={
+                      r.overlap
+                        ? `; ${money(r.overlap, {
+                            cents: true,
+                          })} excluded because sources can overlap`
+                        : ""
+                    }
+                  />
+                  .
+                </li>
+              </>
+            ))}
+          </ul>
+        </div>
+      </>
+    ) : (
+      ""
+    )}
+    {s.anchors?.length ? (
+      <>
+        <p class="small">
+          Named source evidence:{" "}
+          {s.anchors
+            .map(([name, url]) => (
+              <>
+                <a href={url}>{name}</a>
+              </>
+            ))
+            .flatMap((node, index) => (index ? ["; ", node] : [node]))}
+          .
+        </p>
+      </>
+    ) : (
+      ""
+    )}
+    <Fragment set:html={s.combined ? await combinedNames(s, hash) : ""} />
+    <Fragment set:html={standing()} />
+  </div>
+</header>
+<section class="section">
+  <div class="wrap">
+    <div class="figs">
+      <div>
+        <span class="big">
+          <Fragment set:html={moneyWords(s.total)} />
+        </span>
+        <span class="what">
+          included CAD record values, all years; not total money paid
+          (agreements can span several years)
+        </span>
+      </div>
+    </div>
+    <p class="small muted">
+      Awards and contract values are commitments; payments are amounts reported
+      as paid. Sources can overlap, so even included record values are not a
+      deduplicated spending total.{" "}
+      <a href="/method/suppliers/">What this total includes</a>.
+    </p>
+    <p class="small">
+      {FEDERAL_RULE} {OVERLAP_RULE}
+    </p>
+    <Fragment
+      set:html={
+        s.breakdown?.length
+          ? await schedule({
+              caption:
+                "Reported values by source, location evidence and currency",
+              cols: [
+                {
+                  label: "Source and evidence",
+                },
+                {
+                  label: "Records",
+                  num: true,
+                },
+                {
+                  label: "Native value",
+                  num: true,
+                },
+              ],
+              rows: s.breakdown.map((g) => ({
+                cells: [
+                  esc(DATASET_LABEL[g.source] || g.source) +
+                    `<span class="meta">${esc(g.amount_kind)}; ${esc(SCOPE_LABEL[g.scope_status] || "Provincial records")}; ${g.scope_review_state ? esc(REVIEW_LABEL[g.scope_review_state]) + "; " : ""}${esc(g.counting_basis)}; ${g.included_in_summary ? "included" : esc(g.exclusion_reason)}. Periods: ${esc(periodText(g.periods))}. ${esc(g.missing_amounts)} amounts not stated; ${esc(g.zero_amounts)} published zeros.</span>`,
+                  num(g.records),
+                  esc(
+                    nativeAmount(
+                      g.records === g.missing_amounts ? null : g.value,
+                      g.currency,
+                    ),
+                  ),
+                ],
+              })),
+            })
+          : ""
+      }
+    />
+    <div class="grid-2 supplier-breakdown">
+      <div class="supplier-schedules">
+        <Fragment
+          set:html={await schedule({
+            compact: true,
+            caption: "By source, supported CAD values only",
+            cols: [
+              {
+                label: "Source",
+              },
+              {
+                label: "Records",
+                num: true,
+              },
+              {
+                label: "Value",
+                num: true,
+              },
+            ],
+            rows: dsRows.map(([d, [n, a]]) => ({
+              cells: [
+                esc(DATASET_LABEL[d] || d) +
+                  (["pa_pss", "pa_tp", "canadabuys"].includes(d)
+                    ? '<span class="meta">excluded from the total; can overlap contracts and grants</span>'
+                    : ""),
+                num(n),
+                moneyWords(a),
+              ],
+            })),
+          })}
+        />
+        {s.buyers?.length ? (
+          <>
+            <>
+              <p class="small muted">
+                Included values make up the headline; excluded values are shown
+                separately and never added to it. Neither column means this body
+                paid these amounts.
+              </p>
+            </>
+            <Fragment
+              set:html={await schedule({
+                compact: true,
+                caption: "Public bodies named in these records",
+                cols: [
+                  {
+                    label: "Public body",
+                  },
+                  {
+                    label: "Records",
+                    num: true,
+                  },
+                  {
+                    label: "Included value",
+                    num: true,
+                  },
+                  {
+                    label: "Excluded value",
+                    num: true,
+                  },
+                ],
+                rows: s.buyers.map((b) => ({
+                  cells: [
+                    bodyLink(b.name, links),
+                    num(b.n),
+                    moneyWords(b.included),
+                    moneyWords(b.excluded),
+                  ],
+                })),
+                foot: [
+                  {
+                    cells: [
+                      "All public bodies",
+                      num(s.n),
+                      moneyWords(s.total),
+                      moneyWords(s.overlap),
+                    ],
+                  },
+                ],
+              })}
+            />
+          </>
+        ) : (
+          ""
+        )}
+      </div>
+      <div>
+        <Fragment
+          set:html={
+            years.length > 1
+              ? await schedule({
+                  compact: true,
+                  caption: "Included CAD values by original record year",
+                  cols: [
+                    {
+                      label: "Year",
+                    },
+                    {
+                      label: "",
+                      w: "55%",
+                    },
+                    {
+                      label: "Value",
+                      num: true,
+                    },
+                  ],
+                  rows: years.map(([y, v]) => ({
+                    cells: [esc(y), bar(v, ymax), moneyWords(v)],
+                  })),
+                })
+              : ""
+          }
+        />
+        {flagRows.length ? (
+          <>
+            <h3 style="margin-block:1.5rem .6rem">Patterns</h3>
+            <ul class="flaglist">
+              <Fragment
+                set:html={flagRows.map((x) =>
+                  flagItem(x.f, {
+                    count: `${num(x.n)} ${x.n === 1 ? "record" : "records"}`,
+                    method: true,
+                  }),
+                )}
+              />
+            </ul>
+          </>
+        ) : (
+          ""
+        )}
+      </div>
+    </div>
+  </div>
+</section>
+<section class="section">
+  <div class="wrap">
+    <h2 style="margin-block-end:1rem">Largest records</h2>
+    <ol class="results">
+      <Fragment
+        set:html={(
+          await Promise.all(
+            s.top.map(
+              async (it) =>
+                await resultItem(
+                  {
+                    ...it,
+                    s: undefined,
+                    k: undefined,
+                    fy: undefined,
+                  },
+                  flags,
+                  links,
+                ),
+            ),
+          )
+        ).join("")}
+      />
+    </ol>
+    {s.n > s.top.length ? (
+      <>
+        <p style="margin-block-start:1.5rem">
+          <a href={"/search/?s=" + hash}>
+            All <Fragment set:html={num(s.n)} /> records{" "}
+            <Fragment set:html={icon("arrow")} />
+          </a>
+        </p>
+      </>
+    ) : (
+      ""
+    )}
+  </div>
+</section>
+<div class="wrap">
+  <Fragment set:html={spotError()} />
+</div>

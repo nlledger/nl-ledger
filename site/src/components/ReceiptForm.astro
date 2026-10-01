@@ -1,0 +1,42 @@
+---
+const { id, RECEIPT_ASSUMPTIONS, value, error, button } = Astro.props;
+---
+
+<form
+  class="field receipt-form"
+  action="/receipt/"
+  method="get"
+  data-receipt-form
+>
+  <label for={id}>Yearly employment income</label>
+  <p class="small receipt-help" id={id + "-help"}>
+    <Fragment set:html={RECEIPT_ASSUMPTIONS} />
+  </p>
+  <div class="field-row">
+    <span class="pre" aria-hidden="true">
+      $
+    </span>
+    <input
+      id={id}
+      name="income"
+      inputmode="decimal"
+      value={value}
+      placeholder="For example, 55000"
+      autocomplete="off"
+      aria-describedby={id + "-help " + id + "-error"}
+      aria-invalid={error ? "true" : undefined}
+    />
+    <button class="btn" type="submit">
+      {button}
+    </button>
+  </div>
+  <p
+    class="small receipt-error"
+    id={id + "-error"}
+    data-receipt-error
+    role="alert"
+    hidden={!error}
+  >
+    {error}
+  </p>
+</form>

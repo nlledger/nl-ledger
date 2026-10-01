@@ -1,0 +1,93 @@
+---
+import HtmlOneToOne from "./OneToOne.astro";
+const {
+  money,
+  median,
+  moneyWords,
+  career,
+  esc,
+  fy,
+  h,
+  m,
+  leaders,
+  perPerson,
+  total,
+  S,
+  citeHH,
+  perHousehold,
+  perHour,
+  ex,
+  workTime,
+  receipt,
+  icon,
+} = Astro.props;
+---
+
+<section class="section" aria-labelledby="life-h">
+  <div class="wrap">
+    <div class="section-head">
+      <h2 id="life-h">What a working life buys</h2>
+      <p class="lede">
+        Someone earning the median full-time wage here,{" "}
+        <Fragment set:html={money(median)} /> a year, makes about{" "}
+        <Fragment set:html={moneyWords(career)} /> over a 40-year career. In{" "}
+        {fy} the province spent that much every <Fragment set:html={h} /> hours
+        and <Fragment set:html={m} /> minutes.
+      </p>
+    </div>
+    <div style="max-inline-size:40rem;margin-block-end:2.5rem">
+      <Fragment
+        set:html={leaders([
+          {
+            label: `Provincial spending for every resident, ${esc(fy.replace("-", "\u2011"))}`,
+            value: money(perPerson(total, S)),
+          },
+          {
+            label: `Provincial spending for every household${citeHH}`,
+            value: money(perHousehold(total, S)),
+          },
+          {
+            label: "Provincial spending every hour, around the clock, all year",
+            value: moneyWords(perHour, 1),
+          },
+          {
+            label: "A 40-year career at the median wage",
+            value: moneyWords(career),
+            cls: "total",
+          },
+        ]).replace('class="leaders"', 'class="leaders big"')}
+      />
+    </div>
+    <div class="grid-2" style="align-items:stretch">
+      {ex.map((e) => (
+        <HtmlOneToOne
+          {...{
+            title: e.title,
+            amount: e.amount,
+            href: e.href,
+            body: (
+              <>
+                {e.what} It would take someone on the median wage{" "}
+                <strong>
+                  <Fragment set:html={workTime(e.amount, S)} />
+                </strong>{" "}
+                to earn.{" "}
+                <Fragment set:html={receipt(e.url, e.page, e.locator)} />
+              </>
+            ),
+            against: {
+              amount: career,
+              label: "a 40-year career at the median wage",
+            },
+          }}
+          money={money}
+        />
+      ))}
+    </div>
+    <p style="margin-block-start:2rem">
+      <a class="btn solo" href="/scale/">
+        Compare with $1 billion <Fragment set:html={icon("arrow")} />
+      </a>
+    </p>
+  </div>
+</section>

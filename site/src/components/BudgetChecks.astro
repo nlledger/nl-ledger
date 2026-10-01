@@ -1,0 +1,78 @@
+---
+const { K, money, leaders } = Astro.props;
+---
+
+<section class="section" id="checks">
+  <div class="wrap grid-2">
+    <div>
+      <div class="section-head">
+        <h2>How these figures were checked</h2>
+        <p>
+          Every figure here is read by a script from the province's own
+          documents, then added up and compared with what those documents print.{" "}
+          <a href="/method/budget/">How the budget and the accounts line up</a>.
+        </p>
+      </div>
+      {K.failed.length ? (
+        <>
+          <p class="small">
+            Where a check does not hold, the province's documents disagree with
+            each other:
+          </p>
+          <ul class="prose small">
+            {K.failed.map((f) => (
+              <>
+                <li>
+                  {f.what.split(":")[0]}, {f.year}: the Report's Original column
+                  adds to{" "}
+                  <Fragment
+                    set:html={
+                      f.a == null
+                        ? "nothing, because it prints no detail for the department"
+                        : money(f.a)
+                    }
+                  />
+                  ; the Estimates say <Fragment set:html={money(f.b)} />. The
+                  Estimates' figure is used.
+                </li>
+              </>
+            ))}
+          </ul>
+        </>
+      ) : (
+        ""
+      )}
+    </div>
+    <div>
+      <Fragment
+        set:html={leaders([
+          {
+            label: "Subtotals of the Report's cash statement that recompute",
+            value: `${K.statement} of ${K.statement_n}`,
+          },
+          {
+            label: "Years the departments add to the Report's total",
+            value: `${K.report.ok} of ${K.report.n}`,
+          },
+          {
+            label: "Years the departments add to the Estimates' total",
+            value: `${K.estimates.ok} of ${K.estimates.n}`,
+          },
+          {
+            label: "Budget figures the same in the Report and the budget",
+            value: `${K.original} of ${K.original_n}`,
+          },
+          {
+            label:
+              "Department budgets the same in the Report and the Estimates",
+            value: `${K.departments.ok} of ${K.departments.n}`,
+          },
+          {
+            label: "Public Accounts totals that recompute",
+            value: `${K.accounts.ok} of ${K.accounts.n}`,
+          },
+        ])}
+      />
+    </div>
+  </div>
+</section>

@@ -1,0 +1,61 @@
+---
+import Caveat from "./Caveat.astro";
+const { pagehead, f, esc, datasetLabel, cat, methodCode } = Astro.props;
+---
+
+<Fragment
+  set:html={await pagehead({
+    crumbs: [
+      ["/", "Home"],
+      ["/method/", "Methods"],
+      [null, f.title],
+    ],
+    title: `Method: ${esc(f.title)}`,
+    lede: esc(f.short),
+  })}
+/>
+<section class="section">
+  <div class="wrap prose">
+    <h2>Why people look at this</h2>
+    <p>{f.why}</p>
+    <h2>How it is worked out</h2>
+    <ol>
+      {f.how.map((h) => (
+        <>
+          <li>{h}</li>
+        </>
+      ))}
+    </ol>
+    <h2>Data used</h2>
+    <ul>
+      {f.data.map((d) => (
+        <>
+          <li>
+            <a href={"/sources/#" + d}>{datasetLabel(d)}</a>
+          </li>
+        </>
+      ))}
+    </ul>
+    <h2>What it cannot tell you</h2>
+    <p>{f.limits}</p>
+    {<Caveat text={esc(cat.caveat)} />}
+    <p style="margin-block-start:1.5rem">
+      This page and the calculation are generated from one definition, so they
+      cannot drift apart. <a href={"/flags/" + f.id + "/"}>See the results</a>.
+    </p>
+    <Fragment
+      set:html={await methodCode(
+        [
+          [
+            "pipeline/flags.py",
+            `defines this pattern (the entry with id "${esc(f.id)}") and counts it`,
+          ],
+        ],
+        {
+          title: f.title,
+          path: `/method/${esc(f.id)}/`,
+        },
+      )}
+    />
+  </div>
+</section>

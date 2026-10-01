@@ -1,0 +1,67 @@
+---
+const {
+  y,
+  item,
+  moneyWords,
+  c,
+  citeBudget,
+  citeSpent,
+  deficit,
+  a,
+  citeBal,
+  citeDebt,
+  pp,
+  money,
+  citePP,
+  march,
+  icon,
+} = Astro.props;
+---
+
+<div class="cover-ledger">
+  <dl aria-label={"Departments' spending against the budget, " + y.year}>
+    <Fragment
+      set:html={item(
+        "Budgeted",
+        `${moneyWords(c.gross.budget)}${citeBudget}`,
+        "in the spring Estimates",
+      )}
+    />
+    <Fragment
+      set:html={item(
+        "Spent",
+        `${moneyWords(c.gross.actual)}${citeSpent}`,
+        "by departments",
+      )}
+    />
+    <Fragment
+      set:html={item(
+        c.difference < 0 ? "Under budget" : "Over budget",
+        moneyWords(Math.abs(c.difference)),
+        `${(Math.abs(c.share) * 100).toFixed(1)}% ${c.difference < 0 ? "less" : "more"} than budgeted`,
+      )}
+    />
+  </dl>
+  <dl aria-label={"How the year ended for the whole government, " + y.year}>
+    <Fragment
+      set:html={item(
+        deficit ? "Deficit" : "Surplus",
+        `${moneyWords(Math.abs(a.balance.actual))}${citeBal}`,
+        `budget forecast: ${moneyWords(Math.abs(a.balance.budget))}${a.balance.budget < 0 === deficit ? "" : a.balance.budget < 0 ? " deficit" : " surplus"}`,
+      )}
+    />
+    <Fragment
+      set:html={item(
+        "Net debt",
+        `${moneyWords(a.net_debt.actual)}${citeDebt}`,
+        pp ? `${money(pp.value)} a person${citePP}` : `at ${march(y.year)}`,
+      )}
+    />
+  </dl>
+  <p class="cover-ledger-more">
+    <a href="/budget/">
+      Budget against actual, department by department{" "}
+      <Fragment set:html={icon("arrow")} />
+    </a>
+  </p>
+</div>

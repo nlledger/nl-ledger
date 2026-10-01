@@ -1,0 +1,59 @@
+---
+const { SITE, REPO, icon } = Astro.props;
+---
+
+<section class="section help-home" id="help-build" aria-labelledby="hb-h">
+  <div class="wrap">
+    <div class="section-head">
+      <h2 id="hb-h">Help build this</h2>
+      <p class="lede">
+        <Fragment set:html={SITE.name} /> is open source. The code, the data
+        pipeline and every method are public, and a correction from a reader is
+        as useful as a fix from a programmer.
+      </p>
+    </div>
+    <div class="doors">
+      <article class="door">
+        <h3>If you write code</h3>
+        <p>
+          Python for the pipeline, JavaScript for the site. It runs on a laptop
+          with one command and no accounts, on a small sample of the records.
+        </p>
+        <p>
+          <code class="cmd">
+            git clone {REPO.replace("https://", "")} &amp;&amp; cd nl-ledger
+            &amp;&amp; ./dev.sh
+          </code>
+        </p>
+        <p>
+          <a
+            class="btn"
+            href={
+              REPO +
+              "/issues?q=is%3Aopen+label%3A%22good+first+issue%22%2C%22help+wanted%22"
+            }
+          >
+            Pick a starter issue <Fragment set:html={icon("arrow")} />
+          </a>
+        </p>
+      </article>
+      <article class="door">
+        <h3>If you do not</h3>
+        <p>
+          Know of public records the site is missing? Spot a figure that does
+          not match its document? Think something is counted the wrong way? A
+          link and a sentence is a full contribution.
+        </p>
+        <p>
+          <a class="btn" href="/help/">
+            See the four ways in <Fragment set:html={icon("arrow")} />
+          </a>
+        </p>
+      </article>
+    </div>
+    <p class="small muted">
+      MIT licence. Every change is reviewed, and every figure must link to its
+      source. <a href={REPO}>The repository on GitHub</a>.
+    </p>
+  </div>
+</section>

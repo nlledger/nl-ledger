@@ -17,6 +17,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+      - name: Install site tools and compile Astro components
+        run: npm ci --prefix site && npm run check:astro --prefix site
       - name: Python scripts parse
         run: python3 -c "import ast, pathlib; [ast.parse(p.read_text(), str(p)) for p in pathlib.Path('pipeline').glob('*.py')]"
       - name: JavaScript modules parse

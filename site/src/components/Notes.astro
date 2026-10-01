@@ -1,0 +1,20 @@
+---
+const { list, icon } = Astro.props;
+---
+
+<section class="notes" aria-labelledby="notes-h">
+  <h2 id="notes-h">Notes</h2>
+  <ol>
+    {list.map((note, i) => (
+      <li id={`note-${i + 1}`}>
+        {note.label}
+        {note.locator ? `, ${note.locator}` : ""}.{" "}
+        {note.href && (
+          <a class="src" href={note.href} rel="noopener">
+            Open the source <Fragment set:html={icon("out")} />
+          </a>
+        )}
+      </li>
+    ))}
+  </ol>
+</section>

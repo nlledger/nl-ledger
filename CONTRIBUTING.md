@@ -43,6 +43,10 @@ Starter issues, each with what to do, where in the code and how to tell it is do
 
 All of them are under the [`good first issue`](https://github.com/nlledger/nl-ledger/labels/good%20first%20issue) and [`help wanted`](https://github.com/nlledger/nl-ledger/labels/help%20wanted) labels. Comment on one to say you are taking it.
 
+## Editing a page
+
+Page markup lives in `site/src/components/*.astro` and the shared shell in `site/src/layouts/Layout.astro`. The matching `site/src/pages/*.mjs` files assemble data and calculations; Worker handlers in `site/routes/` use the same components. Keep imported text escaped and use raw HTML only for the existing escaped helper fragments. `npm run format --prefix site` formats the Astro markup. See [the migration proof](docs/astro-proof.md) for the build comparison command.
+
 ## What a good contribution includes
 
 - **A source link for every figure.** Each new record links to the file and the page or row it came from. A reader should reach the original in one click.

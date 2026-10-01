@@ -1,0 +1,46 @@
+---
+const { pagehead, ASKED, ASKED_STATE, fmtDate } = Astro.props;
+---
+
+<Fragment
+  set:html={await pagehead({
+    crumbs: [
+      ["/", "Home"],
+      [null, "What people asked for"],
+    ],
+    title: "What people asked for",
+    lede: "Suggestions from readers, and what was done about each. Names are left out.",
+  })}
+/>
+<section class="section">
+  <div class="wrap">
+    <ul class="asked">
+      {ASKED.map((a) => (
+        <>
+          <li>
+            <h3>{a.asked}</h3>
+            <span class={"state " + (a.state === "done" ? "" : "open")}>
+              <Fragment set:html={ASKED_STATE[a.state]} />
+            </span>
+            <p>
+              {a.what}
+              {a.href ? (
+                <>
+                  {" "}
+                  <a href={a.href}>See it</a>.
+                </>
+              ) : (
+                ""
+              )}{" "}
+              <span class="small muted">{fmtDate(a.date)}</span>
+            </p>
+          </li>
+        </>
+      ))}
+    </ul>
+    <p style="margin-block-start:2rem">
+      To add one, write it in the <a href="#feedback">box below</a>. No account
+      is needed.
+    </p>
+  </div>
+</section>

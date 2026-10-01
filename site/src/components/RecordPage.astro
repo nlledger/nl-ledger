@@ -1,0 +1,277 @@
+---
+const {
+  esc,
+  title,
+  it,
+  standing,
+  amountText,
+  isFederal,
+  amountBasis,
+  AMOUNT_LABEL,
+  federalStatement,
+  moneyLimit,
+  money,
+  perPerson,
+  stats,
+  workTime,
+  leaders,
+  facts,
+  href,
+  pdf,
+  icon,
+  x,
+  REVIEW_LABEL,
+  receipt,
+  nativeAmount,
+  fmtDate,
+  fl,
+  flagItem,
+  spotError,
+} = Astro.props;
+---
+
+<header class="pagehead">
+  <div class="wrap">
+    <p class="crumbs">
+      <a href="/">Home</a> / <a href="/search/">Search</a> / Record
+    </p>
+    <h1>{title}</h1>
+    {it.d && (it.s || it.p) ? (
+      <>
+        <p class="lede">{it.d}</p>
+      </>
+    ) : (
+      ""
+    )}
+    <Fragment set:html={standing()} />
+  </div>
+</header>
+<section class="section">
+  <div class="wrap grid-2">
+    <div>
+      <p class="cover-fig record-amount">{amountText(it)}</p>
+      <p class="small muted amount-note">
+        {isFederal(it)
+          ? amountBasis(it)
+          : AMOUNT_LABEL[it.ds] || "Published value"}
+        .
+        <Fragment
+          set:html={
+            ["ppa", "fed_contract", "canadabuys"].includes(it.ds)
+              ? " This is a contract or award value, not the amount paid out."
+              : it.ds === "fed_grant"
+                ? " An agreement can cover several years; this is not the amount paid out."
+                : it.ds === "sunshine"
+                  ? " From the over-$100,000 list, rounded to $100 by the publisher."
+                  : ""
+          }
+        />
+      </p>
+      {isFederal(it) ? (
+        <>
+          <p class="lede">{federalStatement(it)}</p>
+          <p class="small">{moneyLimit(it)}</p>
+        </>
+      ) : it.a ? (
+        <>
+          <p class="lede">
+            <Fragment
+              set:html={money(perPerson(it.a, stats), {
+                cents: true,
+              })}
+            />{" "}
+            per person in the province.{" "}
+            <Fragment set:html={workTime(it.a, stats)} /> of work at the median
+            full-time wage.
+          </p>
+        </>
+      ) : (
+        ""
+      )}
+      <Fragment
+        set:html={leaders(facts).replace(
+          'class="leaders"',
+          'class="leaders facts"',
+        )}
+      />
+    </div>
+    <div>
+      <div class="receipt">
+        <h3>Receipt</h3>
+        <p>{it.l || ""}</p>
+        <p>
+          <a class="btn solo" href={href} rel="noopener">
+            <span>
+              Open the source{" "}
+              <Fragment set:html={pdf && it.g ? `at page ${esc(it.g)}` : ""} />
+            </span>{" "}
+            <Fragment set:html={icon("out")} />
+          </a>
+        </p>
+        {x.machine_read ? (
+          <>
+            <p class="small">
+              Machine-read from a scanned image; compare with the page before
+              quoting.
+            </p>
+          </>
+        ) : (
+          ""
+        )}
+        {x.note ? (
+          <>
+            <p class="small">{x.note}</p>
+          </>
+        ) : (
+          ""
+        )}
+        {isFederal(it) ? (
+          <>
+            <h3>Source location evidence</h3>
+            <p class="small">
+              {REVIEW_LABEL[x.scope_review_state || "unreviewed"]}.
+            </p>
+            <p class="small">
+              Reported address:{" "}
+              {Object.entries(x.reported_location || {})
+                .filter(([, v]) => v)
+                .map(([k, v]) => `${k.replaceAll("_", " ")}: ${v}`)
+                .join("; ") || "not stated"}
+              .{" "}
+              <Fragment
+                set:html={
+                  x.location_conflict
+                    ? `Conflicting fields: ${esc(x.location_conflict)}.`
+                    : ""
+                }
+              />
+            </p>
+            <p class="small">
+              How counted: {x.how_counted || "as published"}.{" "}
+              <Fragment
+                set:html={
+                  typeof x.amount_period === "string"
+                    ? `Financial period: ${esc(x.amount_period)}.`
+                    : `Start: ${esc(x.amount_period?.start || "not stated")}; end: ${esc(x.amount_period?.end || "not stated")}; reported: ${esc(x.amount_period?.reported || "not stated")}.`
+                }
+              />{" "}
+              Amount: {x.amount_coverage || "not stated"}.
+            </p>
+            <ul class="prose small">
+              {(x.scope_evidence || []).map((e) => (
+                <>
+                  <li>
+                    {e.field || "Evidence"}: {e.value}{" "}
+                    <Fragment
+                      set:html={receipt(e.source_url, null, e.locator)}
+                    />
+                  </li>
+                </>
+              ))}
+            </ul>
+            <details>
+              <summary>Full source fields</summary>
+              <dl>
+                {Object.entries(x.source_fields || {}).map(([k, v]) => (
+                  <>
+                    <dt>{k}</dt>
+                    <dd>{v}</dd>
+                  </>
+                ))}
+              </dl>
+            </details>
+            {x.amendment_chain_review ? (
+              <>
+                <p class="small">
+                  {x.amendment_chain_review.reason}{" "}
+                  <a href={x.amendment_chain_review.source_url}>
+                    Official amendment history
+                  </a>
+                  , reviewed {x.amendment_chain_review.reviewed}.
+                </p>
+              </>
+            ) : (
+              ""
+            )}
+            {x.amendment_history?.length ? (
+              <>
+                <details>
+                  <summary>Amendment history, counted once</summary>
+                  <ul class="prose small">
+                    {x.amendment_history.map((r) => (
+                      <>
+                        <li>
+                          {r.supplier}: {nativeAmount(r.amount, "CAD")};
+                          original {nativeAmount(r.original_value, "CAD")};
+                          start {r.start}; procurement {r.procurement_id}.{" "}
+                          <Fragment
+                            set:html={receipt(
+                              r.source_url,
+                              null,
+                              `CSV line ${r.csv_line}`,
+                            )}
+                          />
+                        </li>
+                      </>
+                    ))}
+                  </ul>
+                </details>
+              </>
+            ) : (
+              ""
+            )}
+          </>
+        ) : (
+          ""
+        )}
+        {x.repeat_printings?.length ? (
+          <>
+            <h3>Other printings, counted once</h3>
+            <ul class="prose small">
+              {x.repeat_printings.map((r) => (
+                <>
+                  <li>
+                    <a href={r.source_url + "#page=" + r.page} rel="noopener">
+                      {r.source_file.split("/").pop()}, {r.locator}
+                    </a>
+                    :{r.supplier}; {r.buyer || "buyer not printed"};{" "}
+                    {r.description}; contract {r.contract_no};{" "}
+                    {fmtDate(r.award_date) || "date not printed"};
+                    <Fragment
+                      set:html={money(r.amount, {
+                        cents: true,
+                      })}
+                    />
+                    ; {r.term || "term not printed"}; renewal:{" "}
+                    {r.renewal || "not printed"}.{r.note}
+                  </li>
+                </>
+              ))}
+            </ul>
+          </>
+        ) : (
+          ""
+        )}
+      </div>
+      {fl.length ? (
+        <>
+          <h3 style="margin-block:2rem .6rem">Patterns</h3>
+          <ul class="flaglist">
+            <Fragment
+              set:html={fl.map((f) =>
+                flagItem(f, {
+                  method: true,
+                }),
+              )}
+            />
+          </ul>
+        </>
+      ) : (
+        ""
+      )}
+    </div>
+  </div>
+</section>
+<div class="wrap">
+  <Fragment set:html={spotError()} />
+</div>

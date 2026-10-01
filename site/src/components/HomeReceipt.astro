@@ -1,0 +1,61 @@
+---
+const {
+  S,
+  citeTax,
+  fy,
+  pct,
+  depts,
+  citeRev,
+  receiptForm,
+  num,
+  median,
+  renderReceipt,
+  R,
+} = Astro.props;
+---
+
+<section class="section" id="receipt" aria-labelledby="rc-h">
+  <div class="wrap grid-2">
+    <div class="sticky">
+      <div class="section-head">
+        <h2 id="rc-h">Your receipt</h2>
+        <p class="lede">
+          Enter employment income to estimate provincial income tax and
+          illustrate its share of spending, department by department.
+        </p>
+      </div>
+      <p>
+        The receipt estimates {S.nl_tax.year} Newfoundland and Labrador income
+        tax
+        <Fragment set:html={citeTax} />, then spreads it the way the province
+        spread all its spending in {fy}. Health got{" "}
+        <Fragment set:html={pct(depts[0].share)} /> of every dollar spent, so{" "}
+        <Fragment set:html={pct(depts[0].share)} /> of the estimated tax is
+        shown there.
+      </p>
+      <p class="muted small">
+        Personal income tax brought in{" "}
+        <Fragment
+          set:html={pct(
+            S.provincial_government.personal_income_tax /
+              S.provincial_government.revenue,
+          )}
+        />{" "}
+        of provincial revenue in {S.provincial_government.year}
+        <Fragment set:html={citeRev} />; sales taxes, federal transfers and
+        resource revenue pay most of the rest. The receipt illustrates spending
+        shares; it does not trace an individual’s tax payments.{" "}
+        <a href="/method/receipt/">How the receipt works</a>.
+      </p>
+      <Fragment
+        set:html={await receiptForm({
+          id: "inc2",
+          value: num(median),
+        })}
+      />
+    </div>
+    <div data-receipt-out>
+      <Fragment set:html={renderReceipt(R, median, S)} />
+    </div>
+  </div>
+</section>

@@ -8,7 +8,7 @@ fail=0
 # More names can be added, unpublished, as NL_LEDGER_PRIVATE_NAMES (a regex) in site/.env.
 [ -f .env ] && NL_LEDGER_PRIVATE_NAMES="${NL_LEDGER_PRIVATE_NAMES:-$(sed -n 's/^NL_LEDGER_PRIVATE_NAMES=//p' .env)}"
 names="steve ?clarke|clarke, ?steve${NL_LEDGER_PRIVATE_NAMES:+|$NL_LEDGER_PRIVATE_NAMES}"
-if grep -rIiE "$names" dist lib routes worker.mjs static 2>/dev/null | cut -c1-200; then echo "FAIL: maintainer name found above"; fail=1; fi
+if grep -rIiE "$names" dist lib routes worker.mjs static src/components src/layouts 2>/dev/null | cut -c1-200; then echo "FAIL: maintainer name found above"; fail=1; fi
 if grep -rIl "<meta name=\"author\"" dist >/dev/null 2>&1; then echo "FAIL: author meta tag"; fail=1; fi
 if grep -rIoiE ".{0,30}\b(waste|wasteful|slush|corrupt|corruption)\b.{0,20}" dist --include=*.html | grep -viE "waste ?water|waste management|solid waste|waste collection|waste disposal|hazardous waste|waste oil|biomedical waste|waste removal|waste bins?|waste haul|waste audit|waste diversion|waste reduction" | head; then echo "CHECK: accusation words above (allowed only as quoted records or 'people read as waste')"; fi
 # Links, structured data, descriptions and the sitemap, on the built pages (CI has no dist, so it skips this).

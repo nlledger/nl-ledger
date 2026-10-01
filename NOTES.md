@@ -16,7 +16,7 @@ The Cloudflare account ID and D1 database ID are not in the repository. Deploys 
 
 ## Hosting
 
-- One Worker with static assets (Cloudflare's current replacement for Pages). Static pages are served from `site/dist` without running the Worker; only the paths in `runWorkerFirst` (`site/cloudflare.config.ts`) run `site/worker.mjs`, which sends them to the handlers in `site/routes/`.
+- One Worker with static assets (Cloudflare's current replacement for Pages). Astro packages the pages from `site/dist` as static assets in `site/.astro-build/client`. Only the paths in `runWorkerFirst` (`site/cloudflare.config.ts`) enter the Astro endpoint (`site/src/pages/[...path].ts`), which delegates to `site/worker.mjs` and the existing handlers in `site/routes/`. Other paths still use the asset binding without running the Worker.
 - Deploys use the `cf` CLI (open beta) with an auth profile bound to the checkout (`cf auth activate <profile>`). A login can see more than one Cloudflare account, so `cloudflare.config.ts` names the account from `CLOUDFLARE_ACCOUNT_ID`, and `d1_sync.py` passes the same variable to every `cf d1` command.
 - `cf` no longer deploys Pages projects ("Legacy Pages is not supported"), which is why the site moved off Pages.
 - `www.nlledger.ca` is a proxied placeholder record (`AAAA 100::`) and a zone redirect rule (301 to `https://nlledger.ca`, path and query kept).
@@ -30,7 +30,7 @@ The Cloudflare account ID and D1 database ID are not in the repository. Deploys 
 | `data/cache/` | Downloaded source files and `manifest.json` (URL, sha256, fetch time). Not in git |
 | `data/clean/` | One CSV per source after parsing. Not in git |
 | `data/build/ledger.db` | Local SQLite: the source of truth for the site. Not in git |
-| `site/` | Static build (`build.mjs`, `src/pages/*.mjs`), shared code (`lib/`), Worker (`worker.mjs`, `routes/`), config (`cloudflare.config.ts`, `wrangler.config.ts`) |
+| `site/` | Page data (`build.mjs`, `src/pages/*.mjs`), Astro markup (`src/components/`, `src/layouts/`), shared code (`lib/`), Worker (`worker.mjs`, `routes/`), config (`cloudflare.config.ts`, `wrangler.config.ts`) |
 | `docs/reconciliation.md`, `docs/trace-sample.md` | Checks against the sources (the trace sample is drawn once and kept) |
 | `docs/supplier-matching.md`, `docs/supplier-merges.csv`, `docs/supplier-near-matches.csv` | Supplier matching: counts and largest merges, every joined name with its evidence, close names kept apart. Written by `pipeline/suppliers.py`; reviewed decisions are in `pipeline/supplier_rules.csv` |
 | `docs/review-notes.md` | Second-review findings and what was done about them |
@@ -108,15 +108,15 @@ Every Monday 09:00 UTC the maintainer's home server runs the whole pipeline in a
 
 ```sh
 cd site
-npm ci                         # locked build tools: cf, wrangler and esbuild
-cf deploy                      # runs node build.mjs and ./check.sh, then uploads
+npm ci                         # locked Astro, Cloudflare and rendering tools
+cf deploy                      # runs Astro, data build and ./check.sh, then uploads
 cf deploy --dry-run            # build and checks only
 ```
 
 - `build.mjs` minifies CSS whitespace and comments in `site/dist`, keeps `site/static/site.css` readable, and versions CSS/JS from the emitted bytes.
 - Static assets and Worker HTML use the same security policy (`site/lib/headers.mjs`): nosniff, referrer and permissions policies, six months of HSTS, and CSP restrictions on framing, objects and the base URL. The CSP leaves the inline theme script, chart styles and Turnstile usable. `node site/check-headers.mjs` checks HTML errors, private responses and cache hits; the built-page checks verify static parity and asset versions.
-- `build.mjs` takes about 5 seconds and writes `site/dist`. `check.sh` is the guardrail: backer name, author meta, accusation words.
-- `cf deploy` hands the build to Wrangler (`site/wrangler.config.ts`) and writes its output under `site/.cloudflare/` (not in git).
+- `node build.mjs` compiles the Astro markup and writes `site/dist`; it also renders the share PNGs. `check.sh` is the guardrail: backer name, author meta, accusation words.
+- `cf deploy` invokes `astro build`. The integration in `site/scripts/astro-build.mjs` runs the data build and guardrails, then packages the adapter output with Wrangler (`site/wrangler.config.ts`). Output stays under `site/.astro-build/` and `site/.cloudflare/` (not in git). `site/scripts/adapter-config.mjs` derives the adapter binding configuration from `cloudflare.config.ts`; it never copies secret values.
 - Mobile tables: `node site/check-tables-unit.mjs` checks shared/custom rendering. With a preview running, `PLAYWRIGHT_MODULE=/path/to/playwright/index.mjs node site/check-tables.mjs after http://localhost:8791 /path/to/evidence` checks and captures 24 page types at 320, 390, 430 and 1280 px, light and dark. Phone rows retain all columns and source links; tablet and desktop tables keep their layout.
 - Local preview: `./dev.sh` from the repository root (no Cloudflare account). It serves `site/dist` and runs the Worker's route code against a local SQLite copy of the search index (`data/build/local-search.db`). With no `data/build/ledger.db` it loads the sample in `sample/`. After a full pipeline run, `cd pipeline && uv run python make_sample.py` refreshes the sample (seeded, same rows each time unless the data changes); commit `sample/`.
 

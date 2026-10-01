@@ -1,0 +1,257 @@
+---
+const {
+  pagehead,
+  SOURCES,
+  DATASETS,
+  counts,
+  esc,
+  datasetLabel,
+  LICENCES,
+  SOURCE_LICENCE,
+  num,
+  moneyWords,
+  fmtDate,
+  schedule,
+  OTHER,
+  REPO,
+  card,
+  D,
+  isBrokenPublisherLink,
+} = Astro.props;
+---
+
+<Fragment
+  set:html={await pagehead({
+    crumbs: [
+      ["/", "Home"],
+      [null, "Sources"],
+    ],
+    title: "Sources and report card",
+    lede: "Where every figure comes from, what each source covers, and how well each publisher does at publishing it.",
+  })}
+/>
+<section class="section">
+  <div class="wrap">
+    <h2 style="margin-block-end:1.5rem">Line-item sources</h2>
+    {SOURCES.filter((s) => DATASETS.includes(s.ds)).map((s) => {
+      const c = counts[s.ds] || {};
+      return (
+        <>
+          <article
+            id={s.ds}
+            style="padding-block:1.25rem;border-block-end:1px solid var(--hair)"
+          >
+            <h3>{datasetLabel(s.ds)}</h3>
+            <p class="small muted" style="margin:.3rem 0 .6rem">
+              {s.publisher} ·{" "}
+              <a href={s.url}>
+                {s.url.replace(/^https?:\/\//, "").slice(0, 60)}
+              </a>
+            </p>
+            <p>{s.what}</p>
+            <p class="small">{s.form}</p>
+            <p class="small">
+              Licence:{" "}
+              <a href={LICENCES[SOURCE_LICENCE[s.ds]].url}>
+                {LICENCES[SOURCE_LICENCE[s.ds]].name}
+              </a>
+              .
+            </p>
+            <p class="small">
+              <strong>
+                <Fragment set:html={num(c.n || 0)} /> records (CAD values only;
+                native currency and missing amounts are shown on each record)
+                <Fragment set:html={c.a ? `, ${moneyWords(c.a)}` : ""} />
+              </strong>
+              <Fragment
+                set:html={
+                  c.d0
+                    ? `, dated ${esc(fmtDate(c.d0))} to ${esc(fmtDate(c.d1))}`
+                    : ""
+                }
+              />
+              . <a href={"/search/?ds=" + s.ds}>Search them</a>.
+            </p>
+          </article>
+        </>
+      );
+    })}
+    <h2 style="margin-block:2.5rem 1rem">Other sources</h2>
+    <Fragment
+      set:html={await schedule({
+        cols: [
+          {
+            label: "Source",
+          },
+          {
+            label: "Used for",
+          },
+        ],
+        rows: OTHER.map(([t, u, w]) => ({
+          cells: [`<a href="${u}">${esc(t)}</a>`, esc(w)],
+        })),
+      })}
+    />
+  </div>
+</section>
+<section class="section" id="licences">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Licences</h2>
+      <p>
+        Each source stays under the terms of the body that published it. The
+        site's own code is under the{" "}
+        <a href={REPO + "/blob/main/LICENSE"}>MIT licence</a>.
+      </p>
+    </div>
+    <Fragment
+      set:html={await schedule({
+        compact: true,
+        cols: [
+          {
+            label: "Source",
+          },
+          {
+            label: "Publisher",
+          },
+          {
+            label: "Licence",
+          },
+          {
+            label: "Attribution and conditions",
+          },
+        ],
+        rows: [
+          ...SOURCES.filter((s) => DATASETS.includes(s.ds)).map((s) => [
+            datasetLabel(s.ds),
+            s.publisher,
+            LICENCES[SOURCE_LICENCE[s.ds]],
+          ]),
+          ...OTHER.map(([t, , , k]) => [t, "", LICENCES[k]]),
+        ].map(([src, pub, l]) => ({
+          cells: [
+            esc(src),
+            esc(pub),
+            `<a href="${esc(l.url)}">${esc(l.name)}</a>`,
+            esc(l.wording ? `Required wording: "${l.wording}"` : l.note),
+          ],
+        })),
+      })}
+    />
+    <p class="small">
+      Statistics Canada tables: the required wording is completed with the
+      table's number and reference date, as listed under Other sources. Every
+      record links to the original. Reuse of House of Assembly records follows
+      those publishers' terms, not the federal licence.
+    </p>
+  </div>
+</section>
+<section class="section" id="report-card">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Publisher report card</h2>
+      <p>
+        How complete, correct and usable each publisher's records are. This
+        grades the publishing, not the spending.
+      </p>
+    </div>
+    {card.map((c) => (
+      <>
+        <div style="padding-block:1rem;border-block-end:1px solid var(--hair)">
+          <h3>{c.body}</h3>
+          <ul class="prose" style="margin-block:.5rem 0">
+            {c.grade.map((g) => (
+              <>
+                <li>{g}</li>
+              </>
+            ))}
+          </ul>
+        </div>
+      </>
+    ))}
+    <h3 style="margin-block:2rem .8rem">Award printings counted once</h3>
+    <p class="small">
+      The full contract and purchase-order numbers and award details must agree,
+      or a source review must explain the repeat. Equal amounts and nearby dates
+      alone do not remove an award. Each counted record keeps its other
+      printings and receipts.
+    </p>
+    <Fragment
+      set:html={await schedule({
+        compact: true,
+        cols: [
+          {
+            label: "Other printing",
+          },
+          {
+            label: "Why it is counted once",
+          },
+        ],
+        rows: D.issues
+          .filter(
+            (i) =>
+              i.source === "PPA contract awards" &&
+              /counted once with/.test(i.issue),
+          )
+          .map((i) => ({
+            cells: [
+              `<a href="${esc(i.url)}">${esc(i.url.split("/").pop())}</a>`,
+              esc(i.issue),
+            ],
+          })),
+      })}
+    />
+    <h3 style="margin-block:2rem .8rem">Broken links found</h3>
+    <Fragment
+      set:html={await schedule({
+        compact: true,
+        cols: [
+          {
+            label: "Source",
+          },
+          {
+            label: "Link",
+          },
+          {
+            label: "Problem",
+          },
+        ],
+        rows: D.issues
+          .filter((i) => isBrokenPublisherLink(i.issue))
+          .map((i) => ({
+            cells: [
+              esc(i.source),
+              `<a href="${esc(i.url)}">${esc(i.url.split("/").pop())}</a>`,
+              esc(i.issue),
+            ],
+          })),
+      })}
+    />
+    <h3 style="margin-block:2rem .8rem">Publisher total discrepancies</h3>
+    <Fragment
+      set:html={await schedule({
+        compact: true,
+        cols: [
+          {
+            label: "Source",
+          },
+          {
+            label: "Receipt",
+          },
+          {
+            label: "Discrepancy",
+          },
+        ],
+        rows: D.issues
+          .filter((i) => /publisher discrepancy/.test(i.issue))
+          .map((i) => ({
+            cells: [
+              esc(i.source),
+              `<a href="${esc(i.url)}">${esc(i.url.split("/").pop())}</a>`,
+              esc(i.issue),
+            ],
+          })),
+      })}
+    />
+  </div>
+</section>

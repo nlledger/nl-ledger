@@ -1,0 +1,43 @@
+---
+const { money, income, esc, t, schedule, rows, cents, nlIncomeTax } =
+  Astro.props;
+---
+
+<h2>Worked example at the median wage</h2>
+<p>
+  The same arithmetic the receipt runs, for{" "}
+  <Fragment set:html={money(income)} /> of employment income in {t.year}. Redo
+  it with a calculator, or check it against form NL428 (lines 27 and 29 are the
+  CPP and EI credits).
+</p>
+<Fragment
+  set:html={await schedule({
+    compact: true,
+    cols: [
+      {
+        label: "Step",
+      },
+      {
+        label: "Amount",
+        num: true,
+      },
+    ],
+    rows: rows.map((r) => ({
+      cells: [esc(r[0]), r[1]],
+    })),
+  })}
+/>
+<p class="small">
+  Without the CPP and EI credits and the enhanced CPP deduction, the same income
+  would show{" "}
+  <Fragment
+    set:html={cents(
+      nlIncomeTax(income, {
+        ...t,
+        cpp: undefined,
+        ei: undefined,
+      }),
+    )}
+  />
+  .
+</p>

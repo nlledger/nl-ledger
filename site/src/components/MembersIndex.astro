@@ -1,0 +1,122 @@
+---
+const {
+  pagehead,
+  esc,
+  latestFull,
+  schedule,
+  ranked,
+  D,
+  nameOrder,
+  bar,
+  perYear,
+  rmax,
+  money,
+  mins,
+  num,
+  mhas,
+  moneyWords,
+} = Astro.props;
+---
+
+<Fragment
+  set:html={await pagehead({
+    flagged: true,
+    crumbs: [
+      ["/", "Home"],
+      [null, "Members"],
+    ],
+    title: "MHA expenses and minister expense claims",
+    lede: "What each Member of the House of Assembly (MHA) claimed against their office, travel and constituency allowances, and what each minister claimed in expenses, line by line as the House and Executive Council publish it.",
+  })}
+/>
+<section class="section">
+  <div class="wrap grid-2">
+    <div>
+      <div class="section-head">
+        <h2>MHA spending, {latestFull}</h2>
+        <p>
+          Office, travel and constituency allowances. The House publishes a
+          limit for most categories;{" "}
+          <a href="/flags/over-allowance/">no member went past one</a>. Members
+          who served part of the year, or who are ministers or party leaders
+          with other budgets, spend less from these allowances, so the list is
+          not a ranking of thrift.
+        </p>
+      </div>
+      <Fragment
+        set:html={await schedule({
+          compact: true,
+          cols: [
+            {
+              label: "Member",
+            },
+            {
+              label: "",
+              w: "36%",
+            },
+            {
+              label: "Spent",
+              num: true,
+            },
+          ],
+          rows: ranked.map((m) => ({
+            cells: [
+              `<a href="/mha/${D.slug(m.person)}/">${esc(nameOrder(m.person))}</a><span class="meta">${esc(m.district || "")}</span>`,
+              bar(perYear.get(m.person)[latestFull], rmax),
+              money(perYear.get(m.person)[latestFull]),
+            ],
+          })),
+        })}
+      />
+    </div>
+    <div>
+      <div class="section-head">
+        <h2>Ministers' claims</h2>
+        <p>
+          Travel, meals, accommodation and car allowance paid to cabinet
+          ministers, December 2020 to May 2026.
+        </p>
+      </div>
+      <Fragment
+        set:html={await schedule({
+          compact: true,
+          cols: [
+            {
+              label: "Minister",
+            },
+            {
+              label: "Claims",
+              num: true,
+            },
+            {
+              label: "Paid",
+              num: true,
+            },
+          ],
+          rows: mins.map((m) => ({
+            cells: [
+              `<a href="/ministers/${D.slug(m.person)}/">${esc(m.person)}</a>`,
+              num(m.n),
+              money(m.amount),
+            ],
+          })),
+        })}
+      />
+      <h3 style="margin-block:2rem .8rem">Every MHA since 2020-21</h3>
+      <ul class="twocol">
+        {mhas.map((m) => (
+          <>
+            <li>
+              <a href={"/mha/" + D.slug(m.person) + "/"}>
+                {nameOrder(m.person)}
+              </a>
+              <span>
+                <Fragment set:html={moneyWords(m.amount)} />
+              </span>
+            </li>
+          </>
+        ))}
+      </ul>
+    </div>
+  </div>
+</section>

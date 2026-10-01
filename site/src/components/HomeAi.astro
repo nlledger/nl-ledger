@@ -1,0 +1,61 @@
+---
+const { num, R, icon, EXAMPLE, fmtDate } = Astro.props;
+---
+
+<section class="section ai-home" id="ask-ai" aria-labelledby="ai-h">
+  <div class="wrap grid-2">
+    <div>
+      <div class="section-head">
+        <h2 id="ai-h">Ask your own AI anything</h2>
+        <p class="lede">
+          These pages show a small part of the records. Connect Claude, ChatGPT
+          or another AI assistant to all{" "}
+          <Fragment set:html={num(R.itemCount)} /> of them and ask whatever you
+          want to know, in your own words. It answers from the records and links
+          each figure to its source.
+        </p>
+      </div>
+      <div class="cta">
+        <a class="btn" href="/data/#claude">
+          Connect Claude <Fragment set:html={icon("arrow")} />
+        </a>
+        <a class="btn ghost" href="/data/#chatgpt">
+          Connect ChatGPT
+        </a>
+        <a class="btn ghost" href="/data/#connect">
+          Other assistants
+        </a>
+      </div>
+      <p class="small muted">
+        Free, read-only, no sign-in, and about a minute to set up.{" "}
+        <a href="/data/#try">See what your AI would get back</a> before
+        connecting anything.
+      </p>
+    </div>
+    <figure class="qa-fig">
+      <dl class="qa">
+        <div>
+          <dt>Asked</dt>
+          <dd class="qa-q">{EXAMPLE.q}</dd>
+        </div>
+        <div>
+          <dt>{EXAMPLE.by} answered</dt>
+          <dd class="qa-a">
+            <p>{EXAMPLE.a}</p>
+            <p class="qa-src">
+              <a href={EXAMPLE.source.href} rel="noopener">
+                {EXAMPLE.source.label} <Fragment set:html={icon("out")} />
+              </a>{" "}
+              · <a href={EXAMPLE.record}>The record on this site</a>
+            </p>
+          </dd>
+        </div>
+      </dl>
+      <figcaption>
+        A real answer from {EXAMPLE.by} (in {EXAMPLE.via}) connected to this
+        site on {fmtDate(EXAMPLE.on)}. Only the source link it ended with has
+        been moved below the text.
+      </figcaption>
+    </figure>
+  </div>
+</section>

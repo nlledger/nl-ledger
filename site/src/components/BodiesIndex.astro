@@ -1,0 +1,52 @@
+---
+const { pagehead, groups, schedule, D, esc, num, moneyWords } = Astro.props;
+---
+
+<Fragment
+  set:html={await pagehead({
+    crumbs: [
+      ["/", "Home"],
+      [null, "Public bodies"],
+    ],
+    title: "Public bodies",
+    lede: "Departments and agencies named in the records. Federal results are selected by reported addresses, not spending location; sources can overlap.",
+  })}
+/>
+{await Promise.all(
+  groups.map(async ([title, rows]) => (
+    <section class="section">
+      <div class="wrap">
+        <h2 style="margin-block-end:1rem">{title}</h2>
+        <p class="small">
+          CAD reported record values, all years. Sources can overlap; federal
+          address selection does not locate work or benefit.
+        </p>
+        <Fragment
+          set:html={await schedule({
+            compact: true,
+            cols: [
+              {
+                label: "Body",
+              },
+              {
+                label: "Records",
+                num: true,
+              },
+              {
+                label: "Value",
+                num: true,
+              },
+            ],
+            rows: rows.map((b) => ({
+              cells: [
+                `<a href="/body/${D.slug(b.buyer)}/">${esc(b.buyer)}</a>`,
+                num(b.n),
+                moneyWords(b.amount || 0),
+              ],
+            })),
+          })}
+        />
+      </div>
+    </section>
+  )),
+)}

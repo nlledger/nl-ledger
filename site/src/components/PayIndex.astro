@@ -1,0 +1,105 @@
+---
+import Caveat from "./Caveat.astro";
+const {
+  pagehead,
+  num,
+  grid,
+  latest,
+  esc,
+  otPeople,
+  moneyWords,
+  otAmt,
+  sevAmt,
+  sevPeople,
+  broken,
+  schedule,
+  years,
+  emp,
+  D,
+} = Astro.props;
+---
+
+<Fragment
+  set:html={await pagehead({
+    flagged: true,
+    crumbs: [
+      ["/", "Home"],
+      [null, "Pay over $100,000"],
+    ],
+    title: "Public sector salaries over $100,000: the sunshine list",
+    lede: "Often called the sunshine list: every public employee paid more than $100,000 in a calendar year, salary, overtime and other pay together, as the Public Sector Compensation Transparency Act requires each employer to publish. Amounts are rounded to $100 by the publisher.",
+  })}
+/>
+<section class="section">
+  <div class="wrap">
+    <div class="figs">
+      <div>
+        <span class="big">
+          <Fragment
+            set:html={num(
+              grid.size
+                ? [...grid.values()].reduce(
+                    (s, g) => s + (g[latest]?.n || 0),
+                    0,
+                  )
+                : 0,
+            )}
+          />
+        </span>
+        <span class="what">people on the {latest} lists</span>
+      </div>
+      <div>
+        <span class="big">
+          <Fragment set:html={num(otPeople)} />
+        </span>
+        <span class="what">
+          times someone's overtime was bigger than their salary, 2022 to{" "}
+          {latest}; <Fragment set:html={moneyWords(otAmt)} /> of overtime (
+          <a href="/flags/overtime-over-base/">by job</a>)
+        </span>
+      </div>
+      <div>
+        <span class="big">
+          <Fragment set:html={moneyWords(sevAmt)} />
+        </span>
+        <span class="what">
+          paid in severance, <Fragment set:html={num(sevPeople)} /> payments,
+          2022 to {latest} (<a href="/flags/severance/">by job</a>)
+        </span>
+      </div>
+    </div>
+    {
+      <Caveat
+        text={`The lists count everyone over $100,000, including overtime, so a rise in names does not mean a rise in salaries. The 2022 and 2023 core government lists are much shorter than 2024 and 2025 as published. ${broken.length} files linked from the government's disclosure page could not be downloaded (they return "page not found"), including Newfoundland and Labrador Health Services for 2023; those years are missing here.`}
+      />
+    }
+  </div>
+</section>
+<section class="section">
+  <div class="wrap">
+    <Fragment
+      set:html={await schedule({
+        cols: [
+          {
+            label: "Employer",
+          },
+          ...years.toReversed().map((y) => ({
+            label: esc(y),
+            num: true,
+          })),
+        ],
+        rows: emp.map((e) => ({
+          cells: [
+            `<a href="/pay/${D.slug(e.buyer)}/">${esc(e.buyer)}</a>`,
+            ...years.toReversed().map((y) => {
+              const g = grid.get(e.buyer)?.[y];
+              return g
+                ? `${num(g.n)}<span class="meta">${moneyWords(g.a)}</span>`
+                : '<span class="muted">not available</span>';
+            }),
+          ],
+        })),
+      })}
+    />
+  </div>
+</section>

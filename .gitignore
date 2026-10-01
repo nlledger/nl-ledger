@@ -23,3 +23,9 @@ data/
 
 # The throwaway proof reuses the site dependency directory locally.
 site/card-proof/node_modules
+
+# Astro compilation and adapter output
+site/.render/
+site/.astro/
+site/.astro-build/
+site/wrangler.astro.json

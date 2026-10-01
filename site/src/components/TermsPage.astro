@@ -1,0 +1,108 @@
+---
+const { pagehead, SITE } = Astro.props;
+---
+
+<Fragment
+  set:html={await pagehead({
+    crumbs: [
+      ["/", "Home"],
+      [null, "Terms of use"],
+    ],
+    title: "Terms of use",
+    lede: `${SITE.name} is an independent, non-commercial project, in beta. It gathers records that governments have already made public and shows them in one place, each figure linked to the government file it came from. Using the site means accepting these terms.`,
+  })}
+/>
+<section class="section">
+  <div class="wrap prose">
+    <h2>What the site is</h2>
+    <ul>
+      <li>
+        Records published by the Government of Newfoundland and Labrador, the
+        House of Assembly and the Government of Canada, gathered and combined by
+        automated scripts. The sources, their publishers and the terms each is
+        published under are on the <a href="/sources/#licences">Sources page</a>
+        .
+      </li>
+      <li>
+        Not affiliated with, endorsed by or funded by any government, party or
+        campaign.
+      </li>
+      <li>In beta. The figures have not been independently audited.</li>
+      <li>
+        Built with AI coding tools, which wrote most of its code and page text
+        under human direction. No figure is produced by an AI: every number is
+        read by code from a government record and links to that record.
+      </li>
+    </ul>
+    <h2>What the figures are, and are not</h2>
+    <ul>
+      <li>
+        Each figure is what a government record says, as read by the site's
+        scripts. Where the site adds records together, the{" "}
+        <a href="/method/">method page</a> for that figure explains how.
+      </li>
+      <li>
+        A flag or pattern is a question about the records, not a finding. It is
+        not evidence that anyone did anything wrong.
+      </li>
+      <li>
+        Names appear only as the publishing body printed them, under the laws
+        that require their publication. The site draws no conclusion about any
+        person.
+      </li>
+      <li>
+        Nothing on the site is legal, financial, tax or accounting advice. The
+        tax receipt is an illustration, not a tax calculation for any real
+        person.
+      </li>
+    </ul>
+    <h2>No guarantee</h2>
+    <p>
+      The site is provided as is. Government records contain errors and change
+      after publication, and reading them automatically adds its own mistakes.{" "}
+      <Fragment set:html={SITE.name} /> makes no promise that any figure is
+      complete, accurate or current. Before relying on a figure, check it
+      against the government record it links to; the government's own record is
+      the authority.
+    </p>
+    <h2>Limits of responsibility</h2>
+    <p>
+      To the extent the law allows, the people who make{" "}
+      <Fragment set:html={SITE.name} /> are not responsible for any loss or harm
+      from using the site, from relying on its figures, or from what anyone else
+      does with them. This includes the government files and other websites the
+      site links to, which their owners control.
+    </p>
+    <h2>Corrections</h2>
+    <p>
+      Errors are corrected when they are reported. Send them through the note
+      box at the foot of any page or to{" "}
+      <a href={"mailto:" + SITE.corrections}>
+        <Fragment set:html={SITE.corrections} />
+      </a>
+      , with the page and what is wrong. The{" "}
+      <a href="/corrections/">Corrections page</a> lists what has been changed.
+    </p>
+    <h2>Using what is here</h2>
+    <ul>
+      <li>The site's own code is open source under the MIT licence.</li>
+      <li>
+        The records stay under the terms of the bodies that published them; the{" "}
+        <a href="/sources/#licences">Sources page</a> sets those out. Anyone
+        reusing a record should cite its publisher, as the site does.
+      </li>
+    </ul>
+    <h2>Privacy</h2>
+    <p>
+      What the site collects, which is very little, is set out under{" "}
+      <a href="/about/#privacy">Privacy</a> on the About page.
+    </p>
+    <h2>Changes and governing law</h2>
+    <p>
+      These terms may change as the site does; the date below shows the latest
+      version. They are governed by the laws of Newfoundland and Labrador and of
+      Canada.
+    </p>
+    <p class="small muted">Last updated 30 September 2026.</p>
+  </div>
+</section>

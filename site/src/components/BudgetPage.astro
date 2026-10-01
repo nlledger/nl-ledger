@@ -1,0 +1,73 @@
+---
+const {
+  pagehead,
+  isLatest,
+  fy,
+  esc,
+  lede,
+  yearNav,
+  cashTable,
+  acctTable,
+  march,
+  deptTable,
+  trend,
+  checks,
+} = Astro.props;
+---
+
+<Fragment
+  set:html={await pagehead({
+    crumbs: isLatest
+      ? [
+          ["/", "Home"],
+          [null, "Budget against actual"],
+        ]
+      : [
+          ["/", "Home"],
+          ["/budget/", "Budget against actual"],
+          [null, fy],
+        ],
+    title: `Budget against actual, ${esc(fy)}`,
+    lede,
+    extra: yearNav,
+  })}
+/>
+<section class="section">
+  <div class="wrap">
+    <div class="grid-2 stmts">
+      <div>
+        <Fragment set:html={cashTable} />
+      </div>
+      <div>
+        <Fragment set:html={acctTable} />
+      </div>
+    </div>
+    <div class="prose" style="margin-block-start:2rem">
+      <h3>Two ways of counting, side by side</h3>
+      <p>
+        The first statement counts cash paid by government departments, which is
+        what the House of Assembly votes on. The second is the audited result
+        for the whole government: it adds Newfoundland and Labrador Health
+        Services, Memorial University, Newfoundland and Labrador Hydro and the
+        other public bodies the province controls, and records costs when they
+        are incurred, not when they are paid. The province publishes both. A
+        figure from one cannot be added to or subtracted from a figure in the
+        other. <a href="/method/budget/">How they line up</a>.
+      </p>
+    </div>
+  </div>
+</section>
+<section class="section" id="departments">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>By department, largest differences first</h2>
+      <p>
+        What each department was budgeted in the spring of {fy.slice(0, 4)},
+        what it spent by <Fragment set:html={march(fy)} />, and the difference.
+      </p>
+    </div>
+    <Fragment set:html={deptTable} />
+  </div>
+</section>
+<Fragment set:html={trend} />
+<Fragment set:html={checks} />

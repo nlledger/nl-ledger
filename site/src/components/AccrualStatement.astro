@@ -1,0 +1,70 @@
+---
+import BudgetCashRow from "./StatementRow.astro";
+const { a, cell, march, fy, citeDebtBudget, DOCS, rcpt, pp, money, citePP } =
+  Astro.props;
+---
+
+<p class="sched-hint">Scroll sideways for more columns.</p>
+<div class="sched-wrap">
+  <table class="sched pin-rows stmt tight">
+    <caption>How the year ended for the whole government</caption>
+    <thead>
+      <tr>
+        <th scope="col">
+          <span class="vh">Line</span>
+        </th>
+        <th scope="col" class="n">
+          Budget
+        </th>
+        <th scope="col" class="n">
+          Actual
+        </th>
+        <th scope="col" class="n">
+          Difference
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      {<BudgetCashRow label={"Revenue"} x={a.revenue} cell={cell} />}
+      {<BudgetCashRow label={"Expense"} x={a.expense} cell={cell} />}
+      <tr class="total">
+        <th scope="row">Surplus or (deficit)</th>
+        <Fragment set:html={cell(a.balance.budget)} />
+        <Fragment set:html={cell(a.balance.actual)} />
+        <Fragment set:html={cell(a.balance.actual - a.balance.budget)} />
+      </tr>
+      {
+        <BudgetCashRow
+          label={
+            <>
+              Net debt at <Fragment set:html={march(fy)} />
+              <Fragment set:html={citeDebtBudget} />
+              <span class="meta">what is owed, less financial assets held</span>
+            </>
+          }
+          x={a.net_debt}
+          cell={cell}
+        />
+      }
+    </tbody>
+  </table>
+</div>
+<p class="small muted">
+  Accrual basis, audited: departments together with Crown corporations, boards
+  and authorities. {DOCS.public_accounts},{" "}
+  <Fragment set:html={rcpt(a.balance.source)} /> and{" "}
+  <Fragment set:html={rcpt(a.net_debt.source)} />. The budget column is the
+  Original Budget the statements print, unaudited.
+  {pp ? (
+    <>
+      {" "}
+      Net debt for each person in the province, as the province works it out:{" "}
+      <strong>
+        <Fragment set:html={money(pp.value)} />
+      </strong>
+      <Fragment set:html={citePP} />.
+    </>
+  ) : (
+    ""
+  )}
+</p>

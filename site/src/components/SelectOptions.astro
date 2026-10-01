@@ -1,0 +1,9 @@
+---
+const { options, selected } = Astro.props;
+---
+
+{options.map(([value, label]) => (
+  <option value={value} selected={value === selected}>
+    {label}
+  </option>
+))}

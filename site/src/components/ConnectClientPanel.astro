@@ -1,0 +1,59 @@
+---
+const { c, esc, chat, copyBlock, at, actionButton, list, icon, VERIFIED } =
+  Astro.props;
+---
+
+<article
+  class="client"
+  id={c.id}
+  data-client={c.id}
+  aria-labelledby={"h-" + c.id}
+>
+  <header class="client-head">
+    <h3 id={"h-" + c.id}>{c.name}</h3>
+    <p class={chat ? undefined : "muted small"}>{c.lead}</p>
+  </header>
+  <Fragment
+    set:html={
+      chat
+        ? await Promise.all(
+            c.copy.map(async (x) => await copyBlock(x.label, x.text)),
+          )
+        : ""
+    }
+  />
+  <Fragment set:html={c.action && at === 0 ? actionButton(c.action) : ""} />
+  <Fragment set:html={list(c.steps.slice(0, Math.max(0, at)), 1)} />
+  <Fragment set:html={c.action && at > 0 ? actionButton(c.action) : ""} />
+  <Fragment
+    set:html={list(c.steps.slice(Math.max(0, at)), Math.max(0, at) + 1)}
+  />
+  <Fragment
+    set:html={
+      chat
+        ? ""
+        : await Promise.all(
+            c.copy.map(async (x) => await copyBlock(x.label, x.text)),
+          )
+    }
+  />
+  {c.note ? (
+    <>
+      <p class="small">{c.note}</p>
+    </>
+  ) : (
+    ""
+  )}
+  <p class="client-check small">
+    <Fragment
+      set:html={
+        c.verified === "tested"
+          ? `${icon("check")}${esc(VERIFIED.tested)} `
+          : ""
+      }
+    />
+    <a href={c.doc} rel="noopener">
+      {c.docName || c.name}'s own instructions
+    </a>
+  </p>
+</article>

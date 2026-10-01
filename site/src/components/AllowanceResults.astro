@@ -1,0 +1,10 @@
+---
+const { num, reports, broken } = Astro.props;
+---
+
+<p class="lede">
+  No member spent more than a published limit in any category, in any year from
+  2020-21 to 2025-26. The check covered every category that has a limit in the{" "}
+  {num(reports)} annual detail reports that load; {num(broken)} reports linked
+  from the House of Assembly site are broken and could not be checked.
+</p>

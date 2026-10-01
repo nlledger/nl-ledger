@@ -3,17 +3,27 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node build.mjs",
+    "build": "astro build",
     "dev": "cf dev",
-    "deploy": "cf deploy"
+    "deploy": "cf deploy",
+    "prepare": "node scripts/compile-astro.mjs",
+    "check:astro": "node scripts/compile-astro.mjs",
+    "format": "prettier --plugin=prettier-plugin-astro --write src/components src/layouts"
   },
   "devDependencies": {
+    "@astrojs/compiler-rs": "0.5.1",
     "cf": "^1.0.0-beta.5",
     "esbuild": "0.28.1",
+    "parse5": "^8.0.1",
+    "prettier": "^3.9.9",
+    "prettier-plugin-astro": "^1.1.0",
+    "typescript": "^6.0.3",
     "wrangler": "^4.143.1"
   },
   "dependencies": {
+    "@astrojs/cloudflare": "^14.3.3",
     "@resvg/resvg-wasm": "2.6.2",
+    "astro": "^7.3.5",
     "satori": "0.26.0"
   }
 }

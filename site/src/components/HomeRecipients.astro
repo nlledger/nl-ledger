@@ -1,0 +1,116 @@
+---
+const { num, R, icon, esc, leaders, levelTotals, moneyWords } = Astro.props;
+---
+
+<section class="section" aria-labelledby="wh-h">
+  <div class="wrap grid-2">
+    <div>
+      <div class="section-head">
+        <h2 id="wh-h">Reported record values by source</h2>
+        <p class="lede">
+          <Fragment set:html={num(R.itemCount)} /> line items from provincial
+          and federal records: contract awards (including sole-source), grants,
+          MHA and minister expense claims and salaries over $100,000 (the
+          sunshine list).
+        </p>
+      </div>
+      <form
+        class="field"
+        action="/search/"
+        method="get"
+        role="search"
+        style="max-inline-size:30rem"
+      >
+        <label for="wq">Search every record</label>
+        <div class="field-row">
+          <span class="pre">
+            <Fragment set:html={icon("search")} />
+          </span>
+          <input
+            id="wq"
+            name="q"
+            type="search"
+            placeholder="Try ferry, snow clearing, consulting"
+            autocomplete="off"
+          />
+          <button class="btn" type="submit">
+            Search
+          </button>
+        </div>
+      </form>
+      <ul class="chips" style="margin-block-start:1rem">
+        {R.suggestions.map((s) => (
+          <>
+            <li>
+              <a href={"/search/?q=" + encodeURIComponent(s)}>{s}</a>
+            </li>
+          </>
+        ))}
+      </ul>
+      <h3 style="margin-block:2rem .8rem">Source summaries, all years</h3>
+      <Fragment
+        set:html={leaders(
+          levelTotals.map((l) => ({
+            label: `<span class="sw lv-${esc(l.level)}"></span>${esc(l.label)}`,
+            value: moneyWords(l.amount),
+          })),
+        )}
+      />
+      <p class="small muted" style="margin-block-start:.8rem">
+        Federal records are selected by reported supplier or recipient
+        addresses, including labelled conflicts. Addresses do not establish
+        where work, benefits or spending occurred; no NL share is inferred.
+        These are whole reported commitments, not amounts paid. Sources and
+        agreements can overlap and cover different years: do not add them as a
+        spending total. Major transfers are separate context on the{" "}
+        <a href="/federal/">federal page</a>. Provincial records include awards,
+        expense claims and pay. <a href="/sources/">What each source covers</a>.
+      </p>
+    </div>
+    <div>
+      <h3 style="margin-block-end:.8rem">
+        Largest reported values within each source
+      </h3>
+      <p class="small">
+        Each source is ranked separately across all years. Agreements and
+        sources can overlap: these values are not total receipts or spending in
+        NL. Federal address selection does not locate the work or benefit; read
+        the location evidence on each record.
+      </p>
+      <p class="sched-hint">Scroll sideways for more columns.</p>
+      <div class="sched-wrap">
+        <table class="sched pin-rows compact">
+          <thead>
+            <tr>
+              <th scope="col">Recipient</th>
+              <th scope="col" class="n">
+                On record
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {R.topRecipients.map((r) => (
+              <>
+                <tr>
+                  <th scope="row">
+                    <a href={r.href}>{r.name}</a>
+                    <span class="meta">{r.sources}</span>
+                  </th>
+                  <td class="n">
+                    <Fragment set:html={moneyWords(r.amount)} />
+                  </td>
+                </tr>
+              </>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="small muted">
+        Contract values and grant agreement values as reported, which can span
+        several years; not money paid in one year. Federal major transfers to
+        the provincial government (health, social) are not in this list; they
+        are on the <a href="/federal/">federal page</a>.
+      </p>
+    </div>
+  </div>
+</section>

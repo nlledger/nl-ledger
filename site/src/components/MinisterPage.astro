@@ -1,0 +1,149 @@
+---
+import Caveat from "./Caveat.astro";
+const {
+  pagehead,
+  m,
+  esc,
+  fmtDate,
+  num,
+  money,
+  depts,
+  leaders,
+  cats,
+  payroll,
+  schedule,
+  claims,
+  receipt,
+  spotError,
+} = Astro.props;
+---
+
+<Fragment
+  set:html={await pagehead({
+    flagged: true,
+    crumbs: [
+      ["/", "Home"],
+      ["/members/", "Members"],
+      [null, m.person],
+    ],
+    title: esc(m.person),
+    lede: `Minister's expense claims paid from ${esc(fmtDate(m.d0))} to ${esc(fmtDate(m.d1))}: ${num(m.n)} lines, ${money(
+      m.amount,
+      {
+        cents: true,
+      },
+    )}. Departments: ${depts.map(esc).join("; ")}.`,
+  })}
+/>
+<section class="section">
+  <div class="wrap grid-2">
+    <div>
+      <h2 style="margin-block-end:1rem">What the travel claims were for</h2>
+      <Fragment
+        set:html={leaders([
+          {
+            label: "Airfare, taxis, mileage and other travel",
+            value: money(cats.travel, {
+              cents: true,
+            }),
+          },
+          {
+            label: "Accommodations",
+            value: money(cats.accommodations, {
+              cents: true,
+            }),
+          },
+          {
+            label: "Meals and incidentals",
+            value: money(cats.meals, {
+              cents: true,
+            }),
+          },
+          {
+            label: "Hospitality",
+            value: money(cats.hospitality, {
+              cents: true,
+            }),
+          },
+          {
+            label: "Other (registrations, fees)",
+            value: money(cats.other, {
+              cents: true,
+            }),
+          },
+          {
+            label: "Car allowance through payroll",
+            value: money(
+              payroll.reduce((s, c) => s + (c.amount || 0), 0),
+              {
+                cents: true,
+              },
+            ),
+          },
+          {
+            label: "Total",
+            value: money(m.amount, {
+              cents: true,
+            }),
+            cls: "total",
+          },
+        ])}
+      />
+      <p class="small muted" style="margin-block-start:1rem">
+        Category totals come from each claim's detail page in the PDF. Claims
+        paid directly by the department (some airfare and hotels) appear as
+        their own lines.
+      </p>
+    </div>
+    <div>
+      {
+        <Caveat
+          text={
+            "Ministers are reimbursed under the Ministerial Expense Reimbursement Policy. These records show what was paid; they do not say whether a claim followed the policy."
+          }
+        />
+      }
+    </div>
+  </div>
+</section>
+<section class="section">
+  <div class="wrap">
+    <Fragment
+      set:html={await schedule({
+        cols: [
+          {
+            label: "Purpose",
+          },
+          {
+            label: "Date",
+            w: "7.5rem",
+          },
+          {
+            label: "Amount",
+            num: true,
+          },
+          {
+            label: "Source",
+            num: true,
+          },
+        ],
+        rows: claims.map((c) => {
+          const x = JSON.parse(c.extra || "{}");
+          return {
+            cells: [
+              `${esc(c.description)}${x.routes ? `<span class="meta">${esc(x.routes)}</span>` : ""}<span class="meta">${esc(c.method)} · ${esc(c.buyer)}</span>`,
+              esc(fmtDate(c.date)),
+              money(c.amount, {
+                cents: true,
+              }),
+              receipt(c.source_url, c.page, c.locator),
+            ],
+          };
+        }),
+      })}
+    />
+  </div>
+</section>
+<div class="wrap">
+  <Fragment set:html={spotError()} />
+</div>

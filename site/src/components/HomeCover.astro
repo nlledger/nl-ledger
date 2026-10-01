@@ -1,0 +1,72 @@
+---
+const {
+  moneyWords,
+  total,
+  cite,
+  fy,
+  money,
+  perPerson,
+  S,
+  citePop,
+  num,
+  people,
+  citeWage,
+  ledger,
+  R,
+  icon,
+} = Astro.props;
+---
+
+<section class="cover" aria-labelledby="cover-h">
+  <div class="cover-in">
+    <h1 id="cover-h" class="cover-title">
+      The Newfoundland and Labrador government spent
+    </h1>
+    <p class="cover-fig">
+      <Fragment set:html={moneyWords(total)} />
+      <Fragment set:html={cite} />
+    </p>
+    <p class="cover-sub">
+      in {fy}. That is{" "}
+      <em>
+        <Fragment set:html={money(perPerson(total, S))} />
+      </em>{" "}
+      for every person in the province
+      <Fragment set:html={citePop} />, or what{" "}
+      <em>
+        <Fragment set:html={num(people)} />
+      </em>{" "}
+      people earning the median full-time wage make in a year
+      <Fragment set:html={citeWage} />.
+    </p>
+    <details class="cover-budget">
+      <summary>Budget, deficit and debt</summary>
+      <Fragment set:html={ledger} />
+    </details>
+    <form
+      class="field cover-search"
+      action="/search/"
+      method="get"
+      role="search"
+    >
+      <label for="cq">
+        Search <Fragment set:html={num(R.itemCount)} /> records
+      </label>
+      <div class="field-row">
+        <span class="pre">
+          <Fragment set:html={icon("search")} />
+        </span>
+        <input
+          id="cq"
+          name="q"
+          type="search"
+          placeholder="A company, a town, a word"
+          autocomplete="off"
+        />
+        <button class="btn" type="submit">
+          Search
+        </button>
+      </div>
+    </form>
+  </div>
+</section>

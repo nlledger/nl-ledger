@@ -1,0 +1,13 @@
+---
+const { title, lede } = Astro.props;
+---
+
+<header class="pagehead">
+  <div class="wrap">
+    <p class="crumbs">
+      <a href="/">Home</a> / Feedback
+    </p>
+    <h1>{title}</h1>
+    {lede && <p class="lede">{lede}</p>}
+  </div>
+</header>

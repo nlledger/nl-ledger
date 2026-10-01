@@ -1,0 +1,26 @@
+---
+const { icon, feedbackForm, page } = Astro.props;
+---
+
+<section class="fb" id="feedback" aria-labelledby="fb-h">
+  <div class="fb-in">
+    <div class="fb-say">
+      <h2 id="fb-h">Something missing, wrong or confusing?</h2>
+      <p>
+        Say so here. No account is needed, and no email program. Every note is
+        read.
+      </p>
+      <p class="fb-asked">
+        <a href="/asked/">
+          What people asked for, and what was done{" "}
+          <Fragment set:html={icon("arrow")} />
+        </a>
+      </p>
+    </div>
+    <Fragment
+      set:html={await feedbackForm({
+        page,
+      })}
+    />
+  </div>
+</section>

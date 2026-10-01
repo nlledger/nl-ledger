@@ -1,0 +1,13 @@
+---
+const { inline, label, body, icon } = Astro.props;
+---
+
+<div class={"copy" + (inline ? " inline" : "")}>
+  <span class="copy-label">{label}</span>
+  <pre tabindex="0"><code><Fragment set:html={body} /></code></pre>
+  <button class="copy-btn" type="button" data-copy hidden>
+    <Fragment set:html={icon("copy", "i-copy")} />
+    <Fragment set:html={icon("check", "i-done")} />
+    <span aria-live="polite">Copy</span>
+  </button>
+</div>

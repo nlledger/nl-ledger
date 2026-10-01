@@ -1,0 +1,123 @@
+---
+const { pagehead, S, money, R, workedExample, pct, methodCode } = Astro.props;
+---
+
+<Fragment
+  set:html={await pagehead({
+    crumbs: [
+      ["/", "Home"],
+      ["/method/", "Methods"],
+      [null, "The receipt"],
+    ],
+    title: "Method: the personal receipt",
+    lede: "What the receipt computes, and what it leaves out.",
+  })}
+/>
+<section class="section">
+  <div class="wrap prose">
+    <ol>
+      <li>
+        Your provincial income tax is worked out from your income with the{" "}
+        {S.nl_tax.year} Newfoundland and Labrador brackets (
+        <Fragment
+          set:html={S.nl_tax.brackets
+            .map(
+              (b) =>
+                `${(b[2] * 100).toFixed(1)}%${b[1] ? ` up to ${money(b[1])}` : " above that"}`,
+            )
+            .join(", ")}
+        />
+        ), less the basic personal amount credit (
+        <Fragment set:html={money(S.nl_tax.basic_personal_amount)} /> at{" "}
+        <Fragment set:html={(S.nl_tax.brackets[0][2] * 100).toFixed(1)} />
+        %). Source: {S.nl_tax.source_label}.
+      </li>
+      <li>
+        The receipt treats your income as employment income from one job. The
+        enhanced CPP and CPP2 contributions are deducted from it to get net
+        income, which the brackets and the low-income reduction then use.
+      </li>
+      <li>
+        The Newfoundland and Labrador low-income tax reduction is applied for a
+        single person: $997, less 16% of net income over $23,928 (form NL428,
+        2025).
+      </li>
+      <li>
+        Two more credits, at the same lowest rate (
+        <Fragment set:html={(S.nl_tax.brackets[0][2] * 100).toFixed(1)} />
+        %), come from what an employee pays into the Canada Pension Plan and
+        Employment Insurance (form NL428 lines 27 and 29): base CPP is{" "}
+        <Fragment set:html={(S.nl_tax.cpp.base_rate * 100).toFixed(2)} />% of
+        earnings from <Fragment set:html={money(S.nl_tax.cpp.exemption)} /> to{" "}
+        <Fragment set:html={money(S.nl_tax.cpp.ympe)} />; EI is{" "}
+        <Fragment set:html={(S.nl_tax.ei.rate * 100).toFixed(2)} />% of earnings
+        up to <Fragment set:html={money(S.nl_tax.ei.max_insurable)} />. Enhanced
+        CPP is{" "}
+        <Fragment set:html={(S.nl_tax.cpp.enhanced_rate * 100).toFixed(0)} />%
+        of the same earnings, and CPP2 is{" "}
+        <Fragment set:html={(S.nl_tax.cpp.cpp2_rate * 100).toFixed(0)} />% of
+        earnings from <Fragment set:html={money(S.nl_tax.cpp.ympe)} /> to{" "}
+        <Fragment set:html={money(S.nl_tax.cpp.yampe)} />. Sources:{" "}
+        <a href={S.nl_tax.cpp.source} rel="noopener">
+          CRA, CPP rates and maximums
+        </a>
+        ,{" "}
+        <a href={S.nl_tax.ei.source} rel="noopener">
+          CRA, EI premium rates and maximums
+        </a>
+        .
+      </li>
+      <li>
+        Other credits (pension, age, tuition, dependants) are not applied, so
+        the receipt overstates tax somewhat for anyone who has them.
+      </li>
+      <li>
+        That tax is split across departments in proportion to each department's
+        share of gross spending in <Fragment set:html={R.year} />, from the
+        Report on the Program Expenditures and Revenues of the Consolidated
+        Revenue Fund.
+      </li>
+      <li>
+        "Your share" of a contract is the contract's value times your tax
+        divided by all provincial spending that year: the fraction of everything
+        the province spent that your tax matches.
+      </li>
+    </ol>
+    <Fragment set:html={await workedExample(S)} />
+    <p>
+      Provincial spending is paid for by many revenues. Personal income tax was{" "}
+      <Fragment
+        set:html={pct(
+          S.provincial_government.personal_income_tax /
+            S.provincial_government.revenue,
+        )}
+      />{" "}
+      of provincial revenue in {S.provincial_government.year} (Statistics Canada
+      table <Fragment set:html={S.provincial_government.table} />
+      ). The receipt shows how your part would be spread, not the whole bill.
+      With JavaScript, the calculation stays in your browser. Without it, or
+      when you open a shared receipt link, the income is sent in the web
+      address. Worker logs omit query strings, and feedback leaves the receipt
+      income out. The address remains in browser history and any link you share.
+    </p>
+    <Fragment
+      set:html={await methodCode(
+        [
+          [
+            "site/lib/receipt.mjs",
+            "spreads a tax bill across departments and contracts",
+          ],
+          [
+            "site/lib/format.mjs",
+            "the NL428 tax calculation with CPP and EI credits",
+          ],
+          ["pipeline/stats.py", "loads the Statistics Canada figures it uses"],
+        ],
+        {
+          title: "the personal tax receipt",
+          path: "/method/receipt/",
+        },
+      )}
+    />
+  </div>
+</section>

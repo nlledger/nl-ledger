@@ -1,0 +1,60 @@
+---
+import Caveat from "./Caveat.astro";
+const { pagehead, f, esc, seo, icon, cat, results, federalSummary, D } =
+  Astro.props;
+---
+
+<Fragment
+  set:html={await pagehead({
+    crumbs: [
+      ["/", "Home"],
+      ["/flags/", "Patterns"],
+      [null, f.title],
+    ],
+    title: esc(f.title),
+    lede: esc(f.short),
+  })}
+/>
+<section class="section">
+  <div class="wrap">
+    <div class="grid-2" style="margin-block-end:2.5rem">
+      <div>
+        <p>{f.why}</p>
+        {seo?.note ? (
+          <>
+            <p>{seo.note}</p>
+          </>
+        ) : (
+          ""
+        )}
+        <p>
+          <a href={"/method/" + f.id + "/"}>
+            How this is worked out, and what it cannot tell you{" "}
+            <Fragment set:html={icon("arrow")} />
+          </a>
+        </p>
+      </div>
+      <div>{<Caveat text={esc(cat.caveat)} />}</div>
+    </div>
+    <Fragment set:html={results} />
+    <Fragment
+      set:html={
+        f.data.some((d) =>
+          [
+            "fed_contract",
+            "fed_grant",
+            "canadabuys",
+            "pa_pss",
+            "pa_tp",
+          ].includes(d),
+        )
+          ? await federalSummary(
+              D,
+              "id IN (SELECT item_id FROM flags WHERE flag=?)",
+              f.id,
+            )
+          : ""
+      }
+    />
+  </div>
+</section>

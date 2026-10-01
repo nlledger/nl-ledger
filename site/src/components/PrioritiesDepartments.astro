@@ -1,0 +1,32 @@
+---
+const { moneyWords, sum, latest, cite, money, perPerson, S, workTime } =
+  Astro.props;
+---
+
+<div class="figs">
+  <div>
+    <span class="big">
+      <Fragment set:html={moneyWords(sum.gross)} />
+    </span>
+    <span class="what">
+      spent by the province in {latest}
+      <Fragment set:html={cite} />
+    </span>
+  </div>
+  <div>
+    <span class="big">
+      <Fragment set:html={money(perPerson(sum.gross, S))} />
+    </span>
+    <span class="what">
+      of provincial spending for every person in the province
+    </span>
+  </div>
+  <div>
+    <span class="big">
+      <Fragment set:html={workTime(sum.gross, S)} />
+    </span>
+    <span class="what">
+      of work at the median full-time wage to earn what the province spent
+    </span>
+  </div>
+</div>

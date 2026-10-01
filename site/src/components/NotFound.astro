@@ -1,0 +1,23 @@
+---
+const { pagehead } = Astro.props;
+---
+
+<Fragment
+  set:html={await pagehead({
+    title: "Not in the ledger",
+    lede: "That page does not exist. Try a search.",
+  })}
+/>
+<section class="section">
+  <div class="wrap">
+    <form class="field" action="/search/" style="max-inline-size:30rem">
+      <label for="nq">Search every payment</label>
+      <div class="field-row">
+        <input id="nq" name="q" type="search" />
+        <button class="btn" type="submit">
+          Search
+        </button>
+      </div>
+    </form>
+  </div>
+</section>

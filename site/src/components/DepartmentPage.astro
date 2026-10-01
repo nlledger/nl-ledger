@@ -1,0 +1,183 @@
+---
+const {
+  pagehead,
+  dep,
+  esc,
+  estYear,
+  figs,
+  trend,
+  schedule,
+  bar,
+  tmax,
+  moneyWords,
+  progTable,
+  estTable,
+  prof,
+  latest,
+  money,
+  receipt,
+  awards,
+  num,
+  awardTotal,
+  noComp,
+  ITEM_COLS,
+  itemRow,
+  D,
+  bodyHref,
+} = Astro.props;
+---
+
+<Fragment
+  set:html={await pagehead({
+    crumbs: [
+      ["/", "Home"],
+      ["/priorities/", "Priorities"],
+      [null, dep.name],
+    ],
+    title: esc(dep.name),
+    lede: dep.years.length
+      ? `Reported under this name in ${esc(dep.years.join(", "))}${dep.est ? ` and in the ${esc(estYear)} estimates` : ""}.`
+      : `Appears in the ${esc(estYear)} budget estimates.`,
+  })}
+/>
+<section class="section">
+  <div class="wrap">
+    <Fragment set:html={figs} />
+    {trend.length > 1 ? (
+      <>
+        <h3 style="margin-block-end:.8rem">Spending by year</h3>
+        <Fragment
+          set:html={await schedule({
+            compact: true,
+            cols: [
+              {
+                label: "Fiscal year",
+              },
+              {
+                label: "",
+                w: "50%",
+              },
+              {
+                label: "Spent",
+                num: true,
+              },
+            ],
+            rows: trend.map((t) => ({
+              cells: [
+                esc(t.y),
+                bar(t.v || 0, tmax),
+                t.v ? moneyWords(t.v) : "",
+              ],
+            })),
+          })}
+        />
+      </>
+    ) : (
+      ""
+    )}
+  </div>
+</section>
+<section class="section">
+  <div class="wrap">
+    <Fragment set:html={progTable} />
+  </div>
+</section>
+{estTable ? (
+  <>
+    <section class="section">
+      <div class="wrap">
+        <Fragment set:html={estTable} />
+      </div>
+    </section>
+  </>
+) : (
+  ""
+)}
+{prof.length ? (
+  <>
+    <section class="section">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Professional services</h2>
+          <p>
+            Outside expertise, including consultants, paid from this
+            department's programs in {latest}.
+          </p>
+        </div>
+        <Fragment
+          set:html={await schedule({
+            cols: [
+              {
+                label: "Program",
+              },
+              {
+                label: "Professional services",
+                num: true,
+              },
+              {
+                label: "Source",
+                num: true,
+              },
+            ],
+            rows: prof.map((p) => ({
+              cells: [
+                esc(p.program),
+                money(p.v),
+                receipt(p.source_url, p.page),
+              ],
+            })),
+          })}
+        />
+      </div>
+    </section>
+  </>
+) : (
+  ""
+)}
+{awards.length ? (
+  <>
+    <section class="section">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Contracts awarded</h2>
+          <p>
+            <Fragment set:html={num(awards.length)} /> awards in the Public
+            Procurement Agency reports since 2021,{" "}
+            <Fragment set:html={moneyWords(awardTotal)} /> in all;{" "}
+            <Fragment set:html={num(noComp.length)} /> of them (
+            <Fragment
+              set:html={moneyWords(
+                noComp.reduce((s, a) => s + (a.amount || 0), 0),
+              )}
+            />
+            ) without an open competition. Open-call awards by departments are
+            posted on MERX instead and are not in these reports.
+          </p>
+        </div>
+        <Fragment
+          set:html={await schedule({
+            cols: ITEM_COLS,
+            rows: awards.slice(0, 60).map((a) =>
+              itemRow(D, a, {
+                showBuyer: false,
+              }),
+            ),
+          })}
+        />
+        {awards.length > 60 ? (
+          <>
+            <p>
+              <a href={bodyHref(D, awards[0].buyer)}>
+                All <Fragment set:html={num(awards.length)} /> awards
+              </a>
+            </p>
+          </>
+        ) : (
+          ""
+        )}
+      </div>
+    </section>
+  </>
+) : (
+  ""
+)}

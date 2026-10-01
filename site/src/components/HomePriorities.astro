@@ -1,0 +1,155 @@
+---
+const {
+  fy,
+  top,
+  bar,
+  max,
+  moneyWords,
+  money,
+  perPerson,
+  S,
+  depts,
+  total,
+  D,
+  icon,
+} = Astro.props;
+---
+
+<section class="section" aria-labelledby="pr-h">
+  <div class="wrap">
+    <div class="section-head">
+      <h2 id="pr-h">Priorities</h2>
+      <p class="lede">
+        Where the provincial dollar went in {fy}, set against what the budget
+        said it would cost.
+      </p>
+    </div>
+    <ul class="legend">
+      <li>
+        <span class="sw"></span>Spent (actual)
+      </li>
+      <li>
+        <span class="sw ghost"></span>Budgeted (original estimate)
+      </li>
+    </ul>
+    <p class="sched-hint">Scroll sideways for more columns.</p>
+    <div class="sched-wrap">
+      <table class="sched pin-rows">
+        <thead>
+          <tr>
+            <th scope="col">Department</th>
+            <th scope="col" class="hide-sm" style="inline-size:36%">
+              Spent against budget
+            </th>
+            <th scope="col" class="n">
+              Spent
+            </th>
+            <th scope="col" class="n">
+              Budgeted
+            </th>
+            <th scope="col" class="n hide-sm">
+              Per person
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {top.map((d) => (
+            <>
+              <tr>
+                <th scope="row">
+                  <a href={"/department/" + d.slug + "/"}>{d.name}</a>
+                </th>
+                <td class="hide-sm">
+                  <span class="pair">
+                    <Fragment set:html={bar(d.gross, max)} />
+                    <Fragment
+                      set:html={
+                        d.original != null ? bar(d.original, max, "ghost") : ""
+                      }
+                    />
+                  </span>
+                </td>
+                <td class="n">
+                  <Fragment set:html={moneyWords(d.gross)} />
+                </td>
+                <td class="n">
+                  <Fragment
+                    set:html={
+                      d.original ? moneyWords(d.original) : "not printed"
+                    }
+                  />
+                </td>
+                <td class="n hide-sm">
+                  <Fragment set:html={money(perPerson(d.gross, S))} />
+                </td>
+              </tr>
+            </>
+          ))}
+          <tr class="sub">
+            <th scope="row">
+              <a href="/priorities/">
+                <Fragment set:html={depts.length - top.length} /> more
+                departments
+              </a>
+            </th>
+            <td class="hide-sm"></td>
+            <td class="n">
+              <Fragment
+                set:html={moneyWords(
+                  depts.slice(top.length).reduce((s, d) => s + d.gross, 0),
+                )}
+              />
+            </td>
+            <td class="n">
+              <Fragment
+                set:html={moneyWords(
+                  depts
+                    .slice(top.length)
+                    .reduce((s, d) => s + (d.original || 0), 0),
+                )}
+              />
+            </td>
+            <td class="n hide-sm">
+              <Fragment
+                set:html={money(
+                  perPerson(
+                    depts.slice(top.length).reduce((s, d) => s + d.gross, 0),
+                    S,
+                  ),
+                )}
+              />
+            </td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr class="total">
+            <th scope="row">
+              All <Fragment set:html={depts.length} /> departments
+            </th>
+            <td class="hide-sm"></td>
+            <td class="n">
+              <Fragment set:html={moneyWords(total)} />
+            </td>
+            <td class="n">
+              <Fragment
+                set:html={moneyWords(
+                  depts.reduce((s, d) => s + (d.original || 0), 0),
+                )}
+              />
+            </td>
+            <td class="n hide-sm">
+              <Fragment set:html={money(perPerson(total, S))} />
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <p style="margin-block-start:1.5rem">
+      <a href="/priorities/">
+        Every department and program, {D.years[0]} to {fy}{" "}
+        <Fragment set:html={icon("arrow")} />
+      </a>{" "}
+      · <a href="/budget/">Budget against actual, the deficit and net debt</a>
+    </p>
+  </div>
+</section>

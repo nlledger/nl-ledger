@@ -1,0 +1,48 @@
+---
+const { R, receiptForm, raw, valid, num, income, money, a, renderReceipt } =
+  Astro.props;
+---
+
+<header class="pagehead">
+  <div class="wrap">
+    <p class="crumbs">
+      <a href="/">Home</a> / Your receipt
+    </p>
+    <h1>Your receipt</h1>
+    <p class="lede">
+      An estimate of {R.tax.year} provincial income tax on employment income,
+      illustrated using the province’s {R.year} spending shares.{" "}
+      <a href="/method/receipt/">How this is worked out</a>.
+    </p>
+  </div>
+</header>
+<section class="section">
+  <div class="wrap grid-2">
+    <div>
+      <Fragment
+        set:html={await receiptForm({
+          id: "inc",
+          value: raw && !valid ? raw : num(income),
+          error:
+            raw && !valid
+              ? "Enter an amount in dollars, for example 55000. The median-wage illustration is shown until you enter a valid income."
+              : "",
+        })}
+      />
+      <p class="small muted">
+        With JavaScript, the calculation stays in your browser. Without it, or
+        when you open a shared receipt link, the income is sent in the web
+        address. Worker logs omit its query string, and feedback leaves the
+        income out. The address remains in browser history and in any link you
+        share.
+      </p>
+      <p class="small muted">
+        The median full-time wage in the province is{" "}
+        <Fragment set:html={money(a.stats.median_annual_wage.value)} />.
+      </p>
+    </div>
+    <div data-receipt-out>
+      <Fragment set:html={renderReceipt(R, income, a.stats)} />
+    </div>
+  </div>
+</section>

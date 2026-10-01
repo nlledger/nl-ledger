@@ -1,0 +1,166 @@
+---
+const {
+  pagehead,
+  nameOrder,
+  m,
+  esc,
+  num,
+  money,
+  yrs,
+  byYearCat,
+  schedule,
+  receipt,
+  vendors,
+  D,
+  big,
+  fmtDate,
+  phash,
+  icon,
+  spotError,
+} = Astro.props;
+---
+
+<Fragment
+  set:html={await pagehead({
+    flagged: true,
+    crumbs: [
+      ["/", "Home"],
+      ["/members/", "Members"],
+      [null, nameOrder(m.person)],
+    ],
+    title: esc(nameOrder(m.person)),
+    lede: `Member of the House of Assembly for ${esc(m.district || "a district")}. ${num(m.n)} expense lines from ${esc(m.y0)} to ${esc(m.y1)}, ${money(m.amount)} in all.`,
+  })}
+/>
+<section class="section">
+  <div class="wrap">
+    <Fragment
+      set:html={(
+        await Promise.all(
+          yrs.map(async (y) => {
+            const cats = [...byYearCat.values()]
+              .filter((e) => e.y === y)
+              .sort((a, b) => b.a - a.a);
+            return await schedule({
+              caption: esc(y),
+              compact: true,
+              cols: [
+                {
+                  label: "Allowance category",
+                },
+                {
+                  label: "Lines",
+                  num: true,
+                },
+                {
+                  label: "Spent",
+                  num: true,
+                },
+                {
+                  label: "Source",
+                  num: true,
+                },
+              ],
+              rows: cats.map((c) => ({
+                cells: [
+                  esc(c.cat),
+                  num(c.n),
+                  money(c.a, {
+                    cents: true,
+                  }),
+                  receipt(c.url, c.page),
+                ],
+              })),
+              foot: [
+                {
+                  cells: [
+                    "Total",
+                    num(cats.reduce((s, c) => s + c.n, 0)),
+                    money(
+                      cats.reduce((s, c) => s + c.a, 0),
+                      {
+                        cents: true,
+                      },
+                    ),
+                    "",
+                  ],
+                },
+              ],
+            });
+          }),
+        )
+      ).join('<div style="block-size:2rem"></div>')}
+    />
+  </div>
+</section>
+<section class="section">
+  <div class="wrap grid-2">
+    <div>
+      <h2 style="margin-block-end:1rem">Paid to</h2>
+      <Fragment
+        set:html={await schedule({
+          compact: true,
+          cols: [
+            {
+              label: "Vendor as printed",
+            },
+            {
+              label: "Lines",
+              num: true,
+            },
+            {
+              label: "Paid",
+              num: true,
+            },
+          ],
+          rows: vendors.map((v) => ({
+            cells: [
+              `<a href="/supplier/${D.keyHash(v.supplier_key)}/">${esc(v.supplier)}</a>`,
+              num(v.n),
+              money(v.a),
+            ],
+          })),
+        })}
+      />
+    </div>
+    <div>
+      <h2 style="margin-block-end:1rem">Largest lines</h2>
+      <Fragment
+        set:html={await schedule({
+          compact: true,
+          cols: [
+            {
+              label: "Line",
+            },
+            {
+              label: "Amount",
+              num: true,
+            },
+            {
+              label: "Source",
+              num: true,
+            },
+          ],
+          rows: big.map((l) => ({
+            cells: [
+              `${esc(l.supplier || "")}<span class="meta">${esc(l.description || "")} · ${esc(l.method)} · ${esc(fmtDate(l.date))}</span>`,
+              money(l.amount, {
+                cents: true,
+              }),
+              receipt(l.source_url, l.page, l.locator),
+            ],
+          })),
+        })}
+      />
+      <p>
+        <a href={"/search/?ds=mha&p=" + phash}>
+          Search all <Fragment set:html={num(m.n)} /> lines{" "}
+          <Fragment set:html={icon("arrow")} />
+        </a>
+      </p>
+    </div>
+  </div>
+</section>
+<div class="wrap">
+  <Fragment set:html={spotError()} />
+</div>

@@ -6,20 +6,66 @@ import { SECURITY_HEADERS } from "../lib/headers.mjs";
 let cache = null;
 export async function assets(ctx) {
   if (cache) return cache;
-  const get = async (p) => (await ctx.env.ASSETS.fetch(new URL(p, ctx.request.url))).json();
-  const [stats, flags, version, links] = await Promise.all([get("/data/stats.json"), get("/data/flags.json"), get("/data/version.json"), get("/data/links.json")]);
+  const get = async (p) =>
+    (await ctx.env.ASSETS.fetch(new URL(p, ctx.request.url))).json();
+  const [stats, flags, version, links] = await Promise.all([
+    get("/data/stats.json"),
+    get("/data/flags.json"),
+    get("/data/version.json"),
+    get("/data/links.json"),
+  ]);
   setAssetVersion(version.v);
-  cache = { stats, links, flags: Object.fromEntries(flags.flags.map((f) => [f.id, f])), caveat: flags.caveat, updated: version.updated, version: version.v + (version.data || "") + (version.code || "") };
+  cache = {
+    stats,
+    links,
+    flags: Object.fromEntries(flags.flags.map((f) => [f.id, f])),
+    caveat: flags.caveat,
+    updated: version.updated,
+    version: version.v + (version.data || "") + (version.code || ""),
+  };
   return cache;
 }
 
-export function page(ctx, a, { title, description, body, status = 200, path, maxAge = 3600, jsonld, robots, feedback, share, sharePath }) {
+export async function page(
+  ctx,
+  a,
+  {
+    title,
+    description,
+    body,
+    status = 200,
+    path,
+    maxAge = 3600,
+    jsonld,
+    robots,
+    feedback,
+    share,
+    sharePath,
+  },
+) {
   const u = new URL(ctx.request.url);
   // Search context keeps its words; receipt context leaves out income.
-  const htmlText = layout({ title, description, body, path: path || u.pathname, updated: a.updated, jsonld, robots, feedback, share, sharePath, shareOrigin: ctx.env.SHARE_ORIGIN || undefined, at: feedbackContext(u.pathname + u.search) });
+  const htmlText = await layout({
+    title,
+    description,
+    body,
+    path: path || u.pathname,
+    updated: a.updated,
+    jsonld,
+    robots,
+    feedback,
+    share,
+    sharePath,
+    shareOrigin: ctx.env.SHARE_ORIGIN || undefined,
+    at: feedbackContext(u.pathname + u.search),
+  });
   return new Response(htmlText, {
     status,
-    headers: { ...SECURITY_HEADERS, "content-type": "text/html; charset=utf-8", "cache-control": `public, max-age=${maxAge}` },
+    headers: {
+      ...SECURITY_HEADERS,
+      "content-type": "text/html; charset=utf-8",
+      "cache-control": `public, max-age=${maxAge}`,
+    },
   });
 }
 
@@ -53,7 +99,9 @@ export function searchIO(ctx) {
     // Words the records contain, for spelling help (build.mjs writes it; about 90 KB compressed, read once per isolate).
     vocab: async () => {
       if (!vocab) {
-        const res = await env.ASSETS.fetch(new URL("/data/words.json", ctx.request.url));
+        const res = await env.ASSETS.fetch(
+          new URL("/data/words.json", ctx.request.url),
+        );
         if (!res.ok) throw new Error("no vocabulary");
         vocab = await res.json();
       }
