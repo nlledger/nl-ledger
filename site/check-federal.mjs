@@ -10,7 +10,7 @@ import { buildSupplierShards } from "./src/shards.mjs";
 import { flagResultsJSON } from "./src/mcpdata.mjs";
 import { handleMcp, PROMPTS, serverJson, serverCard } from "./lib/mcp.mjs";
 import { getItem } from "./lib/search.mjs";
-import { datasetLd } from "./src/seo.mjs";
+import { datasetLd, LICENSE } from "./src/seo.mjs";
 import {
   nativeAmount,
   reportedBreakdown,
@@ -294,6 +294,7 @@ assert.equal(
     name: "Federal records",
     path: "/federal/",
     description: FEDERAL_RULE,
+    license: LICENSE.federal,
   }).spatialCoverage,
   undefined,
 );
@@ -301,6 +302,8 @@ assert.equal(
   datasetLd({
     name: "Provincial accounts",
     path: "/priorities/",
+    description: FEDERAL_RULE,
+    license: LICENSE.provincial,
     spatialCoverage: "Newfoundland and Labrador, Canada",
   }).spatialCoverage,
   "Newfoundland and Labrador, Canada",
