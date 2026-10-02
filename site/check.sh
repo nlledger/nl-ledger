@@ -18,6 +18,7 @@ SET_HTML_CAP=54
 count=$(grep -r "set:html" src | wc -l | tr -d ' ')
 if [ "$count" -gt "$SET_HTML_CAP" ]; then echo "FAIL: $count set:html uses in src (cap $SET_HTML_CAP)"; fail=1; fi
 node check-components.mjs || fail=1
+node check-dataset-ld.mjs || fail=1
 # Links, structured data, descriptions and the sitemap, on the built pages (CI has no dist, so it skips this).
 if [ -f dist/index.html ]; then node check-dist.mjs || fail=1; fi
 echo "guardrails: $([ $fail = 0 ] && echo pass || echo FAIL)"

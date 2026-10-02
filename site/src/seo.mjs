@@ -37,7 +37,12 @@ export function siteLd() {
 }
 
 // A Dataset. `files` are the site's own JSON files; `license` is the publisher's licence URL or a list of them.
+// Google rejects a Dataset without a description of 50 to 5000 characters and flags one without a creator or licence,
+// so a call that cannot supply them fails the build here instead of reaching the page.
 export function datasetLd({ name, description, path, license, period, spatialCoverage, files = [], publishers = [] }) {
+  const text = String(description || "");
+  if (text.length < 50 || text.length > 5000) throw new Error(`Dataset ${path}: description must be 50 to 5000 characters (got ${text.length})`);
+  if (!license || (Array.isArray(license) && !license.length)) throw new Error(`Dataset ${path}: license is required`);
   const d = {
     "@context": "https://schema.org",
     "@type": "Dataset",
@@ -51,7 +56,8 @@ export function datasetLd({ name, description, path, license, period, spatialCov
   };
   if (spatialCoverage) d.spatialCoverage = spatialCoverage;
   if (period) d.temporalCoverage = period;
-  if (publishers.length) d.isBasedOn = publishers.map((p) => ({ "@type": "Dataset", name: p.name, url: p.url }));
+  // The publishers' pages are cited, not described: a CreativeWork is not validated as a Dataset of its own.
+  if (publishers.length) d.isBasedOn = publishers.map((p) => ({ "@type": "CreativeWork", name: p.name, url: p.url }));
   if (files.length) d.distribution = files.map((f) => ({ "@type": "DataDownload", encodingFormat: "application/json", contentUrl: `${SITE.url}${f}` }));
   return d;
 }
