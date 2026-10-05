@@ -82,7 +82,7 @@ Every Monday 09:00 UTC the maintainer's home server runs the whole pipeline in a
 | Process | any parse, build, flags, reconcile or export error |
 | Guards (`guards.py check`) | a new download failure, nothing fetched in 8 days, a dataset down over 2% or fewer cached files than the last good run |
 | D1 budget (`d1_sync.py --dry-run`) | the sync would pass 90,000 writes; checked before deploying so the site and the search index stay in step |
-| Deploy (`cf deploy`) | build or `check.sh` fails, or the upload fails |
+| Deploy (`cf deploy`) | the upload fails. `NL_LEDGER_DIST_BUILT=1` makes the Astro build package the `dist` from the site build step instead of running `build.mjs` again |
 | Live check | `https://nlledger.ca/` does not serve the page just built within two minutes |
 | D1 sync | a D1 error, or remote and local counts differ |
 | Meaning index (`vectorize_sync.py`) | a Workers AI or Vectorize error; its `--dry-run` also runs before deploying, so a token without those permissions stops the run before anything changes |
@@ -91,6 +91,8 @@ Every Monday 09:00 UTC the maintainer's home server runs the whole pipeline in a
 
 - The job needs `CLOUDFLARE_API_TOKEN` (an account token: Workers edit, D1 edit, Workers AI read, Vectorize edit, account settings read; zone read and Workers routes edit on `nlledger.ca`), `CLOUDFLARE_ACCOUNT_ID`, `NL_LEDGER_D1_ID` and the `NL_LEDGER_S3_*` settings in `archive.py`.
 - A failure that has been checked and is real (a report withdrawn, a link the publisher broke for good, a better de-duplication) is accepted for one run with `NL_LEDGER_ACCEPT_CHANGES=1`; that run becomes the new baseline.
+- Dead links the publishers still list (missing since the first run, never used) are in `GONE` in `pipeline/common.py`; `fetch()` skips them without a request.
+- The container has 1.5 GB. `build.mjs` alone peaks near 0.9 GB; run a second time under `cf` and `astro` it was killed for memory (2026-10-05 run), hence the skip above.
 - The last lines of a run are `SUMMARY: Data gathered <date>; <items> items; <rows> rows written` or `FAILED at <step>: ...`.
 - Run the same container locally: `docker build -t nl-ledger-pipeline . && docker run --rm --env-file site/.env -v "$PWD/data:/app/data" nl-ledger-pipeline` (it deploys).
 

@@ -29,6 +29,38 @@ DISABLED = {"paradise", "stjohns"}
 # fetching and fails on any failure the last good run did not already have (guards.py).
 FAILURES = CACHE / "_fetch_failures.json"
 
+# Links the publishers still list to files that were missing on NL Ledger's first run (2026-09-29)
+# and were never used. fetch() skips them without a request, so they stop appearing in every run's notes.
+GONE = {
+    "https://www.assembly.nl.ca/Members/Expenses/Reports/Apr2024-Mar2025/LanePaulElvisDet2024-25.pdf",
+    "https://www.assembly.nl.ca/Members/Expenses/Reports/Apr2024-Mar2025/LanePaulElvisSum2024-25.pdf",
+    "https://www.assembly.nl.ca/Members/Expenses/Reports/Apr2025-Mar2026/GambinWalshSherryDet2025-26.pdf",
+    "https://www.assembly.nl.ca/Members/Expenses/Reports/Apr2025-Mar2026/GambinWalshSherrySum2025-26.pdf",
+    "https://www.assembly.nl.ca/Members/Expenses/Reports/Apr2025-Mar2026/KingMichaelDet2025-26.pdf",
+    "https://www.assembly.nl.ca/Members/Expenses/Reports/Apr2025-Mar2026/KingMichaelSum2025-26.pdf",
+    "https://www.assembly.nl.ca/Members/Expenses/Reports/Apr2025-Mar2026/ParsonsAndrew2025-26.pdf",
+    "https://www.assembly.nl.ca/Members/Expenses/Reports/Apr2025-Mar2026/ParsonsPam2025-26.pdf",
+    "https://www.gov.nl.ca/exec/tbs/files/CUDGC-Compensation-Disclosure-2022-1.xlsx",
+    "https://www.gov.nl.ca/exec/tbs/files/NL-Housing-Corporation-Compensation-Disclosure-2022.xlsx",
+    "https://www.gov.nl.ca/exec/tbs/files/NL-Liquor-Corporation-Compensation-Disclosure-2022.xlsx",
+    "https://www.gov.nl.ca/exec/tbs/files/NLC-Compensation-Disclosure.xlsx",
+    "https://www.gov.nl.ca/exec/tbs/files/NLESD-2022-Compensation-Disclosure-2022.xlsx",
+    "https://www.gov.nl.ca/exec/tbs/files/NLH-and-Affiliates-Compensation-Disclosure-2022.xlsx",
+    "https://www.gov.nl.ca/exec/tbs/files/NLHC-Compensation-Disclosure.xlsx",
+    "https://www.gov.nl.ca/exec/tbs/files/Newfoundland-and-Labrador-Health-Services-Compensation-Disclosure.xlsx",
+    "https://www.gov.nl.ca/exec/tbs/files/Newfoundland-and-Labrador-Hydro-and-Affiliates-Compensation-Disclosure.xlsx",
+    "https://www.gov.nl.ca/exec/tbs/files/Oil-and-Gas-Corporation-NL-Compensation-Disclosure-2022.xlsx",
+    "https://www.gov.nl.ca/exec/tbs/files/Oil-and-Gas-Corporation-of-Newfoundland-and-Labrador-Compensation-Disclosure.xlsx",
+    "https://www.gov.nl.ca/exec/tbs/files/PACSW-Compensation-Disclosure.xlsx",
+    "https://www.gov.nl.ca/exec/tbs/files/PILRB-Compensation-Disclosure.xlsx",
+    "https://www.gov.nl.ca/exec/tbs/files/PPA-Compensation-Disclosure.xlsx",
+    "https://www.gov.nl.ca/exec/tbs/files/PSC-Compensation-Disclosure.xlsx",
+    "https://www.gov.nl.ca/exec/tbs/files/RNC-Compensation-Disclosure.xlsx",
+    "https://www.gov.nl.ca/exec/tbs/files/The-Rooms-Compensation-Disclosure-2.xlsx",
+    "https://www.gov.nl.ca/exec/tbs/files/WHSCRD-Compensation-Disclosure-1.xlsx",
+    "https://www.gov.nl.ca/exec/tbs/files/Workplace-NL-Compensation-Disclosure.xlsx",
+}
+
 UA = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/128.0 Safari/537.36"
@@ -145,6 +177,8 @@ def fetch(url: str, dest: Path, *, refresh: bool = False, max_age_days: float | 
 
     Files that the publisher replaces in place (the federal bulk files) pass max_age_days so a
     weekly run fetches them again; published reports never change and are fetched once."""
+    if url in GONE:
+        return None
     dest = cache_path(dest)
     tmp = cache_path(dest.with_suffix(dest.suffix + ".part"))
     cache_path(FAILURES)

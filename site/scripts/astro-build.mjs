@@ -1,19 +1,33 @@
 // cf detects Astro and invokes `astro build`. Keep data, guardrails and Worker packaging in that build.
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { cpSync, mkdirSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 const cwd = fileURLToPath(new URL("../", import.meta.url));
+function run(cmd, args) {
+  try {
+    execFileSync(cmd, args, { cwd, stdio: "inherit" });
+  } catch (e) {
+    if (e.signal === "SIGKILL")
+      throw new Error(`${args[0] ?? cmd} was killed, most likely out of memory`);
+    throw e;
+  }
+}
+
 export function ledgerBuild() {
   return {
     name: "nl-ledger-build",
     hooks: {
       "astro:config:setup": ({ command }) => {
         if (command !== "build") return;
-        execFileSync(process.execPath, ["build.mjs"], {
-          cwd,
-          stdio: "inherit",
-        });
-        execFileSync("./check.sh", [], { cwd, stdio: "inherit" });
+        // The weekly job has already run build.mjs and check.sh on its own. Running build.mjs
+        // again under astro and cf needs more memory than the job's container has.
+        if (process.env.NL_LEDGER_DIST_BUILT === "1") {
+          if (!existsSync(`${cwd}dist/index.html`))
+            throw new Error("NL_LEDGER_DIST_BUILT=1 but dist/index.html is missing");
+          return;
+        }
+        run(process.execPath, ["build.mjs"]);
+        run("./check.sh", []);
       },
       "astro:build:done": () => {
         // Vite discovers public files before config:setup builds dist. Copy the

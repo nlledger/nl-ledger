@@ -20,6 +20,7 @@ BULK = {
 for y in (2022, 2023, 2024, 2025):
     BULK[f"federal/pss-{y}.csv"] = f"https://donnees-data.tpsgc-pwgsc.gc.ca/ba1/idsps-dipss/idsps-dipss-{y}.csv"
     BULK[f"federal/tp-{y}.csv"] = f"https://donnees-data.tpsgc-pwgsc.gc.ca/ba1/pt-tp/pt-tp-{y}.csv"
+for y in (2024, 2025):  # the multi-year transfer table starts with 2024
     BULK[f"federal/mtp-{y}.csv"] = f"https://donnees-data.tpsgc-pwgsc.gc.ca/ba1/ppt-mtp/ppt-mtp-{y}.csv"
 
 DATASTORE = "https://open.canada.ca/data/en/api/3/action/datastore_search"
