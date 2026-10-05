@@ -59,7 +59,8 @@ class Downloads(unittest.TestCase):
             p = patch.object(module, "CACHE", self.cache)
             p.start()
             self.addCleanup(p.stop)
-        for name, file in (("MANIFEST", "manifest.json"), ("FAILURES", "_fetch_failures.json")):
+        for name, file in (("MANIFEST", "manifest.json"), ("FAILURES", "_fetch_failures.json"),
+                           ("GONE_TRIED", "_gone_tried.json")):
             p = patch.object(common, name, self.cache / file)
             p.start()
             self.addCleanup(p.stop)
@@ -109,6 +110,25 @@ class Downloads(unittest.TestCase):
             self.assert_rejected(lambda: common.fetch("https://example.test/a.pdf", dest, manifest={}))
             link.unlink()
         self.assertEqual(sentinel.read_bytes(), b"KEEP")
+
+    def test_gone_link_retried_monthly_without_notes(self):
+        url = "https://example.test/gone.pdf"
+        dest = self.cache / "mha/gone.pdf"
+        with patch.object(common, "GONE", {url}):
+            self.request.return_value = Response(b"<!DOCTYPE html><html>not found</html>")
+            self.assertIsNone(common.fetch(url, dest, manifest={}))
+            self.assertIsNone(common.fetch(url, dest, manifest={}))
+            self.assertEqual(self.request.call_count, 1, "a GONE link was tried twice within the retry period")
+            self.assertFalse((self.cache / "_fetch_failures.json").exists(), "a GONE link was recorded as a failure")
+            tried = self.cache / "_gone_tried.json"
+            tried.write_text(json.dumps({url: "2000-01-01T00:00:00+00:00"}))
+            self.request.return_value = Response()
+            manifest = {}
+            self.assertEqual(common.fetch(url, dest, manifest=manifest), dest)
+            self.assertEqual(dest.read_bytes(), PDF)
+            self.assertIn("mha/gone.pdf", manifest)
+            self.assertEqual(common.fetch(url, dest, manifest=manifest), dest)
+            self.assertEqual(self.request.call_count, 2, "a fetched GONE link was not served from the cache")
 
     def mha_listing(self, href):
         return patch.object(provincial, "get_text", side_effect=[MEMBERS, f'<a href="{href}">report</a>'])

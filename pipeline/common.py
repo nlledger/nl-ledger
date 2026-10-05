@@ -30,7 +30,10 @@ DISABLED = {"paradise", "stjohns"}
 FAILURES = CACHE / "_fetch_failures.json"
 
 # Links the publishers still list to files that were missing on NL Ledger's first run (2026-09-29)
-# and were never used. fetch() skips them without a request, so they stop appearing in every run's notes.
+# and were never used. fetch() tries each at most once every GONE_RETRY_DAYS (a current-year report
+# may still be posted) and never records its failure, so they stay out of every run's notes.
+GONE_RETRY_DAYS = 30
+GONE_TRIED = CACHE / "_gone_tried.json"
 GONE = {
     "https://www.assembly.nl.ca/Members/Expenses/Reports/Apr2024-Mar2025/LanePaulElvisDet2024-25.pdf",
     "https://www.assembly.nl.ca/Members/Expenses/Reports/Apr2024-Mar2025/LanePaulElvisSum2024-25.pdf",
@@ -171,14 +174,24 @@ def is_stale(rel: str, manifest: dict, max_age_days: float | None) -> bool:
     return age.total_seconds() > max_age_days * 86400
 
 
+def _gone_due(url: str) -> bool:
+    """True when a GONE link was last tried over GONE_RETRY_DAYS ago; marks it tried now."""
+    path = cache_path(GONE_TRIED)
+    tried = json.loads(path.read_text()) if path.exists() else {}
+    now = datetime.now(timezone.utc)
+    if url in tried and (now - datetime.fromisoformat(tried[url])).days < GONE_RETRY_DAYS:
+        return False
+    tried[url] = now.isoformat(timespec="seconds")
+    cache_write_text(path, json.dumps(tried, indent=1, sort_keys=True))
+    return True
+
+
 def fetch(url: str, dest: Path, *, refresh: bool = False, max_age_days: float | None = None,
           manifest: dict | None = None) -> Path | None:
     """Download url to dest unless already cached. Records url, sha256, fetched_at.
 
     Files that the publisher replaces in place (the federal bulk files) pass max_age_days so a
     weekly run fetches them again; published reports never change and are fetched once."""
-    if url in GONE:
-        return None
     dest = cache_path(dest)
     tmp = cache_path(dest.with_suffix(dest.suffix + ".part"))
     cache_path(FAILURES)
@@ -194,11 +207,18 @@ def fetch(url: str, dest: Path, *, refresh: bool = False, max_age_days: float | 
             if own:
                 save_manifest(manifest)
         return dest
+    if url in GONE and not _gone_due(url):
+        return None
+
+    def fail(reason: str) -> None:
+        if url not in GONE:
+            record_failure(url, dest, reason)
+
     for attempt in range(3):
         try:
             r = _session.get(url, timeout=120, stream=True)
             if r.status_code == 404:
-                record_failure(url, dest, "404 not found")
+                fail("404 not found")
                 return None
             r.raise_for_status()
             tmp = cache_path(tmp)
@@ -210,7 +230,7 @@ def fetch(url: str, dest: Path, *, refresh: bool = False, max_age_days: float | 
             if dest.suffix.lower() not in (".html", ".htm") and (head.startswith(b"<!doctype") or head.startswith(b"<html")):
                 tmp.unlink()
                 print(f"  NOT FOUND (HTML page served for {url})")
-                record_failure(url, dest, "HTML page served instead of the file")
+                fail("HTML page served instead of the file")
                 return None
             cache_path(tmp).rename(cache_path(dest))
             manifest[rel] = {
@@ -224,7 +244,7 @@ def fetch(url: str, dest: Path, *, refresh: bool = False, max_age_days: float | 
         except requests.RequestException as e:
             if attempt == 2:
                 print(f"  FAILED {url}: {e}")
-                record_failure(url, dest, str(e)[:200])
+                fail(str(e)[:200])
                 return None
             time.sleep(2 * (attempt + 1))
     return None

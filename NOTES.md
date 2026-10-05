@@ -91,7 +91,7 @@ Every Monday 09:00 UTC the maintainer's home server runs the whole pipeline in a
 
 - The job needs `CLOUDFLARE_API_TOKEN` (an account token: Workers edit, D1 edit, Workers AI read, Vectorize edit, account settings read; zone read and Workers routes edit on `nlledger.ca`), `CLOUDFLARE_ACCOUNT_ID`, `NL_LEDGER_D1_ID` and the `NL_LEDGER_S3_*` settings in `archive.py`.
 - A failure that has been checked and is real (a report withdrawn, a link the publisher broke for good, a better de-duplication) is accepted for one run with `NL_LEDGER_ACCEPT_CHANGES=1`; that run becomes the new baseline.
-- Dead links the publishers still list (missing since the first run, never used) are in `GONE` in `pipeline/common.py`; `fetch()` skips them without a request.
+- Dead links the publishers still list (missing since the first run, never used) are in `GONE` in `pipeline/common.py`. `fetch()` tries each at most once every 30 days (`data/cache/_gone_tried.json`), so a report posted late is still picked up, and never counts their failures.
 - The container has 1.5 GB. `build.mjs` alone peaks near 1.2 GB; run a second time under `cf` and `astro` (about 0.55 GB more) it was killed for memory (2026-10-05 run), hence the skip above.
 - The last lines of a run are `SUMMARY: Data gathered <date>; <items> items; <rows> rows written` or `FAILED at <step>: ...`.
 - Run the same container locally: `docker build -t nl-ledger-pipeline . && docker run --rm --env-file site/.env -v "$PWD/data:/app/data" nl-ledger-pipeline` (it deploys).
