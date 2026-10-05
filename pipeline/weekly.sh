@@ -52,13 +52,14 @@ step "meaning index check"
 uv run python vectorize_sync.py --dry-run
 
 step "site build"
-# Build and run the guardrails before deploying; cf deploy runs its own build again.
+# Build and run the guardrails before deploying.
 cd ../site
 node build.mjs
 ./check.sh
 
 step "deploy"
-npx cf deploy
+# dist was built and checked in the step above; the Astro build packages it as it is.
+NL_LEDGER_DIST_BUILT=1 npx cf deploy
 local_hash=$(sha256sum dist/index.html | cut -d' ' -f1)
 gathered=$(grep -o 'Data gathered [^<]*' dist/index.html | head -1 | sed 's/\.$//')
 
