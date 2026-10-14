@@ -114,10 +114,16 @@ def main():
         sys.exit(f"Refusing: {writes:,} writes is over --max-writes {max_writes:,} (D1 free plan: 100,000 a day).")
     if dry:
         return
+    def ids(rids):
+        # Row ids are 60-bit. Sent as a bound parameter, one arrives rounded to the nearest double
+        # (810319528619886561 is stored as 810319528619886592), so earlier syncs stored oversized
+        # documents under the rounded id. Deletes cover both; inserts now put the id in the SQL text.
+        return ",".join(str(x) for rid in rids for x in {rid, int(float(rid))})
+
     def send(rids, stmts):
         # Each request first deletes the old versions of the documents it inserts, so a changed
         # document is never missing between requests, and a retried request cannot collide.
-        query(";\n".join([f"DELETE FROM docs WHERE rowid IN ({','.join(map(str, rids))})", *stmts]))
+        query(";\n".join([f"DELETE FROM docs WHERE rowid IN ({ids(rids)})", *stmts]))
 
     batch, rids, size, done = [], [], 0, 0
     for rid in new:
@@ -125,8 +131,8 @@ def main():
         stmt = f"INSERT INTO docs({','.join(COLS)}) VALUES ({','.join(q(d[c]) for c in COLS)})"
         if len(stmt) > 90_000:
             # D1 refuses a statement over 100 KB (SQLITE_TOOBIG); bound values do not count towards it.
-            query(f"DELETE FROM docs WHERE rowid = {rid}")
-            query(f"INSERT INTO docs({','.join(COLS)}) VALUES ({','.join('?' * len(COLS))})", [d[c] for c in COLS])
+            query(f"DELETE FROM docs WHERE rowid IN ({ids([rid])})")
+            query(f"INSERT INTO docs({','.join(COLS)}) VALUES ({rid},{','.join('?' * (len(COLS) - 1))})", [d[c] for c in COLS[1:]])
             done += 1
             continue
         if size + len(stmt) > 90_000 and batch:
@@ -142,9 +148,8 @@ def main():
         done += len(batch)
     import hashlib
     for i in range(0, len(gone), 500):
-        # the same rowid export.py assigns, as an exact integer literal
-        ids = ",".join(str(int(hashlib.sha1(doc.encode()).hexdigest()[:15], 16)) for doc in gone[i:i + 500])
-        query(f"DELETE FROM docs WHERE rowid IN ({ids})")
+        # the same rowid export.py assigns
+        query(f"DELETE FROM docs WHERE rowid IN ({ids(int(hashlib.sha1(doc.encode()).hexdigest()[:15], 16) for doc in gone[i:i + 500])})")
     query("INSERT OR REPLACE INTO meta(k, v) VALUES ('synced_at', ?)", [time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())])
     n = query("SELECT count(*) n FROM docs")["result"][0]["results"][0]["n"]
     print(f"done: inserted {done:,}, replaced {len(stale) - len(gone):,}, deleted {len(gone):,}; remote now holds {n:,} documents (local {len(local):,}); {ROWS_WRITTEN:,} rows written")
