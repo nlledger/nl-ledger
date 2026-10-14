@@ -126,10 +126,11 @@ def main():
             f"- Grants and contributions selected by reported recipient province NL (including labelled address conflicts): {g['raw_rows']:,} rows worth {money(g['raw_value'])}. One value per "
             f"agreement (department, agreement number, recipient; a renamed recipient stays in its agreement): latest amendment where "
             f"the department reports running totals, amendments summed where it reports changes "
-            f"({', '.join(g.get('delta_departments', []))}): {g['agreements']:,} agreements worth {money(g['dedup_value'])}. "
+            f"({', '.join(g.get('delta_departments', []))}) until the department's restated total replaces them "
+            f"(isc-sac and aandc-aadnc from 2026-27 Q1): {g['agreements']:,} agreements worth {money(g['dedup_value'])}. "
             "Agreement values can span several years.",
-            "- Check of the change-reporting departments against Public Accounts transfer payments to NL recipients "
-            "(payments of $100K or more):"]
+            "- Check of the change-reporting departments' rows from before any restated total against Public Accounts "
+            "transfer payments to NL recipients (payments of $100K or more):"]
     for cr in g.get("change_reporting", {}).values():
         out.append(f"  - {cr['department']}: rows added up {money(cr['summed'])}; latest row only {money(cr['latest_only'])}; "
                    f"paid {cr['paid_years']} {money(cr['paid'])}.")

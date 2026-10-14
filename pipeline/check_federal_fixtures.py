@@ -50,7 +50,7 @@ def main():
             if actual != wanted:
                 problems.append(f"{label} {field}: {actual!r} parsed, {wanted!r} expected")
         if dataset == "fed_grant":
-            rule = "sum of" if case["department"] in parser.CHANGE_REPORTING else "latest of"
+            rule = expected.get("rule") or ("sum of" if case["department"] in parser.CHANGE_REPORTING else "latest of")
             if not row["how"].startswith(rule):
                 problems.append(f"{label}: counting rule {row['how']!r}, expected {rule!r}")
         else:
