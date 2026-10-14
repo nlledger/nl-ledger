@@ -1,6 +1,6 @@
 # Federal amendment fixtures
 
-`../cache/federal/` contains **22 grant rows and 15 contract rows** selected from
+`../cache/federal/` contains **58 grant rows and 15 contract rows** selected from
 `data/cache/federal/` in the main checkout, with every publisher field retained.
 Grant JSON lines are copied verbatim; contract CSV records retain their original
 field values and header. No records were invented. Source order is retained,
@@ -11,7 +11,8 @@ reference and recipient, number of versions, exact value, publisher links, and
 locators in the original cached file (`csv_record` counts CSV records with the
 header as record 1, matching the parser; `line` counts JSONL lines from 1). CSV
 fields contain embedded newlines, so CSV record numbers are not physical lines. It also records the full cached files' SHA-256 hashes and the contracts
-fetch time, 2026-09-29. Federal sources use the Open Government Licence – Canada.
+fetch time, 2026-09-29. The two 2026-27 restatement chains come from the grants file of
+2026-10-12, recorded as its own source with its hash. Federal sources use the Open Government Licence – Canada.
 The grants cache was selected by publisher-reported `recipient_province = NL`.
 
 | Department / agreement or procurement | Rule checked | Rows | Retained value (CAD) |
@@ -23,6 +24,8 @@ The grants cache was selected by publisher-reported `recipient_province = NL`.
 | Crown-Indigenous Relations / 1819-HQ-000034 | Five changes, including a negative amendment | 5 | 3,531,937.00 |
 | Canadian Heritage / 1337983 | Sum three changes, all numbered amendment 0 | 3 | 21,768,583.00 |
 | Public Health Agency / 1718-HQ-000283 | Original plus extension change | 2 | 2,509,260.00 |
+| Crown-Indigenous Relations / 2425-HQ-000020 | 2026-27 restated total replaces three changes | 4 | 2,901,754.00 |
+| Indigenous Services / 2526-AT-000004 | Restated grant and contribution totals each replace their own changes | 32 | 63,178,848.08 |
 | Infrastructure / unnumbered, Grand Falls-Windsor | Reissued references still form one agreement | 2 | 15,384,361.00 |
 | Agriculture / 3000733969 | Latest contract total, supplier punctuation variants | 3 | 105,281.53 |
 | Health / H105002096 | Reviewed supplier rename; national service, NL address | 12 | 255,261,335.35 |
@@ -30,8 +33,8 @@ The grants cache was selected by publisher-reported `recipient_province = NL`.
 These files print **no reconciliation total**. Expected values are hand-traced
 from each chain's published running totals or changes, not a claim that these
 are payments or spending in NL. `../expected.json` pins the aggregate counts
-and values: **8 agreements, CAD 48,889,141.00; 2 contracts, CAD 255,366,616.88**.
-The raw grant values add to CAD 68,102,928.00. Fourteen contract rows have an NL
+and values: **10 agreements, CAD 114,969,743.08; 2 contracts, CAD 255,366,616.88**.
+The raw grant values add to CAD 189,970,701.25. Fourteen contract rows have an NL
 address and add to CAD 1,681,123,737.32 before deduplication. The fifteenth is an
 earlier record in the reviewed Health Canada chain, without an NL postal code;
 it stays as provenance, not an additional selected contract.
@@ -70,6 +73,11 @@ in `finally` blocks; none of these mutations is part of the change.
 | Change the national contract's reviewed scope status to `NL` | Exit 1; expected `national_or_multiple_or_other`, parsed `NL` |
 
 After restoration, the same command exits 0 with 8 agreements and 2 contracts.
+
+On 2026-10-14, with `restates()` made to return false (restated totals summed as
+changes), the command exits 1: Crown-Indigenous Relations 2425-HQ-000020 parses to
+5,847,720.00 instead of 2,901,754 and Indigenous Services 2526-AT-000004 to
+116,020,053.25 instead of 63,178,848.08. Restored, it exits 0 with 10 agreements.
 The production parser and location reviews are unchanged.
 
 The other files in this directory hold the earlier real-source audit

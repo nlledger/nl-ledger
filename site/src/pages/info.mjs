@@ -67,7 +67,7 @@ const SOURCES = [
     publisher: "Government of Canada (open.canada.ca)",
     url: "https://open.canada.ca/data/en/dataset/432527ab-7aac-45b5-81d6-7597107a7013",
     what: "Proactive disclosure of grants and contributions whose publisher reports recipient province NL. Conflicting address fields are labelled; that province field does not locate the project or benefit.",
-    form: "Open data API, filtered on reported recipient province. Latest running total for most departments; summed amendment changes for Indigenous Services, Crown-Indigenous Relations, Canadian Heritage and the Public Health Agency.",
+    form: "Open data API, filtered on reported recipient province. Latest running total for most departments; summed amendment changes for Indigenous Services, Crown-Indigenous Relations, Canadian Heritage and the Public Health Agency, until a restated total replaces them (Indigenous Services and Crown-Indigenous Relations, from 2026-27).",
   },
   {
     ds: "canadabuys",

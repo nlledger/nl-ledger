@@ -11,6 +11,10 @@
     "grants_NL.jsonl": {
       "sha256": "100b63de89e3ed05d4a6d2d2028aa3c33783ca42351009b6ec3f437f51743c70",
       "url": "https://open.canada.ca/data/en/api/3/action/datastore_search?resource_id=1d15a62f-5656-49ad-8c88-f40ce689d831&filters=%7B%22recipient_province%22%3A%22NL%22%7D"
+    },
+    "grants_NL.jsonl (2026-10-12)": {
+      "sha256": "85b9c033bfc17a25a332b6156505f2274b03bd3b89f96eebf5db927d7f31d8d5",
+      "url": "https://open.canada.ca/data/en/api/3/action/datastore_search?resource_id=1d15a62f-5656-49ad-8c88-f40ce689d831&filters=%7B%22recipient_province%22%3A%22NL%22%7D"
     }
   },
   "cases": [
@@ -418,6 +422,290 @@
           "value": "255261335.35",
           "source_url": "https://search.open.canada.ca/contracts/record/hc-sc,C-2023-2024-Q3-00581",
           "csv_record": 525257
+        }
+      ]
+    },
+    {
+      "dataset": "fed_grant",
+      "department": "aandc-aadnc",
+      "agreement_number": "2425-HQ-000020",
+      "reason": "Restatement: from 2026-27 Q1 the department reports the agreement's new total. Three earlier change rows add to 2,945,966; the 2026-27 Q1 row, noted as reducing that total, carries the reduced total 2,901,754, which replaces them.",
+      "source": "grants_NL.jsonl (2026-10-12)",
+      "expected": {
+        "ref_number": "0420-2026-2027-Qrt1-015079",
+        "recipient": "HAMILTON WHOLESALERS LTD.",
+        "rows": 4,
+        "amount": "2901754",
+        "rule": "restated total"
+      },
+      "source_rows": [
+        {
+          "line": 11883,
+          "ref_number": "0420-2024-2025-Qrt1-0000124",
+          "amendment": "0",
+          "value": "3600000.0",
+          "source_url": "https://search.open.canada.ca/grants/record/aandc-aadnc,0420-2024-2025-Qrt1-0000124,current"
+        },
+        {
+          "line": 11909,
+          "ref_number": "0420-2025-2026-Qrt1-0000092",
+          "amendment": "1",
+          "value": "-314034.0",
+          "source_url": "https://search.open.canada.ca/grants/record/aandc-aadnc,0420-2025-2026-Qrt1-0000092,current"
+        },
+        {
+          "line": 11927,
+          "ref_number": "0420-2025-2026-Qrt4-0000469",
+          "amendment": "2",
+          "value": "-340000.0",
+          "source_url": "https://search.open.canada.ca/grants/record/aandc-aadnc,0420-2025-2026-Qrt4-0000469,current"
+        },
+        {
+          "line": 11938,
+          "ref_number": "0420-2026-2027-Qrt1-015079",
+          "amendment": "3",
+          "value": "2901754.0",
+          "source_url": "https://search.open.canada.ca/grants/record/aandc-aadnc,0420-2026-2027-Qrt1-015079,current"
+        }
+      ]
+    },
+    {
+      "dataset": "fed_grant",
+      "department": "isc-sac",
+      "agreement_number": "2526-AT-000004",
+      "reason": "Restatement per agreement type: 2026-27 Q1 brings one contribution total (61,366,979.29) and one grant total (1,811,868.79); each replaces the earlier changes of its own type, and the two are added.",
+      "source": "grants_NL.jsonl (2026-10-12)",
+      "expected": {
+        "ref_number": "1910-2026-2027-Qrt1-610964",
+        "recipient": "MUSHUAU INNU FIRST NATION",
+        "rows": 32,
+        "amount": "63178848.08",
+        "rule": "restated total"
+      },
+      "source_rows": [
+        {
+          "line": 29811,
+          "ref_number": "1910-2024-2025-Qrt4-0000822",
+          "amendment": "1",
+          "value": "60460.13",
+          "source_url": "https://search.open.canada.ca/grants/record/isc-sac,1910-2024-2025-Qrt4-0000822,current"
+        },
+        {
+          "line": 29887,
+          "ref_number": "1910-2025-2026-Qrt1-0000555",
+          "amendment": "0",
+          "value": "31302572.0",
+          "source_url": "https://search.open.canada.ca/grants/record/isc-sac,1910-2025-2026-Qrt1-0000555,current"
+        },
+        {
+          "line": 29888,
+          "ref_number": "1910-2025-2026-Qrt1-0000556",
+          "amendment": "2",
+          "value": "130000.0",
+          "source_url": "https://search.open.canada.ca/grants/record/isc-sac,1910-2025-2026-Qrt1-0000556,current"
+        },
+        {
+          "line": 29889,
+          "ref_number": "1910-2025-2026-Qrt1-0000557",
+          "amendment": "3",
+          "value": "254458.59",
+          "source_url": "https://search.open.canada.ca/grants/record/isc-sac,1910-2025-2026-Qrt1-0000557,current"
+        },
+        {
+          "line": 29890,
+          "ref_number": "1910-2025-2026-Qrt1-0000558",
+          "amendment": "4",
+          "value": "63700.0",
+          "source_url": "https://search.open.canada.ca/grants/record/isc-sac,1910-2025-2026-Qrt1-0000558,current"
+        },
+        {
+          "line": 29891,
+          "ref_number": "1910-2025-2026-Qrt1-0000560",
+          "amendment": "5",
+          "value": "852471.0",
+          "source_url": "https://search.open.canada.ca/grants/record/isc-sac,1910-2025-2026-Qrt1-0000560,current"
+        },
+        {
+          "line": 29892,
+          "ref_number": "1910-2025-2026-Qrt1-0000563",
+          "amendment": "1",
+          "value": "164368.26",
+          "source_url": "https://search.open.canada.ca/grants/record/isc-sac,1910-2025-2026-Qrt1-0000563,current"
+        },
+        {
+          "line": 29893,
+          "ref_number": "1910-2025-2026-Qrt1-0000564",
+          "amendment": "2",
+          "value": "70198.66",
+          "source_url": "https://search.open.canada.ca/grants/record/isc-sac,1910-2025-2026-Qrt1-0000564,current"
+        },
+        {
+          "line": 29894,
+          "ref_number": "1910-2025-2026-Qrt1-0000566",
+          "amendment": "7",
+          "value": "5216827.0",
+          "source_url": "https://search.open.canada.ca/grants/record/isc-sac,1910-2025-2026-Qrt1-0000566,current"
+        },
+        {
+          "line": 29895,
+          "ref_number": "1910-2025-2026-Qrt1-0000567",
+          "amendment": "3",
+          "value": "17192.25",
+          "source_url": "https://search.open.canada.ca/grants/record/isc-sac,1910-2025-2026-Qrt1-0000567,current"
+        },
+        {
+          "line": 29896,
+          "ref_number": "1910-2025-2026-Qrt1-0000568",
+          "amendment": "0",
+          "value": "885201.79",
+          "source_url": "https://search.open.canada.ca/grants/record/isc-sac,1910-2025-2026-Qrt1-0000568,current"
+        },
+        {
+          "line": 29936,
+          "ref_number": "1910-2025-2026-Qrt2-0000459",
+          "amendment": "9",
+          "value": "1917506.58",
+          "source_url": "https://search.open.canada.ca/grants/record/isc-sac,1910-2025-2026-Qrt2-0000459,current"
+        },
+        {
+          "line": 29937,
+          "ref_number": "1910-2025-2026-Qrt2-0000462",
+          "amendment": "10",
+          "value": "1276862.54",
+          "source_url": "https://search.open.canada.ca/grants/record/isc-sac,1910-2025-2026-Qrt2-0000462,current"
+        },
+        {
+          "line": 29938,
+          "ref_number": "1910-2025-2026-Qrt2-0000463",
+          "amendment": "4",
+          "value": "53773.0",
+          "source_url": "https://search.open.canada.ca/grants/record/isc-sac,1910-2025-2026-Qrt2-0000463,current"
+        },
+        {
+          "line": 29939,
+          "ref_number": "1910-2025-2026-Qrt2-0000464",
+          "amendment": "11",
+          "value": "1120636.0",
+          "source_url": "https://search.open.canada.ca/grants/record/isc-sac,1910-2025-2026-Qrt2-0000464,current"
+        },
+        {
+          "line": 29940,
+          "ref_number": "1910-2025-2026-Qrt2-0000466",
+          "amendment": "12",
+          "value": "384928.54",
+          "source_url": "https://search.open.canada.ca/grants/record/isc-sac,1910-2025-2026-Qrt2-0000466,current"
+        },
+        {
+          "line": 29963,
+          "ref_number": "1910-2025-2026-Qrt3-0000625",
+          "amendment": "13",
+          "value": "600000.0",
+          "source_url": "https://search.open.canada.ca/grants/record/isc-sac,1910-2025-2026-Qrt3-0000625,current"
+        },
+        {
+          "line": 29964,
+          "ref_number": "1910-2025-2026-Qrt3-0000628",
+          "amendment": "15",
+          "value": "2392958.24",
+          "source_url": "https://search.open.canada.ca/grants/record/isc-sac,1910-2025-2026-Qrt3-0000628,current"
+        },
+        {
+          "line": 29965,
+          "ref_number": "1910-2025-2026-Qrt3-0000634",
+          "amendment": "5",
+          "value": "226865.0",
+          "source_url": "https://search.open.canada.ca/grants/record/isc-sac,1910-2025-2026-Qrt3-0000634,current"
+        },
+        {
+          "line": 29966,
+          "ref_number": "1910-2025-2026-Qrt3-0000635",
+          "amendment": "6",
+          "value": "6308.0",
+          "source_url": "https://search.open.canada.ca/grants/record/isc-sac,1910-2025-2026-Qrt3-0000635,current"
+        },
+        {
+          "line": 30004,
+          "ref_number": "1910-2025-2026-Qrt4-0000787",
+          "amendment": "7",
+          "value": "50172.0",
+          "source_url": "https://search.open.canada.ca/grants/record/isc-sac,1910-2025-2026-Qrt4-0000787,current"
+        },
+        {
+          "line": 30005,
+          "ref_number": "1910-2025-2026-Qrt4-0000789",
+          "amendment": "16",
+          "value": "81144.0",
+          "source_url": "https://search.open.canada.ca/grants/record/isc-sac,1910-2025-2026-Qrt4-0000789,current"
+        },
+        {
+          "line": 30006,
+          "ref_number": "1910-2025-2026-Qrt4-0000790",
+          "amendment": "17",
+          "value": "283205.0",
+          "source_url": "https://search.open.canada.ca/grants/record/isc-sac,1910-2025-2026-Qrt4-0000790,current"
+        },
+        {
+          "line": 30007,
+          "ref_number": "1910-2025-2026-Qrt4-0000791",
+          "amendment": "19",
+          "value": "6500.0",
+          "source_url": "https://search.open.canada.ca/grants/record/isc-sac,1910-2025-2026-Qrt4-0000791,current"
+        },
+        {
+          "line": 30008,
+          "ref_number": "1910-2025-2026-Qrt4-0000798",
+          "amendment": "20",
+          "value": "6284560.09",
+          "source_url": "https://search.open.canada.ca/grants/record/isc-sac,1910-2025-2026-Qrt4-0000798,current"
+        },
+        {
+          "line": 30009,
+          "ref_number": "1910-2025-2026-Qrt4-0000799",
+          "amendment": "21",
+          "value": "193391.0",
+          "source_url": "https://search.open.canada.ca/grants/record/isc-sac,1910-2025-2026-Qrt4-0000799,current"
+        },
+        {
+          "line": 30010,
+          "ref_number": "1910-2025-2026-Qrt4-0000801",
+          "amendment": "8",
+          "value": "14737.0",
+          "source_url": "https://search.open.canada.ca/grants/record/isc-sac,1910-2025-2026-Qrt4-0000801,current"
+        },
+        {
+          "line": 30011,
+          "ref_number": "1910-2025-2026-Qrt4-0000802",
+          "amendment": "9",
+          "value": "-1551640.0",
+          "source_url": "https://search.open.canada.ca/grants/record/isc-sac,1910-2025-2026-Qrt4-0000802,current"
+        },
+        {
+          "line": 30012,
+          "ref_number": "1910-2025-2026-Qrt4-0000805",
+          "amendment": "22",
+          "value": "163639.0",
+          "source_url": "https://search.open.canada.ca/grants/record/isc-sac,1910-2025-2026-Qrt4-0000805,current"
+        },
+        {
+          "line": 30013,
+          "ref_number": "1910-2025-2026-Qrt4-0000806",
+          "amendment": "7",
+          "value": "318209.5",
+          "source_url": "https://search.open.canada.ca/grants/record/isc-sac,1910-2025-2026-Qrt4-0000806,current"
+        },
+        {
+          "line": 30096,
+          "ref_number": "1910-2026-2027-Qrt1-929329",
+          "amendment": "25",
+          "value": "1811868.79",
+          "source_url": "https://search.open.canada.ca/grants/record/isc-sac,1910-2026-2027-Qrt1-929329,current"
+        },
+        {
+          "line": 30097,
+          "ref_number": "1910-2026-2027-Qrt1-610964",
+          "amendment": "12",
+          "value": "61366979.29",
+          "source_url": "https://search.open.canada.ca/grants/record/isc-sac,1910-2026-2027-Qrt1-610964,current"
         }
       ]
     }

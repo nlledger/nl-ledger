@@ -7,7 +7,7 @@ reference_number, so they are never merged with another contract.
 
 Grants and contributions: one row per agreement (see grants()). The latest amendment is kept
 where a department reports running totals; amendments are summed where it reports changes
-(CHANGE_REPORTING).
+(CHANGE_REPORTING), until a department's restated total replaces them (TOTALS_FROM).
 
 CanadaBuys award notices overlap the contracts disclosure (the same contract can
 appear in both). Notices are excluded from supplier commitment summaries and shown
@@ -172,6 +172,31 @@ PA_NAME = {  # as Public Accounts prints them; a department renamed in a later f
     "pch": "Department of Canadian Heritage",
     "phac-aspc": "Public Health Agency of Canada",
 }
+# From their 2026-27 first-quarter disclosure on, Indigenous Services and Crown-Indigenous
+# Relations report each agreement's new total, as the data dictionary asks. The note "The total
+# award value of $2,945,966.00 reported in a previous quarter has been reduced by this
+# Amendment" (CIRNAC 2425-HQ-000020) now comes with $2,901,754, the reduced total, where every
+# earlier quarter's row with that note carried the negative change; all 24 rows in that file are
+# positive, seven of them below what the agreement's earlier rows add to. Each such row replaces
+# the sum of the earlier rows of the same agreement and agreement type (grant or contribution).
+TOTALS_FROM = {"isc-sac": (2026, 1), "aandc-aadnc": (2026, 1)}
+
+
+def ref_quarter(r) -> tuple[int, int] | None:
+    """Fiscal year and quarter in an Indigenous Services or CIRNAC reference number (1910-2026-2027-Qrt1-...)."""
+    m = re.search(r"-(\d{4})-\d{4}-Qrt(\d)-", r["ref_number"])
+    return (int(m[1]), int(m[2])) if m else None
+
+
+def restates(r) -> bool:
+    q, since = ref_quarter(r), TOTALS_FROM.get(r["owner_org"])
+    return bool(q and since and q >= since)
+
+
+def newest_total(rs):
+    return max((r for r in rs if restates(r)), key=lambda r: (ref_quarter(r), r.get("amendment_date") or "", r["ref_number"]), default=None)
+
+
 # Running-total departments say so in their notes: ACOA "the previous value was $X" (X is the
 # prior row in 1,514 of 1,519 cases), Health Canada "The total agreement value previously
 # disclosed has been updated", NRC "The total amended value is -$X" (the row is the original
@@ -195,13 +220,17 @@ def grants(*, check_total=True) -> None:
       a department re-reports an amendment under a new reference number (Infrastructure
       Canada, Veterans Affairs): those join on recipient, start date, program and title.
     Where the department reports running totals the latest amendment is the agreement's
-    value; where it reports changes (CHANGE_REPORTING) the amendments are added up.
+    value; where it reports changes (CHANGE_REPORTING) the amendments are added up. Once such a
+    department reports totals (TOTALS_FROM), its latest total for the agreement and agreement
+    type replaces the earlier changes.
     """
     with open(FED / "grants_NL.jsonl") as fh:
         rows = [json.loads(line) for line in fh]
     raw_value = sum(money(r.get("agreement_value")) or 0 for r in rows)
     negative = {r["owner_org"] for r in rows if (money(r.get("agreement_value")) or 0) < 0}
     assert negative <= CHANGE_REPORTING.keys(), f"negative grant values from {sorted(negative - CHANGE_REPORTING.keys())}: check how they report amendments"
+    changes = sorted(r["ref_number"] for r in rows if restates(r) and (money(r.get("agreement_value")) or 0) < 0)
+    assert not changes, f"negative rows {changes[:5]} where TOTALS_FROM says the department reports totals: check how it reports amendments"
 
     def who(r):
         return entity_key(name_forms(r.get("recipient_legal_name") or r.get("recipient_operating_name"), bilingual=True)[0])
@@ -243,12 +272,24 @@ def grants(*, check_total=True) -> None:
             if k != home and any(same(r) for r in groups[k]):
                 groups[home] += groups.pop(k)
     out = []
-    latest_only = Counter()  # what a change-reporting department would come to if its rows were read as totals
+    # The change-reporting evidence uses only rows from before a department switched to totals:
+    # what they add up to, and what they would come to if read as totals (latest row only).
+    summed, latest_only = Counter(), Counter()
     for (org, agr, *_), rs in groups.items():
         rs.sort(key=lambda r: (int(r.get("amendment_number") or 0), r.get("amendment_date") or "", r["ref_number"]))
         last = rs[-1]
-        latest_only[org] += money(last.get("agreement_value")) or 0
-        if org in CHANGE_REPORTING:
+        changes = [r for r in rs if not restates(r)]
+        summed[org] += sum(money(r.get("agreement_value")) or 0 for r in changes)
+        latest_only[org] += (money(changes[-1].get("agreement_value")) or 0) if changes else 0
+        if newest := newest_total(rs):
+            value = 0
+            for kind in {r.get("agreement_type") for r in rs}:
+                part = [r for r in rs if r.get("agreement_type") == kind]
+                total = newest_total(part)
+                value += money(total.get("agreement_value")) if total else sum(money(r.get("agreement_value")) or 0 for r in part)
+            last = newest
+            how = f"restated total replaces earlier changes, {len(rs)} rows (department reports totals from 2026-27)"
+        elif org in CHANGE_REPORTING:
             value = sum(money(r.get("agreement_value")) or 0 for r in rs)
             how = f"sum of {len(rs)} amendment rows (department reports changes)"
         else:
@@ -283,7 +324,7 @@ def grants(*, check_total=True) -> None:
     REPORT["grants"] = {"raw_rows": len(rows), "raw_value": round(raw_value, 2), "agreements": len(out), "dedup_value": round(tot, 2),
                         "delta_departments": sorted(CHANGE_REPORTING),
                         "change_reporting": {org: {"department": next(r["department"] for r in out if r["owner_org"] == org),
-                                                   "evidence": ev, "summed": round(sum(r["amount"] or 0 for r in out if r["owner_org"] == org)),
+                                                   "evidence": ev, "summed": round(summed[org]),
                                                    "latest_only": round(latest_only[org])}
                                              for org, ev in CHANGE_REPORTING.items() if any(r["owner_org"] == org for r in out)},
                         "by_department": dict(Counter({k: round(v) for k, v in _by(out, lambda r: r["department"]).items()}).most_common(8))}
