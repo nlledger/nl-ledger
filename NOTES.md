@@ -67,7 +67,7 @@ uv run python vectorize_sync.py --cf-login   # embed only changed documents into
 
 - Downloads are cached; delete a file under `data/cache/` to fetch it again. The federal bulk files and the grants query are replaced in place by their publishers, so they are fetched again once 6 days old; published reports are fetched once.
 - `./run.sh fetch` and `./run.sh process` run the two halves separately.
-- `d1_sync.py` compares document hashes and writes only what changed. An unchanged re-run writes nothing. It refuses above 90,000 writes (D1 free plan: 100,000 rows written a day). It runs each query through `cf d1 query`, so it needs the `cf` login and no token of its own. It prints the rows D1 reports written.
+- `d1_sync.py` compares document hashes and writes only what changed. An unchanged re-run writes nothing, and a re-run after a failure finishes the job. A changed document is deleted and re-inserted in the same request, so search and its record page never lose it mid-sync; documents that disappeared are deleted last. When D1 refuses a request (429, "D1 DB is overloaded") or fails with a 5xx or timeout, it waits 5 s, doubling to a minute, for about seven minutes before giving up. It refuses above 90,000 writes (D1 free plan: 100,000 rows written a day). It runs each query through `cf d1 query`, so it needs the `cf` login and no token of its own. It prints the rows D1 reports written.
 - Full pipeline time: about 6 minutes, most of it the MHA PDFs (read word by word with pdfplumber).
 
 ## Weekly job
@@ -84,7 +84,7 @@ Every Monday 09:00 UTC the maintainer's home server runs the whole pipeline in a
 | D1 budget (`d1_sync.py --dry-run`) | the sync would pass 90,000 writes; checked before deploying so the site and the search index stay in step |
 | Deploy (`cf deploy`) | the upload fails. `NL_LEDGER_DIST_BUILT=1` makes the Astro build package the `dist` from the site build step instead of running `build.mjs` again |
 | Live check | `https://nlledger.ca/` does not serve the page just built within two minutes |
-| D1 sync | a D1 error, or remote and local counts differ |
+| D1 sync | a D1 error that outlasts about seven minutes of retries, or remote and local counts differ. Re-running `d1_sync.py` alone is safe: it writes only what is still missing |
 | Meaning index (`vectorize_sync.py`) | a Workers AI or Vectorize error; its `--dry-run` also runs before deploying, so a token without those permissions stops the run before anything changes |
 | Archive verify | one random archived file, fetched back, does not match its hash |
 | Baseline (`guards.py commit`) | this run becomes the one the next run is compared with |
