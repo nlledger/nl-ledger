@@ -41,7 +41,7 @@ Notes on each source NL Ledger uses or has looked at: where it lives, what it ho
 | Hospitality | Resource `7b301f1a-2a7a-48bd-9ea9-e0ac4a5313ed` (28 MB) | Description, location, vendor, attendees, total | 5 in St. John's | Verified |
 | Annual travel, hospitality, conferences | Resource `a811cac0-2a2a-4440-8a81-2994fc753171` | Department totals per year | None | Verified |
 | Founded wrongdoing | Resource `84a77a58-6bce-4bfb-ad67-bbe452523b14` | 73 cases | None | Verified |
-| Public Accounts Vol III, professional and special services | `https://donnees-data.tpsgc-pwgsc.gc.ca/ba1/idsps-dipss/idsps-dipss-2025.csv` | Payee, city and province, department, amount; $100K floor; FY2003 onward | FY2024-25: 79 NL rows, $126.8M | Verified |
+| Public Accounts Vol III, professional and special services | `https://donnees-data.tpsgc-pwgsc.gc.ca/ba1/idsps-dipss/idsps-dipss-2025.csv` | Payee, city and province (one text column, `Contractor-details_Details-entrepr_eng`, called `Proj-desc_eng` until October 2026), department, amount; $100K floor; FY2003 onward | FY2024-25: 79 NL rows, $126.8M | Verified |
 | Public Accounts Vol III, transfer payments | `.../ba1/pt-tp/pt-tp-2025.csv` | Recipient, city, province, amount; $100K floor | FY2024-25: 650 NL rows | Verified |
 | Major transfers by province | `.../ba1/ppt-mtp/ppt-mtp-2025.csv` | Per province per transfer type | NL 2024-25: OAS $1,569M, EI $1,228M, CHT $688M, CST $224M | Verified |
 | GC InfoBase datasets | Package `a35cf382-690c-4221-a971-cf0fd189a46f` | Spending by program and year from 2010, FTEs, transfer programs | No province | Verified CSVs; API untested |

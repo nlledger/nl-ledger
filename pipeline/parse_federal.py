@@ -20,7 +20,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 from common import CACHE, CLEAN, entity_key, money, name_forms, norm_space
-from federal_evidence import is_nl_postal, notice_selected, pss_location
+from federal_evidence import PSS_PAYEE_FIELD, is_nl_postal, notice_selected, pss_location
 
 csv.field_size_limit(10**9)
 FED = CACHE / "federal"
@@ -393,41 +393,59 @@ def canadabuys() -> None:
     print("canadabuys", REPORT["canadabuys"])
 
 
+PSS_COLUMNS = ["Fscl-yr_Ex-fin", "Dept-name_Nom-min_eng", "Rpt-obj_Art-rppt_eng", PSS_PAYEE_FIELD, "Aggregate-payments_Versements-totalisant"]
+TP_COLUMNS = ["Fscl-yr_Ex-fin", "Dept-name_Nom-min_eng", "Rcpt-class_Cat-bnfcrs_eng", "Rcpt-nm-locn_Nm-lieu-bnfcrs_eng",
+              "City_Ville_eng", "Prov-Terr_eng", "Aggregate-payments_Versements-totalisant"]
+MTP_COLUMNS = ["Prov-Terr_eng", "Type-detail_eng", "Adjusts_Rajusts_eng", "Amt-units_Mnt-unite"]
+
+
+def public_accounts_rows(name: str, required: list[str]):
+    """Yield (csv line, row) from a Public Accounts file, first checking that every column read is in its header.
+
+    The publisher has renamed columns between weekly runs, so a missing one stops the run naming the file and column."""
+    with open(FED / name, encoding="utf-8-sig", newline="") as fh:
+        rd = csv.DictReader(fh)
+        header = rd.fieldnames or []
+        for column in required:
+            if column not in header:
+                raise ValueError(f"{name}: column {column!r} is missing; the header is {header}")
+        yield from enumerate(rd, 2)
+
+
 def public_accounts() -> None:
     pss, tp, mtp = [], [], []
     for y in (2022, 2023, 2024, 2025):
-        with open(FED / f"pss-{y}.csv", encoding="utf-8-sig", newline="") as fh:
-            for line_no, r in enumerate(csv.DictReader(fh), 2):
-                payee = r["Proj-desc_eng"] or ""
-                parsed = pss_location(payee)
-                if not parsed:
-                    continue
-                name, place = parsed
-                pss.append({"fiscal_year": r["Fscl-yr_Ex-fin"], "department": r["Dept-name_Nom-min_eng"],
-                            "category": r["Rpt-obj_Art-rppt_eng"], "payee": norm_space(name), "place": norm_space(place),
-                            "amount": money(r["Aggregate-payments_Versements-totalisant"]),
-                            "province": place.rsplit(",", 1)[-1].strip(), "source_fields": json.dumps(r),
-                            "file": f"pss-{y}.csv", "csv_line": line_no})
-        with open(FED / f"tp-{y}.csv", encoding="utf-8-sig", newline="") as fh:
-            for line_no, r in enumerate(csv.DictReader(fh), 2):
-                if r["Prov-Terr_eng"] != "Newfoundland and Labrador":
-                    continue
-                tp.append({"fiscal_year": r["Fscl-yr_Ex-fin"], "department": r["Dept-name_Nom-min_eng"],
-                           "program": norm_space(r["Rcpt-class_Cat-bnfcrs_eng"]), "recipient": norm_space(r["Rcpt-nm-locn_Nm-lieu-bnfcrs_eng"]),
-                           "city": r["City_Ville_eng"], "amount": money(r["Aggregate-payments_Versements-totalisant"]),
-                           "province": r["Prov-Terr_eng"], "source_fields": json.dumps(r),
-                           "file": f"tp-{y}.csv", "csv_line": line_no})
+        for line_no, r in public_accounts_rows(f"pss-{y}.csv", PSS_COLUMNS):
+            parsed = pss_location(r[PSS_PAYEE_FIELD] or "")
+            if not parsed:
+                continue
+            name, place = parsed
+            pss.append({"fiscal_year": r["Fscl-yr_Ex-fin"], "department": r["Dept-name_Nom-min_eng"],
+                        "category": r["Rpt-obj_Art-rppt_eng"], "payee": norm_space(name), "place": norm_space(place),
+                        "amount": money(r["Aggregate-payments_Versements-totalisant"]),
+                        "province": place.rsplit(",", 1)[-1].strip(), "source_fields": json.dumps(r),
+                        "file": f"pss-{y}.csv", "csv_line": line_no})
+        for line_no, r in public_accounts_rows(f"tp-{y}.csv", TP_COLUMNS):
+            if r["Prov-Terr_eng"] != "Newfoundland and Labrador":
+                continue
+            tp.append({"fiscal_year": r["Fscl-yr_Ex-fin"], "department": r["Dept-name_Nom-min_eng"],
+                       "program": norm_space(r["Rcpt-class_Cat-bnfcrs_eng"]), "recipient": norm_space(r["Rcpt-nm-locn_Nm-lieu-bnfcrs_eng"]),
+                       "city": r["City_Ville_eng"], "amount": money(r["Aggregate-payments_Versements-totalisant"]),
+                       "province": r["Prov-Terr_eng"], "source_fields": json.dumps(r),
+                       "file": f"tp-{y}.csv", "csv_line": line_no})
         if not (FED / f"mtp-{y}.csv").exists():
             continue
         with open(FED / f"mtp-{y}.csv", encoding="utf-8-sig", newline="") as fh:
-            rd = csv.DictReader(fh)
-            ycol = next(c for c in rd.fieldnames if re.fullmatch(r"\d{4}/\d{4}", c))
-            for line_no, r in enumerate(rd, 2):
-                if r["Prov-Terr_eng"] != "Newfoundland and Labrador" or not r["Type-detail_eng"]:
-                    continue
-                unit = 1_000_000 if "1000000" in r["Amt-units_Mnt-unite"] else 1
-                mtp.append({"fiscal_year": ycol, "transfer": r["Type-detail_eng"], "adjust": r["Adjusts_Rajusts_eng"],
-                            "amount": (money(r[ycol]) or 0) * unit, "file": f"mtp-{y}.csv", "csv_line": line_no})
+            header = csv.DictReader(fh).fieldnames or []
+        ycol = next((c for c in header if re.fullmatch(r"\d{4}/\d{4}", c)), None)
+        if ycol is None:
+            raise ValueError(f"mtp-{y}.csv: no fiscal-year column such as '2024/2025'; the header is {header}")
+        for line_no, r in public_accounts_rows(f"mtp-{y}.csv", MTP_COLUMNS):
+            if r["Prov-Terr_eng"] != "Newfoundland and Labrador" or not r["Type-detail_eng"]:
+                continue
+            unit = 1_000_000 if "1000000" in r["Amt-units_Mnt-unite"] else 1
+            mtp.append({"fiscal_year": ycol, "transfer": r["Type-detail_eng"], "adjust": r["Adjusts_Rajusts_eng"],
+                        "amount": (money(r[ycol]) or 0) * unit, "file": f"mtp-{y}.csv", "csv_line": line_no})
     write("pa_pss_nl.csv", pss)
     write("pa_tp_nl.csv", tp)
     write("pa_mtp_nl.csv", mtp)

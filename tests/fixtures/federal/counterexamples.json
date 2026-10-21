@@ -923,8 +923,8 @@
       "Rpt-obj_Art-rppt": "040",
       "Rpt-obj_Art-rppt_eng": "Business Services",
       "Rpt-obj_Art-rppt_fra": "Services commerciaux",
-      "Proj-desc_eng": "73719 Newfoundland & Labrador Inc., Clarence Creek, Ontario",
-      "Proj-desc_fra": "73719 Newfoundland & Labrador Inc., Clarence Creek, Ontario",
+      "Contractor-details_Details-entrepr_eng": "73719 Newfoundland & Labrador Inc., Clarence Creek, Ontario",
+      "Contractor-details_Details-entrepr_fra": "73719 Newfoundland & Labrador Inc., Clarence Creek, Ontario",
       "Xpnd-current-yr_Dep-ex-courant": "0",
       "Aggregate-payments_Versements-totalisant": "4269348"
     }
@@ -966,8 +966,8 @@
       "Rpt-obj_Art-rppt": "040",
       "Rpt-obj_Art-rppt_eng": "Business Services",
       "Rpt-obj_Art-rppt_fra": "Services commerciaux",
-      "Proj-desc_eng": "73719 Newfoundland & Labrador Inc, Clarence Creek, Ontario",
-      "Proj-desc_fra": "73719 Newfoundland & Labrador Inc, Clarence Creek, Ontario",
+      "Contractor-details_Details-entrepr_eng": "73719 Newfoundland & Labrador Inc, Clarence Creek, Ontario",
+      "Contractor-details_Details-entrepr_fra": "73719 Newfoundland & Labrador Inc, Clarence Creek, Ontario",
       "Xpnd-current-yr_Dep-ex-courant": "0",
       "Aggregate-payments_Versements-totalisant": "2016868"
     }
@@ -1608,8 +1608,8 @@
       "Rpt-obj_Art-rppt": "45",
       "Rpt-obj_Art-rppt_eng": "Health and Welfare Services",
       "Rpt-obj_Art-rppt_fra": "Services de santé et de bien-être",
-      "Proj-desc_eng": "SC2.0 Stepped Care Solutions Inc, Mount Pearl, Newfoundland and Labrador",
-      "Proj-desc_fra": "SC2.0 Stepped Care Solutions Inc, Mount Pearl, Terre-Neuve-et-Labrador",
+      "Contractor-details_Details-entrepr_eng": "SC2.0 Stepped Care Solutions Inc, Mount Pearl, Newfoundland and Labrador",
+      "Contractor-details_Details-entrepr_fra": "SC2.0 Stepped Care Solutions Inc, Mount Pearl, Terre-Neuve-et-Labrador",
       "Xpnd-current-yr_Dep-ex-courant": "0",
       "Aggregate-payments_Versements-totalisant": "47098904"
     }
