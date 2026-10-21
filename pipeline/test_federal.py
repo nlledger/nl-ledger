@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 import parse_federal as parser
 from check_federal import ROOT, EXPECTED
-from federal_evidence import evidence, is_nl_postal, notice_selected, pss_location, location_conflict
+from federal_evidence import PSS_PAYEE_FIELD, evidence, is_nl_postal, notice_selected, pss_location, location_conflict
 
 FIXTURES = json.loads((ROOT / "tests/fixtures/federal/counterexamples.json").read_text())
 CHAIN = json.loads((ROOT / "tests/fixtures/federal/health-chain.json").read_text())
@@ -31,7 +31,7 @@ class FederalTests(unittest.TestCase):
             self.assertFalse(is_nl_postal(pc))
         self.assertFalse(notice_selected(FIXTURES["35bb90c1f35e"]["raw"]))
         for id in ("af355141e3d1", "7698e532de4f"):
-            self.assertIsNone(pss_location(FIXTURES[id]["raw"]["Proj-desc_eng"]))
+            self.assertIsNone(pss_location(FIXTURES[id]["raw"][PSS_PAYEE_FIELD]))
         self.assertIsNotNone(pss_location("A company, with a comma, St. John's, Newfoundland and Labrador"))
         self.assertIsNotNone(pss_location("A company, St. John's, Newfoundland & Labr."))
         self.assertFalse(notice_selected({"supplierAddressCountry-fournisseurAdressePays-eng": "Ireland", "supplierAddressProvince-fournisseurAdresseProvince-eng": "NL", "supplierAddressPostalCode-fournisseurAdresseCodePostal": "A1B 3N9"}))
@@ -75,6 +75,15 @@ class FederalTests(unittest.TestCase):
         for name in ["A supplier in Newfoundland and Labrador", "Province of Newfoundland and Labrador (Names Withheld - 7 Recipients)", "Government of Manitoba"]:
             self.assertEqual(classify({**raw, "Rcpt-nm-locn_Nm-lieu-bnfcrs_eng": name})["scope_review_state"], "unreviewed")
         self.assertEqual(classify({**raw, "Prov-Terr_eng": "Ontario"})["scope_status"], "unknown")
+
+    def test_renamed_public_accounts_column_is_named_in_the_error(self):
+        with tempfile.TemporaryDirectory() as td:
+            fed = Path(td)
+            raw = next(v["raw"] for v in FIXTURES.values() if v["item"]["dataset"] == "pa_pss")
+            csvfile(fed / "pss-2022.csv", [{("Proj-desc_eng" if k == PSS_PAYEE_FIELD else k): v for k, v in raw.items()}])
+            with patch.object(parser, "FED", fed), self.assertRaises(ValueError) as caught:
+                parser.public_accounts()
+            self.assertIn(f"pss-2022.csv: column '{PSS_PAYEE_FIELD}' is missing", str(caught.exception))
 
     def test_source_fields_and_counterexamples(self):
         with tempfile.TemporaryDirectory() as td:

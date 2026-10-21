@@ -16,6 +16,7 @@ UNREVIEWED_STATEMENT = "NL Ledger has not established the work, benefit or juris
 CANADA = {"", "ca", "can", "canada"}
 NL_PROVINCES = {"nl", "newfoundland and labrador", "newfoundland & labrador", "newfoundland & labr.", "terre-neuve-et-labrador"}
 POSTAL = re.compile(r"[ABCEGHJ-NPRSTVXY]\d[ABCEGHJ-NPRSTV-Z](?:\s?\d[ABCEGHJ-NPRSTV-Z]\d)?", re.I)
+PSS_PAYEE_FIELD = "Contractor-details_Details-entrepr_eng"  # "Payee, City, Province"; named Proj-desc_eng until October 2026
 OUTSIDE_CITIES = {"winnipeg", "regina", "toronto", "ottawa", "halifax", "vancouver", "calgary", "edmonton", "montreal", "montréal"}
 
 
@@ -78,7 +79,7 @@ def evidence(it, r):
         kind, counted = "Reported federal award notice value", "latest notice amendment; may overlap contract disclosures"
     else:
         location = {"city": r.get("city", r.get("place", "")), "province": r.get("province", ""), "country": "", "postal_code": ""}
-        field = "Proj-desc_eng (trailing location)" if ds == "pa_pss" else "Prov-Terr_eng"
+        field = f"{PSS_PAYEE_FIELD} (trailing location)" if ds == "pa_pss" else "Prov-Terr_eng"
         value = r.get("place", r.get("province", ""))
         reason = "Selected because the published payee location is NL" if ds == "pa_pss" else "Selected because the publisher reports recipient province Newfoundland and Labrador"
         kind, counted = "Reported federal payment", "annual payment as published; may overlap commitments and notices"
