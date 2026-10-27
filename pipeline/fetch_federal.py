@@ -6,7 +6,10 @@
   All source fields are cached unchanged; the parser exposes address conflicts.
 """
 import json
+import time
 import urllib.parse
+
+import requests
 
 from common import CACHE, cache_path, fetch, is_stale, load_manifest, save_manifest, sha256, _session
 
@@ -27,6 +30,20 @@ DATASTORE = "https://open.canada.ca/data/en/api/3/action/datastore_search"
 GRANTS = "1d15a62f-5656-49ad-8c88-f40ce689d831"
 
 
+def _grants_page(url: str) -> list:
+    """One page of the datastore. It answers 500 now and then (2026-10-26 weekly run), so retry before failing the run."""
+    for attempt in range(4):
+        try:
+            r = _session.get(url, timeout=300)
+            r.raise_for_status()
+            return r.json()["result"]["records"]
+        except (requests.RequestException, ValueError, KeyError) as e:
+            if attempt == 3:
+                raise
+            print(f"  grants page failed ({e}); retrying")
+            time.sleep(30 * (attempt + 1))
+
+
 def fetch_grants(m: dict) -> None:
     dest = cache_path(CACHE / "federal" / "grants_NL.jsonl")
     tmp = cache_path(dest.with_suffix(".part"))
@@ -42,9 +59,7 @@ def fetch_grants(m: dict) -> None:
                 "limit": 10000,
                 "offset": off,
             })
-            r = _session.get(f"{DATASTORE}?{q}", timeout=300)
-            r.raise_for_status()
-            recs = r.json()["result"]["records"]
+            recs = _grants_page(f"{DATASTORE}?{q}")
             if not recs:
                 break
             for r in recs:
