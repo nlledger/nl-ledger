@@ -77,7 +77,7 @@ Every Monday 09:00 UTC the maintainer's home server runs the whole pipeline in a
 | Step | What stops the run |
 |---|---|
 | Cloudflare token check | token expired or revoked (`/tokens/verify`) |
-| Fetch | a listing page fails after three tries |
+| Fetch | a listing page fails after three tries; the federal grants datastore still fails after about 20 minutes of retries, or changes under three fetches in a row (open.canada.ca reloads that table daily, usually 09:00 to 13:30 UTC: `fetch_grants` waits out the reload and keeps only a copy taken from one version of the table) |
 | Archive (`archive.py`) | the archive is unreachable, or a cached file no longer matches its manifest hash |
 | Process | any parse, build, flags, reconcile or export error |
 | Guards (`guards.py check`) | a new download failure, nothing fetched in 8 days, a dataset down over 2% or fewer cached files than the last good run |
