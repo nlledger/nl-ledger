@@ -60,7 +60,7 @@ def _datastore(params: dict, sleep=time.sleep) -> dict:
                 if body.get("success"):
                     return body["result"]
             problem = f"HTTP {r.status_code} {r.text[:200]}"
-        except (requests.ConnectionError, requests.Timeout, ValueError) as e:
+        except (requests.ConnectionError, requests.Timeout, requests.exceptions.ChunkedEncodingError, ValueError) as e:
             problem = f"{type(e).__name__}: {e}"
         if wait is None:
             raise RuntimeError(f"grants datastore still failing after {len(RETRY_WAITS)} retries: {problem}\n{_grants_state()}")

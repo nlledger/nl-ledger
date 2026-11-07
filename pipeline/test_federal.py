@@ -166,7 +166,7 @@ class FakePortal:
 
     def __init__(self, rows, first_id=500):
         self.reload(rows, first_id)
-        self.calls, self.down, self.on_call = [], 0, {}
+        self.calls, self.down, self.cut, self.on_call = [], 0, 0, {}
         self.package = {"resources": [{"id": fetch_federal.GRANTS, "name": "grants", "datastore_active": True, "last_modified": "x"}]}
 
     def reload(self, rows, first_id):
@@ -178,6 +178,9 @@ class FakePortal:
         self.calls.append(params)
         if len(self.calls) in self.on_call:
             self.on_call.pop(len(self.calls))(self)
+        if self.cut:
+            self.cut -= 1
+            raise requests.exceptions.ChunkedEncodingError("Connection broken: IncompleteRead")
         if self.down:
             self.down -= 1
             return FakeResponse(404, {"success": False, "error": {"__type": "Not Found Error"}})
@@ -209,9 +212,10 @@ class GrantsFetchTests(unittest.TestCase):
     def test_waits_out_a_reload_404(self):
         portal = FakePortal(2500)
         portal.on_call[3] = lambda p: setattr(p, "down", 2)  # the table is missing for the third page
+        portal.on_call[6] = lambda p: setattr(p, "cut", 1)  # a page cut off mid-body
         rows, waits, _ = self.fetch(portal)
         self.assertEqual(len(rows), 2500)
-        self.assertEqual(waits, [30, 60])
+        self.assertEqual(waits, [30, 60, 30])
 
     def test_restarts_when_the_table_is_reloaded_mid_fetch(self):
         portal = FakePortal(2500)
