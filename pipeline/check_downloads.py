@@ -37,6 +37,7 @@ class Response:
     def __init__(self, body=PDF, records=None):
         self.body = body
         self.records = records or []
+        self.text = ""
 
     def raise_for_status(self):
         pass
@@ -45,7 +46,7 @@ class Response:
         yield self.body
 
     def json(self):
-        return {"result": {"records": self.records}}
+        return {"success": True, "result": {"total": 1, "total_was_estimated": False, "records": self.records}}
 
 
 class Downloads(unittest.TestCase):
@@ -148,11 +149,11 @@ class Downloads(unittest.TestCase):
         zip_bytes = io.BytesIO()
         with zipfile.ZipFile(zip_bytes, "w") as z:
             z.writestr("14100064.csv", "VALUE\n123\n")
-        pages = iter([[{"recipient_province": "NL", "value": "123.45"}], []])
+        grant = {"_id": 7, "recipient_province": "NL", "value": "123.45"}
 
         def publisher(url, **kwargs):
             if "datastore_search" in url:
-                return Response(records=next(pages))
+                return Response(records=[grant][int(kwargs["params"].get("offset", 0)):])
             if url.endswith(".xlsx"):
                 return Response((FIXTURES / "sunshine/The-Rooms-Compensation-Disclosure-2022.xlsx").read_bytes())
             if url.endswith(".csv"):
@@ -189,7 +190,7 @@ class Downloads(unittest.TestCase):
         common.fetch("https://example.test/table.zip", self.cache / "statcan/14100064.zip", manifest=m)
         self.assertEqual(list(stats.read_csv("14100064")), [{"VALUE": "123"}])
         grants = [json.loads(line) for line in (self.cache / "federal/grants_NL.jsonl").read_text().splitlines()]
-        self.assertEqual(grants, [{"recipient_province": "NL", "value": "123.45"}])
+        self.assertEqual(grants, [grant])
         for folder in ("mha", "ministers", "sunshine", "ppa", "paradise", "stjohns", "federal", "crf", "estimates", "budget", "public-accounts", "statcan"):
             self.assertTrue(any(p.is_file() for p in (self.cache / folder).rglob("*")), folder)
         dest = self.cache / "mha/Apr2022-Mar2023/DavisBernardSum2022-23.pdf"

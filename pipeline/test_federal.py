@@ -8,6 +8,9 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+import requests
+
+import fetch_federal
 import parse_federal as parser
 from check_federal import ROOT, EXPECTED
 from federal_evidence import PSS_PAYEE_FIELD, evidence, is_nl_postal, notice_selected, pss_location, location_conflict
@@ -143,6 +146,98 @@ class FederalTests(unittest.TestCase):
             with patch.object(parser, "FED", fed), patch.object(parser, "write", lambda name, rows: out.update({name: rows})), contextlib.redirect_stdout(io.StringIO()):
                 parser.canadabuys()
             self.assertEqual(out["canadabuys_nl.csv"][0]["amount"], 0)
+
+
+class FakeResponse:
+    def __init__(self, status, body):
+        self.status_code, self._body, self.text = status, body, json.dumps(body)
+
+    def json(self):
+        return self._body
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            raise requests.HTTPError(f"{self.status_code}")
+
+
+class FakePortal:
+    """The grants datastore as open.canada.ca serves it: 1,000 rows a page at most, and a daily
+    reload that briefly removes the table (404) and renumbers every _id."""
+
+    def __init__(self, rows, first_id=500):
+        self.reload(rows, first_id)
+        self.calls, self.down, self.cut, self.on_call = [], 0, 0, {}
+        self.package = {"resources": [{"id": fetch_federal.GRANTS, "name": "grants", "datastore_active": True, "last_modified": "x"}]}
+
+    def reload(self, rows, first_id):
+        self.rows = [{"_id": first_id + i, "ref_number": f"r{i}"} for i in range(rows)]
+
+    def get(self, url, params=None, timeout=None):
+        if url == fetch_federal.PACKAGE:
+            return FakeResponse(200, {"success": True, "result": self.package})
+        self.calls.append(params)
+        if len(self.calls) in self.on_call:
+            self.on_call.pop(len(self.calls))(self)
+        if self.cut:
+            self.cut -= 1
+            raise requests.exceptions.ChunkedEncodingError("Connection broken: IncompleteRead")
+        if self.down:
+            self.down -= 1
+            return FakeResponse(404, {"success": False, "error": {"__type": "Not Found Error"}})
+        off, limit = int(params.get("offset", 0)), min(int(params["limit"]), 1000)
+        return FakeResponse(200, {"success": True, "result": {"total": len(self.rows), "total_was_estimated": False,
+                                                              "records": self.rows[off:off + limit]}})
+
+
+class GrantsFetchTests(unittest.TestCase):
+    def fetch(self, portal):
+        waits = []
+        with tempfile.TemporaryDirectory() as tmp, patch.object(fetch_federal, "_session", portal), \
+                patch.object(fetch_federal, "CACHE", Path(tmp)), patch.object(fetch_federal, "cache_path", lambda p: p), \
+                contextlib.redirect_stdout(io.StringIO()):
+            m = {}
+            fetch_federal.fetch_grants(m, sleep=waits.append)
+            rows = [json.loads(line) for line in (Path(tmp) / "federal/grants_NL.jsonl").read_text().splitlines()]
+        return rows, waits, m
+
+    def test_pages_at_the_portal_cap_until_the_total(self):
+        rows, waits, m = self.fetch(portal := FakePortal(2500))
+        self.assertEqual([r["_id"] for r in rows], list(range(500, 3000)))
+        pages = [c for c in portal.calls if c["limit"] == fetch_federal.PAGE]
+        self.assertEqual([c["offset"] for c in pages], [0, 1000, 2000])
+        self.assertTrue(all(c["sort"] == "_id" and json.loads(c["filters"]) == {"recipient_province": "NL"} for c in portal.calls))
+        self.assertEqual(waits, [])
+        self.assertIn("sha256", m["federal/grants_NL.jsonl"])
+
+    def test_waits_out_a_reload_404(self):
+        portal = FakePortal(2500)
+        portal.on_call[3] = lambda p: setattr(p, "down", 2)  # the table is missing for the third page
+        portal.on_call[6] = lambda p: setattr(p, "cut", 1)  # a page cut off mid-body
+        rows, waits, _ = self.fetch(portal)
+        self.assertEqual(len(rows), 2500)
+        self.assertEqual(waits, [30, 60, 30])
+
+    def test_restarts_when_the_table_is_reloaded_mid_fetch(self):
+        portal = FakePortal(2500)
+        # After the second page the table is renumbered and gains a row (the 2026-11-02 run).
+        portal.on_call[3] = lambda p: p.reload(2501, first_id=90_000)
+        rows, waits, _ = self.fetch(portal)
+        self.assertEqual([r["_id"] for r in rows], list(range(90_000, 92_501)))
+        self.assertIn(60, waits)  # waited for the reload to settle before starting again
+
+    def test_fails_clearly_when_the_resource_is_gone(self):
+        portal = FakePortal(10)
+        portal.down = 10**6
+        portal.package = {"resources": [{"id": "new-id", "name": "grants", "datastore_active": True}]}
+        with self.assertRaisesRegex(RuntimeError, "no longer lists resource .*new-id"):
+            self.fetch(portal)
+
+    def test_gives_up_when_the_table_never_holds_still(self):
+        portal = FakePortal(2500)
+        ids = iter(range(10**5, 10**7, 10**4))
+        portal.on_call = {n: (lambda p: p.reload(2500, next(ids))) for n in range(2, 400, 2)}
+        with self.assertRaises(RuntimeError):
+            self.fetch(portal)
 
 
 def main():
